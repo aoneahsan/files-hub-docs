@@ -1,0 +1,25 @@
+/* TEAM */
+
+Maintainer + Author: Ahsan Mahmood
+Site: https://aoneahsan.com
+Email: aoneahsan@gmail.com
+LinkedIn: https://linkedin.com/in/aoneahsan
+GitHub: https://github.com/aoneahsan
+npm: https://www.npmjs.com/~aoneahsan
+Location: Pakistan
+
+/* THANKS */
+
+To the Laravel and Laravel Nova teams for the framework FilesHub is built on,
+and to every project that integrates FilesHub as its upload backend and files
+the occasional issue or idea.
+
+/* SITE */
+
+Last update: 2026-06-23
+Standards: HTML5, CSS3, Markdown, JSON-LD
+Components: Docusaurus 3 (https://docusaurus.io/), React 19, TypeScript
+Software: Visual Studio Code, Anthropic Claude (development assistant)
+Hosting: Firebase Hosting + GitHub Pages
+Source: https://github.com/aoneahsan/files-hub-docs
+Product: https://fileshub.zaions.com

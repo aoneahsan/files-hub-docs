@@ -1,0 +1,124 @@
+# FilesHub — full LLM context
+
+> FilesHub (https://fileshub.zaions.com) is a zero-cost file-storage and developer-utility
+> API built on Laravel + Nova. This file gives an AI assistant enough detail to answer
+> integration questions accurately without crawling every page. Last updated: 2026-06-23.
+
+## What FilesHub is
+
+A small HTTP API that stores files for you and serves them back at a stable URL, plus a
+large catalogue of stateless developer utilities. Apps use it as their upload backend so
+they never have to run their own storage server. Every request is authenticated with a
+per-project API key sent in the `X-API-Key` header. The API is versioned under `/api/v1`.
+
+Base URL: `https://fileshub.zaions.com/api/v1`
+
+## Authentication
+
+Send `X-API-Key: <key>` on every request. Keys belong to a project and carry permissions:
+
+- `read` — list and download (including private) objects.
+- `write` — upload and delete objects.
+
+Keys may be `live` (`fh_live_...`) or `test` (`fh_test_...`). Restricted keys additionally
+validate the request origin: browsers send `Origin`/`Referer` (checked against an allowed
+domain list); mobile apps send `X-App-Id` with the bundle id and a platform user-agent.
+Create and manage keys in the Nova admin panel of your FilesHub deployment.
+
+## The object lifecycle (storage API)
+
+### Upload — POST /api/v1/objects (write)
+
+Multipart `form-data`:
+
+- `file` (required) — the file. Validated against the configured max size
+  (`FILESHUB_MAX_UPLOAD_MB`, default 10 MB) and an optional allowed-MIME list.
+- `visibility` (optional) — `public` or `private`. Defaults to `private` server-side, but
+  the Aoneahsan/Zaions integration convention is to send `public`.
+- `expires_in_days` (optional, 1–3650) — auto-delete N days from now.
+- `expires_at` (optional, ISO-8601, must be in the future) — auto-delete at an absolute time.
+  If both are given, `expires_at` wins.
+
+Success `201`:
+
+```json
+{
+  "public_id": "01JDKQXXXXXXXXXXXXXXXXXXXXX",
+  "project_id": "01JDKPXXXXXXXXXXXXXXXXXXXXX",
+  "visibility": "public",
+  "mime_type": "application/pdf",
+  "size_bytes": 1048576,
+  "url": "https://fileshub.zaions.com/api/v1/objects/01JDKQXXXXXXXXXXXXXXXXXXXXX",
+  "expires_at": null
+}
+```
+
+The `url` is what you store in your own database and render in your UI. The `public_id` is a
+ULID — sortable, URL-safe, collision-resistant.
+
+### Download / view — GET /api/v1/objects/{public_id}
+
+Streams the file with its real `Content-Type` and original filename. Public objects need no
+key (use the URL directly in an `<img>` or `<a>`); private objects require a `read` key from
+the same project. Expired objects return `404` and are cleaned up on access.
+
+### List — GET /api/v1/objects (read)
+
+Query params: `page` (default 1), `per_page` (default 20, max 100), `visibility`
+(`public`|`private`, optional filter). Returns:
+
+```json
+{
+  "data": [
+    {
+      "public_id": "01JDKQ...",
+      "original_filename": "photo.jpg",
+      "mime_type": "image/jpeg",
+      "size_bytes": 524288,
+      "visibility": "public",
+      "url": "https://fileshub.zaions.com/api/v1/objects/01JDKQ...",
+      "created_at": "2026-06-23T12:00:00+00:00"
+    }
+  ],
+  "meta": { "current_page": 1, "per_page": 20, "total": 150 }
+}
+```
+
+### Delete — DELETE /api/v1/objects/{public_id} (write)
+
+Permanently deletes the database record and the stored file (a model event removes the file).
+Returns `200 { "message": "Deleted" }`. Only objects belonging to the key's project are
+deletable.
+
+## Error envelope
+
+Errors return a JSON body `{ "message": "..." }` with an appropriate status code:
+
+- `401` — missing/invalid key, or a private object requested without a key.
+- `403` — key lacks the required permission, or origin/app-id not allowed.
+- `404` — object not found, expired, or the stored file is missing.
+- `422` — validation failed (e.g. file too large, bad `visibility`). The message is the first
+  validation error.
+- `429` — rate limit exceeded.
+- `500` — server error.
+
+## Beyond storage: platform services
+
+FilesHub also exposes 50+ stateless utility endpoints under `/api/v1`, including: hashing and
+verification, Base64/URL encoding, JSON/CSV/XML/YAML converters, UUID/ULID/NanoID generators,
+QR codes, short URLs, OTP send/verify, an encryption vault, image resize/compress/crop/convert,
+PDF generation, link previews, sitemap/feed generation, webhooks, uptime monitors, and scheduled
+tasks. These share the same `X-API-Key` auth and base URL. The storage object API above is the
+part most apps integrate first.
+
+## Honest limits
+
+- Single-region, locally-stored backend — not a global CDN. Use a CDN for large global media.
+- Default 10 MB upload cap (configurable per deployment).
+- No published client SDK yet; integrate over plain HTTP in any language. A TypeScript SDK is
+  archived until the API stabilises.
+
+## Author
+
+Built and maintained by Ahsan Mahmood — https://aoneahsan.com ·
+https://github.com/aoneahsan · https://www.npmjs.com/~aoneahsan

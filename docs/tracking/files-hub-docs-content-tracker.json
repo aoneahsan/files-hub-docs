@@ -1,0 +1,45 @@
+{
+  "$schema": "files-hub-docs-content-tracker",
+  "description": "Tracks documentation content coverage for the FilesHub docs site. Resumable across sessions.",
+  "site": "https://docs.fileshub.zaions.com",
+  "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
+  "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
+  "lastUpdated": "2026-06-23",
+  "author": "Ahsan Mahmood",
+  "buildGates": {
+    "yarnInstall": "exit 0 expected",
+    "yarnBuild": "docusaurus build -> ./build, exit 0 expected"
+  },
+  "pages": [
+    { "id": "intro", "path": "docs/intro.md", "status": "complete", "seoFloor": true },
+    { "id": "getting-started/quick-start", "path": "docs/getting-started/quick-start.md", "status": "complete", "seoFloor": true },
+    { "id": "getting-started/authentication", "path": "docs/getting-started/authentication.md", "status": "complete", "seoFloor": true },
+    { "id": "getting-started/file-visibility", "path": "docs/getting-started/file-visibility.md", "status": "complete", "seoFloor": true },
+    { "id": "api/overview", "path": "docs/api/overview.md", "status": "complete", "seoFloor": true },
+    { "id": "api/upload-object", "path": "docs/api/upload-object.md", "status": "complete", "seoFloor": true },
+    { "id": "api/get-object", "path": "docs/api/get-object.md", "status": "complete", "seoFloor": true },
+    { "id": "api/list-objects", "path": "docs/api/list-objects.md", "status": "complete", "seoFloor": true },
+    { "id": "api/delete-object", "path": "docs/api/delete-object.md", "status": "complete", "seoFloor": true },
+    { "id": "api/errors-and-limits", "path": "docs/api/errors-and-limits.md", "status": "complete", "seoFloor": true },
+    { "id": "guides/integrate-from-any-app", "path": "docs/guides/integrate-from-any-app.md", "status": "complete", "seoFloor": true },
+    { "id": "guides/browser-and-mobile-uploads", "path": "docs/guides/browser-and-mobile-uploads.md", "status": "complete", "seoFloor": true },
+    { "id": "platform-services", "path": "docs/platform-services.md", "status": "complete", "seoFloor": true },
+    { "id": "faq", "path": "docs/faq.md", "status": "complete", "seoFloor": true },
+    { "id": "privacy", "path": "docs/privacy.md", "status": "complete", "seoFloor": false },
+    { "id": "changelog", "path": "docs/changelog.md", "status": "complete", "seoFloor": false },
+    { "id": "about-the-author", "path": "docs/about-the-author.md", "status": "complete", "seoFloor": false }
+  ],
+  "totalPages": 17,
+  "completePages": 17,
+  "nextBatchSuggestion": {
+    "rationale": "Baseline complete. Future batches: per-utility reference pages for the platform-services catalogue (hashing, QR, short-urls, OTP, vault, image/PDF) once their exact request/response shapes are confirmed from the controllers — one category per batch.",
+    "candidateCategories": ["email", "short-urls", "qr-codes", "otp", "encryption-vault", "image-processing", "hashing-encoding-converters"]
+  },
+  "runHistory": [
+    {
+      "date": "2026-06-23",
+      "summary": "Created files-hub-docs from the native-update-docs template; adapted brand/URLs/JSON-LD/SEO files; wrote 17 baseline pages (intro, 3 getting-started, 6 API reference, 2 guides, platform-services, FAQ, privacy, changelog, author). Source-accurate from ObjectController.php. yarn install + yarn build verified.",
+      "commit": "pending"
+    }
+  ]
+}

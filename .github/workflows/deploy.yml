@@ -1,0 +1,62 @@
+# Deploy the FilesHub docs site to GitHub Pages.
+#
+# This PUBLIC docs repo is published two ways (both free):
+#   1. GitHub Pages (this workflow) — custom domain via static/CNAME.
+#   2. Firebase Hosting (manual `yarn firebase:deploy`) — see DEPLOY.md.
+#
+# Enable once in the GitHub UI: Settings -> Pages -> "Build and deployment" ->
+# Source: "GitHub Actions". The custom domain (docs.fileshub.zaions.com) is
+# carried by static/CNAME, which Docusaurus copies into the build output.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; cancel in-progress runs for the same ref.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack (yarn)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
