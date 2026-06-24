@@ -30,10 +30,18 @@ Thumbs.db
 
 # Env / secrets
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 *.pem
 *.key
+*.jks
+*.keystore
+key.properties
+keystore.properties
+*service-account*.json
+.npmrc
 .firebase/
 .firebaserc.local
 
