@@ -1,0 +1,28 @@
+{
+  "$schema": "files-hub-docs-finalization-tracker",
+  "description": "Resumable tracker for the docs-site finalization: GitHub Pages @ fileshub-docs.zaions.com, full API docs (emails/jobs/schedules/templates/version + key restrictions), raw-markdown mirror + manifest, OpenAPI 3.1 core, Firebase removal. Model workflow: Fable 5 planned + reviews; Opus 4.8 implements — NEVER re-plan. NO sub-agents; skills per RULE #0. Facts ONLY from files-hub source (PRIVATE repo at ../files-hub).",
+  "module": "docs-finalization",
+  "createdAt": "2026-07-14",
+  "lastUpdated": "2026-07-14",
+  "planFile": "/Users/pc/.claude/plans/great-our-project-is-eventual-sun.md (PART B; PART A backend tracker lives in files-hub docs/features/api-key-app-restrictions/)",
+  "userDecisions": {
+    "domain": "fileshub-docs.zaions.com fully replaces docs.fileshub.zaions.com everywhere",
+    "hosting": "GitHub Pages ONLY — delete firebase.json/.firebaserc + firebase:* scripts",
+    "aiJson": "OpenAPI 3.1 core (/openapi.json: objects, emails, jobs, email-schedules, templates, version/health) + summarized utilities index page; NOT all 194 routes",
+    "docsScope": "full API docs now (emails send/templates/schedules, jobs, version/health, key-restrictions guide)"
+  },
+  "phases": [
+    { "id": "B1", "title": "Domain switch — grep-replace docs.fileshub.zaions.com -> fileshub-docs.zaions.com (CNAME, docusaurus.config.ts SITE_URL, DEPLOY.md, llms*.txt, robots.txt, security.txt, humans.txt, README, CLAUDE/AGENTS, docs pages)", "status": "pending" },
+    { "id": "B2", "title": "Remove Firebase Hosting (delete firebase.json/.firebaserc, drop firebase:* scripts, rewrite DEPLOY.md GH-Pages-only, update workflow comments)", "status": "pending" },
+    { "id": "B3", "title": "New pages (emails-send, email-templates, email-schedules, jobs, version-health, utilities-index, getting-started/api-key-restrictions) + update existing 17 pages + sidebars.ts — facts from files-hub controllers/routes only", "status": "pending" },
+    { "id": "B4", "title": "Raw-md mirror: plugins/raw-docs.js postBuild copy docs/**/*.md -> build/raw/** + build/raw/manifest.json; DocItem/Content swizzle wrapper with View-raw/Download links; regenerate llms.txt + llms-full.txt with raw URLs", "status": "pending" },
+    { "id": "B5", "title": "static/openapi.json (OpenAPI 3.1 core, X-API-Key scheme, restriction headers as optional params) + redocly lint 0 errors + docs/api/openapi.md", "status": "pending" },
+    { "id": "B6", "title": "CLAUDE.md + AGENTS.md full refresh (Model Workflow section, new domain, GH-Pages-only, content inventory) + content tracker + README", "status": "pending" },
+    { "id": "B7", "title": "Gates (yarn typecheck + yarn build + artifact checks + redocly lint) + ONE commit -> push (triggers Pages workflow); verify gh run green", "status": "pending" },
+    { "id": "MANUAL", "title": "USER-ONLY: GH Pages settings (Source: GitHub Actions, custom domain, HTTPS), DNS CNAME fileshub-docs.zaions.com -> aoneahsan.github.io, GSC/Bing submission, live spot-checks", "status": "blocked", "awaitingUser": true }
+  ],
+  "runHistory": [
+    { "date": "2026-07-14", "phase": "planning", "summary": "Fable 5 plan approved; tracker scaffolded. Opus 4.8 implements B1-B7 next.", "commit": "pending" }
+  ],
+  "resumeInstructions": "1) Read planFile PART B. 2) First pending phase. 3) Invoke skills (RULE #0; no sub-agents). 4) Complete, update statuses + runHistory + lastUpdated. 5) ONE commit per session including this tracker, push to o main."
+}

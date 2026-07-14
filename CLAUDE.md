@@ -7,6 +7,14 @@ Public Docusaurus documentation site for **FilesHub** (the file-storage + utilit
 
 Finish the real task fast + correctly FIRST; docs/trackers/sync are a footnote (≤~20% of effort) — never let recording outpace the fix. HARD STOP when doc work outpaces the change → ship, then ONE line if anything. No new summary/status/completion files unless asked; edit/delete over add; delete stale docs. Full rule: `~/.claude/CLAUDE.md`. (Est. 2026-06-19)
 
+## Model Workflow — Fable 5 plans & reviews, Opus 4.8 implements (IRON-SOLID — CRITICAL)
+
+- **Plan + review on Fable 5; implement on Opus 4.8** — always, for every task in this project. Fable writes the plan to `~/.claude/plans/` + a resumable tracker; Opus reads BOTH and implements exactly (NEVER re-plans from zero); Fable then reviews the diff vs the plan and appends `§FINDINGS` for Opus to fix.
+- **NO sub-agents, ever** — all planning/implementation/review happens in the MAIN context.
+- **Skills mandatory (RULE #0)** — invoke every relevant skill before acting, on both planning and implementation sides.
+- Global rule: `~/.claude/CLAUDE.md` → "Model Workflow". (Owner directive 2026-07-14; adopted here same day.)
+- **Active plan awaiting Opus 4.8:** `~/.claude/plans/great-our-project-is-eventual-sun.md` (PART B) → tracker `docs/tracking/docs-finalization-tracker.json` (finalize for GitHub Pages @ **fileshub-docs.zaions.com**: domain switch, full API docs, raw-md mirror + manifest, OpenAPI 3.1 core, drop Firebase).
+
 ## Identity
 
 | Key | Value |
