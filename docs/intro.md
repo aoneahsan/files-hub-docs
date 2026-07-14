@@ -4,13 +4,13 @@ title: Introduction
 description: FilesHub is a zero-cost file-storage and developer-utility API — upload a file over HTTP with an X-API-Key header, get a stable public URL, then list, download, or delete it.
 keywords: [fileshub, file storage api, file upload api, http file storage, public file url, x-api-key, store files api, image hosting api, laravel file storage]
 last_update:
-  date: 2026-06-23
+  date: 2026-07-14
   author: Ahsan Mahmood
 ---
 
 # Introduction
 
-**FilesHub is a zero-cost file-storage and developer-utility API: you upload a file over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header, and FilesHub stores it and returns a stable URL you can link to or download.** Around that storage core it adds object listing, deletion, per-file visibility, optional auto-expiry, scoped API keys, and 50+ stateless utility endpoints — all under one base URL and one key.
+**FilesHub is a zero-cost file-storage, email, and developer-utility API: you upload a file over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header, and FilesHub stores it and returns a stable URL you can link to or download.** Around that storage core it adds object listing, deletion, per-file visibility, optional auto-expiry, scoped API keys, transactional email (send, templates, recurring schedules), and 50+ stateless utility endpoints — all under one base URL and one key.
 
 FilesHub runs at [fileshub.zaions.com](https://fileshub.zaions.com) and is the upload backend used by every Aoneahsan/Zaions project, so an app never has to run its own storage server. It is built on Laravel + Nova and maintained by [Ahsan Mahmood](https://aoneahsan.com).
 
@@ -24,6 +24,8 @@ FilesHub runs at [fileshub.zaions.com](https://fileshub.zaions.com) and is the u
 | **Delete a file** | `DELETE /api/v1/objects/{public_id}` removes the record and the stored bytes together. |
 | **Control access** | Each object is `public` or `private`; keys carry `read`/`write` permissions and optional origin restrictions. |
 | **Auto-expire** | `expires_in_days` or `expires_at` on upload makes a file self-clean after its window. |
+| **Send email** | `POST /api/v1/emails/send` — raw or [template](api/emails-send), from a verified domain, queued with a job to poll. |
+| **Ship a key in a frontend** | Mark a key [restricted](getting-started/api-key-restrictions) to your web origin or app (Android package + signing cert, iOS bundle id) — no proxy backend needed. |
 | **More than storage** | 50+ utility endpoints (hashing, encoding, converters, QR codes, short URLs, OTP, vault, image/PDF). |
 
 ## Why it exists
@@ -52,9 +54,10 @@ flowchart LR
 ## Where to go next
 
 - [Quick Start](getting-started/quick-start) — upload your first file in about five minutes with `curl` or `fetch`.
-- [Authentication](getting-started/authentication) — how `X-API-Key`, key permissions, and restrictions work.
-- [File visibility](getting-started/file-visibility) — `public` vs `private`, and why integrations default to `public`.
-- [API Reference](api/overview) — every object endpoint with exact request/response shapes.
+- [Authentication](getting-started/authentication) — how `X-API-Key`, key scopes, and restrictions work.
+- [API key restrictions](getting-started/api-key-restrictions) — ship a key safely in a React or mobile frontend.
+- [API Reference](api/overview) — every endpoint (objects, email, jobs) with exact request/response shapes.
+- [OpenAPI spec](api/openapi) — a machine-readable `/openapi.json` and raw-Markdown mirror for AI coding agents.
 - [Integrate from any app](guides/integrate-from-any-app) — copy-paste integration for JS/TS, PHP, and mobile.
 
 ## Honest limits

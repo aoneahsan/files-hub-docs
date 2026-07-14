@@ -8,15 +8,14 @@ import type * as Preset from '@docusaurus/preset-classic';
 // Product: https://fileshub.zaions.com  (API base: https://fileshub.zaions.com/api/v1)
 // ---------------------------------------------------------------------------
 
-const SITE_URL = 'https://docs.fileshub.zaions.com';
+const SITE_URL = 'https://fileshub-docs.zaions.com';
 
 const config: Config = {
   title: 'FilesHub Docs',
   tagline: 'Zero-cost file storage + utility API for every app. Upload, store, and serve files over a simple HTTP API keyed by X-API-Key.',
   favicon: 'img/favicon.svg',
 
-  // Production URL — served from Firebase Hosting site `files-hub-docs`
-  // and GitHub Pages (custom domain via static/CNAME).
+  // Production URL — served from GitHub Pages (custom domain via static/CNAME).
   url: SITE_URL,
   baseUrl: '/',
 
@@ -137,6 +136,10 @@ const config: Config = {
     },
   },
   themes: ['@docusaurus/theme-mermaid'],
+
+  // Local plugin: mirror every docs page as raw Markdown under /raw/** +
+  // /raw/manifest.json, for AI coding agents (see plugins/raw-docs.js).
+  plugins: ['./plugins/raw-docs.js'],
 
   presets: [
     [

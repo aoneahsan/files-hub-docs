@@ -1,0 +1,523 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FilesHub API",
+    "version": "1.0.0",
+    "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
+    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health). The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.",
+    "contact": { "name": "Ahsan Mahmood", "url": "https://aoneahsan.com", "email": "aoneahsan@gmail.com" },
+    "license": { "name": "Proprietary (docs MIT)", "url": "https://fileshub-docs.zaions.com/privacy" }
+  },
+  "servers": [
+    { "url": "https://fileshub.zaions.com/api/v1", "description": "Versioned API (objects, emails, jobs, schedules, templates)" }
+  ],
+  "security": [{ "ApiKeyHeader": [] }],
+  "tags": [
+    { "name": "Objects", "description": "File upload, download, list, delete" },
+    { "name": "Emails", "description": "Send email, manage templates and recurring schedules" },
+    { "name": "Jobs", "description": "Poll queued operations" },
+    { "name": "Status", "description": "Public health and deploy-version endpoints (no auth, at /api not /api/v1)" }
+  ],
+  "paths": {
+    "/objects": {
+      "post": {
+        "tags": ["Objects"],
+        "summary": "Upload an object",
+        "description": "Upload a multipart file. Returns 201 with the object's ULID, public URL, and metadata.",
+        "operationId": "uploadObject",
+        "parameters": [
+          { "$ref": "#/components/parameters/AppId" },
+          { "$ref": "#/components/parameters/AndroidCert" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary", "description": "The file to store (max upload size configurable, default 10 MB)." },
+                  "visibility": { "type": "string", "enum": ["public", "private"], "description": "Access control. Omitted => private. Integrations send public." },
+                  "expires_in_days": { "type": "integer", "minimum": 1, "maximum": 3650, "description": "Auto-delete this many days from now." },
+                  "expires_at": { "type": "string", "format": "date-time", "description": "Auto-delete at this absolute time (wins over expires_in_days)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StoredObject" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "get": {
+        "tags": ["Objects"],
+        "summary": "List objects",
+        "operationId": "listObjects",
+        "parameters": [
+          { "name": "visibility", "in": "query", "schema": { "type": "string", "enum": ["public", "private"] } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "$ref": "#/components/parameters/AppId" },
+          { "$ref": "#/components/parameters/AndroidCert" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/StoredObjectListItem" } },
+                    "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/objects/{publicId}": {
+      "parameters": [
+        { "name": "publicId", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The object's ULID." }
+      ],
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Download or view an object",
+        "description": "Streams the file. Public objects need no key; private objects require a read key from the same project.",
+        "operationId": "getObject",
+        "security": [{}, { "ApiKeyHeader": [] }],
+        "responses": {
+          "200": { "description": "The file stream.", "content": { "application/octet-stream": { "schema": { "type": "string", "format": "binary" } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Objects"],
+        "summary": "Delete an object",
+        "operationId": "deleteObject",
+        "parameters": [
+          { "$ref": "#/components/parameters/AppId" },
+          { "$ref": "#/components/parameters/AndroidCert" }
+        ],
+        "responses": {
+          "200": { "description": "Deleted." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/emails/send": {
+      "post": {
+        "tags": ["Emails"],
+        "summary": "Send an email",
+        "description": "Send one transactional email (raw or template). Queued by default (202 + job_id); pass queue=false for a synchronous 201.",
+        "operationId": "sendEmail",
+        "parameters": [{ "$ref": "#/components/parameters/AppId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/SendEmailRaw" },
+                  { "$ref": "#/components/schemas/SendEmailTemplate" }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Queued.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailSendResult" } } } },
+          "201": { "description": "Sent synchronously or scheduled.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailSendResult" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" },
+          "429": { "description": "Daily sending quota exhausted.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "Requested domain temporarily without capacity; retry with backoff.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/emails/templates": {
+      "get": {
+        "tags": ["Emails"],
+        "summary": "List email templates",
+        "operationId": "listEmailTemplates",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/EmailTemplate" } } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Emails"],
+        "summary": "Create an email template",
+        "description": "Requires the write + email_template scopes.",
+        "operationId": "createEmailTemplate",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailTemplateCreate" } } } },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailTemplate" } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/emails/templates/{slug}": {
+      "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Immutable template slug." }],
+      "patch": {
+        "tags": ["Emails"],
+        "summary": "Update an email template",
+        "operationId": "updateEmailTemplate",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailTemplateUpdate" } } } },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailTemplate" } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "delete": {
+        "tags": ["Emails"],
+        "summary": "Delete an email template",
+        "operationId": "deleteEmailTemplate",
+        "responses": {
+          "200": { "description": "Deleted." },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/email-schedules": {
+      "get": {
+        "tags": ["Emails"],
+        "summary": "List email schedules",
+        "operationId": "listEmailSchedules",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/EmailSchedule" } }, "meta": { "$ref": "#/components/schemas/PaginationMeta" } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Emails"],
+        "summary": "Create an email schedule",
+        "operationId": "createEmailSchedule",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailScheduleCreate" } } } },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailSchedule" } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/email-schedules/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Schedule ULID." }],
+      "get": {
+        "tags": ["Emails"], "summary": "Show an email schedule", "operationId": "getEmailSchedule",
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailSchedule" } } } }, "404": { "$ref": "#/components/responses/NotFound" } }
+      },
+      "patch": {
+        "tags": ["Emails"], "summary": "Update / pause / resume a schedule",
+        "description": "Send is_active=false to pause, true to resume; or update any create field.",
+        "operationId": "updateEmailSchedule",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailScheduleUpdate" } } } },
+        "responses": { "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailSchedule" } } } }, "404": { "$ref": "#/components/responses/NotFound" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+      },
+      "delete": {
+        "tags": ["Emails"], "summary": "Delete a schedule", "operationId": "deleteEmailSchedule",
+        "responses": { "200": { "description": "Deleted." }, "404": { "$ref": "#/components/responses/NotFound" } }
+      }
+    },
+    "/email-schedules/{id}/run": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "tags": ["Emails"], "summary": "Run a schedule now", "operationId": "runEmailSchedule",
+        "description": "Send this schedule's run immediately, off-cadence.",
+        "responses": { "202": { "description": "Run queued." }, "404": { "$ref": "#/components/responses/NotFound" } }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List jobs",
+        "operationId": "listJobs",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "schema": { "type": "string" } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Job" } }, "meta": { "$ref": "#/components/schemas/PaginationMeta" } } } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/jobs/{jobId}": {
+      "parameters": [{ "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Job ULID." }],
+      "get": {
+        "tags": ["Jobs"], "summary": "Get job status", "operationId": "getJob",
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/Job" } } } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/health": {
+      "servers": [{ "url": "https://fileshub.zaions.com/api", "description": "Root API (health/version live here, not under /api/v1)" }],
+      "get": {
+        "tags": ["Status"], "summary": "Health check", "operationId": "health", "security": [{}],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } } }
+      }
+    },
+    "/version": {
+      "servers": [{ "url": "https://fileshub.zaions.com/api", "description": "Root API (health/version live here, not under /api/v1)" }],
+      "get": {
+        "tags": ["Status"], "summary": "Deploy-version marker", "operationId": "version", "security": [{}],
+        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "backend_version": { "type": "string", "example": "2026.07.14.3" }, "env": { "type": "string", "example": "production" } } } } } } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyHeader": { "type": "apiKey", "in": "header", "name": "X-API-Key", "description": "Per-project API key. Send on every authenticated request." }
+    },
+    "parameters": {
+      "AppId": {
+        "name": "X-App-Id", "in": "header", "required": false,
+        "schema": { "type": "string" },
+        "description": "Required only for app-restricted keys: the Android package or iOS bundle id (X-Android-Package is an accepted alias)."
+      },
+      "AndroidCert": {
+        "name": "X-Android-Cert", "in": "header", "required": false,
+        "schema": { "type": "string" },
+        "description": "Android signing-cert fingerprint (SHA-256 or SHA-1). Required when the key's android origin pins certificate fingerprints. See https://fileshub-docs.zaions.com/getting-started/api-key-restrictions."
+      }
+    },
+    "responses": {
+      "Unauthorized": { "description": "Missing or invalid X-API-Key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Forbidden": { "description": "Key lacks the required scope, or origin/app not allowed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "Resource not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "ValidationError": { "description": "Validation failed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "RateLimited": { "description": "Rate limit exceeded.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "success": { "type": "boolean" }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "current_page": { "type": "integer" },
+          "last_page": { "type": "integer" },
+          "per_page": { "type": "integer" },
+          "total": { "type": "integer" }
+        }
+      },
+      "StoredObject": {
+        "type": "object",
+        "properties": {
+          "public_id": { "type": "string", "description": "ULID." },
+          "project_id": { "type": "string" },
+          "visibility": { "type": "string", "enum": ["public", "private"] },
+          "mime_type": { "type": "string" },
+          "size_bytes": { "type": "integer" },
+          "url": { "type": "string", "format": "uri" },
+          "expires_at": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "StoredObjectListItem": {
+        "type": "object",
+        "properties": {
+          "public_id": { "type": "string" },
+          "original_filename": { "type": "string" },
+          "mime_type": { "type": "string" },
+          "size_bytes": { "type": "integer" },
+          "visibility": { "type": "string", "enum": ["public", "private"] },
+          "url": { "type": "string", "format": "uri" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SendEmailCommon": {
+        "type": "object",
+        "properties": {
+          "to": { "type": "string", "format": "email" },
+          "to_name": { "type": ["string", "null"] },
+          "cc": { "type": "array", "maxItems": 10, "items": { "type": "string", "format": "email" } },
+          "bcc": { "type": "array", "maxItems": 10, "items": { "type": "string", "format": "email" } },
+          "reply_to": { "type": ["string", "null"], "format": "email" },
+          "from_name": { "type": ["string", "null"] },
+          "attachments": { "type": "array", "maxItems": 5, "items": { "type": "string", "description": "Pre-uploaded FilesHub object ULID (26 chars)." } },
+          "domain": { "type": ["string", "null"], "enum": ["aoneahsan.com", "zaions.com", "trizlink.com", null], "description": "Verified sending domain. Omitted => admin default with fallback." },
+          "queue": { "type": "boolean", "default": true, "description": "true = queued (202 + job); false = synchronous (201)." },
+          "scheduled_at": { "type": ["string", "null"], "format": "date-time", "description": "Send once at a future time." }
+        }
+      },
+      "SendEmailRaw": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SendEmailCommon" },
+          {
+            "type": "object",
+            "required": ["to", "subject"],
+            "properties": {
+              "subject": { "type": "string", "maxLength": 500 },
+              "body_html": { "type": ["string", "null"], "description": "Required unless body_text is given." },
+              "body_text": { "type": ["string", "null"], "description": "Required unless body_html is given." }
+            }
+          }
+        ]
+      },
+      "SendEmailTemplate": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SendEmailCommon" },
+          {
+            "type": "object",
+            "required": ["to", "template"],
+            "properties": {
+              "template": { "type": "string", "description": "Template slug." },
+              "variables": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          }
+        ]
+      },
+      "EmailSendResult": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "description": "Email log ULID." },
+              "status": { "type": "string", "description": "queued | sent | ..." },
+              "from_email": { "type": "string" },
+              "domain": { "type": ["string", "null"] },
+              "job_id": { "type": ["string", "null"] },
+              "status_url": { "type": "string", "format": "uri" },
+              "scheduled_at": { "type": ["string", "null"], "format": "date-time" },
+              "sent_at": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        }
+      },
+      "EmailTemplate": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "subject": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "variables": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "EmailTemplateCreate": {
+        "type": "object",
+        "required": ["name", "category", "subject"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 255 },
+          "slug": { "type": "string", "description": "Immutable once set; auto-generated from name if omitted." },
+          "category": { "type": "string" },
+          "subject": { "type": "string", "maxLength": 500 },
+          "body_html": { "type": ["string", "null"], "description": "Required unless body_text is given." },
+          "body_text": { "type": ["string", "null"], "description": "Required unless body_html is given." },
+          "description": { "type": ["string", "null"], "maxLength": 2000 },
+          "variables": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "description": { "type": "string" }, "required": { "type": "boolean" } } } },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "EmailTemplateUpdate": {
+        "type": "object",
+        "description": "Any subset of the create fields except slug (immutable).",
+        "properties": {
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "subject": { "type": "string" },
+          "body_html": { "type": "string" },
+          "body_text": { "type": "string" },
+          "description": { "type": "string" },
+          "variables": { "type": "array", "items": { "type": "object" } },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "EmailScheduleCommon": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 255 },
+          "description": { "type": ["string", "null"], "maxLength": 2000 },
+          "recipients": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "type": "object", "required": ["email"], "properties": { "email": { "type": "string", "format": "email" }, "name": { "type": ["string", "null"] } } } },
+          "template": { "type": ["string", "null"], "description": "Template slug (wins over raw content)." },
+          "variables": { "type": "object", "additionalProperties": { "type": "string" } },
+          "subject": { "type": ["string", "null"], "maxLength": 500 },
+          "body_html": { "type": ["string", "null"] },
+          "body_text": { "type": ["string", "null"] },
+          "cc": { "type": "array", "maxItems": 10, "items": { "type": "string", "format": "email" } },
+          "bcc": { "type": "array", "maxItems": 10, "items": { "type": "string", "format": "email" } },
+          "reply_to": { "type": ["string", "null"], "format": "email" },
+          "from_name": { "type": ["string", "null"] },
+          "domain": { "type": ["string", "null"], "enum": ["aoneahsan.com", "zaions.com", "trizlink.com", null] },
+          "cron_expression": { "type": "string", "description": "5-field cron or @hourly/@daily/@weekly/@monthly." },
+          "timezone": { "type": ["string", "null"], "description": "IANA timezone." },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "EmailScheduleCreate": {
+        "allOf": [
+          { "$ref": "#/components/schemas/EmailScheduleCommon" },
+          { "type": "object", "required": ["name", "recipients", "cron_expression"] }
+        ]
+      },
+      "EmailScheduleUpdate": { "$ref": "#/components/schemas/EmailScheduleCommon" },
+      "EmailSchedule": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "cron_expression": { "type": "string" },
+          "timezone": { "type": ["string", "null"] },
+          "is_active": { "type": "boolean" },
+          "recipients": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Job ULID." },
+          "type": { "type": "string", "example": "email.send" },
+          "status": { "type": "string", "description": "pending | processing | completed | failed" },
+          "attempts": { "type": "integer" },
+          "result": { "type": ["object", "null"] },
+          "error": { "type": ["string", "null"] },
+          "queued_at": { "type": ["string", "null"], "format": "date-time" },
+          "started_at": { "type": ["string", "null"], "format": "date-time" },
+          "finished_at": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "degraded"] },
+          "app": { "type": "string" },
+          "version": { "type": "string" },
+          "backend_version": { "type": "string" },
+          "database": { "type": "string", "enum": ["ok", "error"] },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

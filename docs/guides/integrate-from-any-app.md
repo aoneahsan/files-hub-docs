@@ -4,7 +4,7 @@ title: Integrate from any app
 description: Copy-paste FilesHub integration for JavaScript/TypeScript, React, PHP/Laravel, and mobile — upload a file, store the returned URL, render it, and clean it up on delete.
 keywords: [fileshub integration, upload file react, upload file laravel, file storage integration, file upload axios, file upload php, store returned url]
 last_update:
-  date: 2026-06-23
+  date: 2026-07-14
   author: Ahsan Mahmood
 ---
 
@@ -82,7 +82,7 @@ function AvatarUpload({ apiKey }: { apiKey: string }) {
 }
 ```
 
-For production, route uploads through your backend so the `write` key stays server-side, or use a restricted browser key scoped to your domain (see [Authentication](../getting-started/authentication)).
+For production, route uploads through your backend so the `write` key stays server-side, or use a restricted browser key scoped to your domain so you need no backend at all (see [API key restrictions](../getting-started/api-key-restrictions)).
 
 ## PHP / Laravel
 
@@ -100,7 +100,7 @@ $user->update(['avatar_url' => $object['url'], 'avatar_object_id' => $object['pu
 
 ## Mobile (Capacitor / React Native / native)
 
-Mobile apps `POST` the same multipart request. If your key is app-restricted, add `X-App-Id` with your bundle id and keep a platform user-agent (Capacitor's WebView and native HTTP clients send one). See [Browser & mobile uploads](browser-and-mobile-uploads) for platform specifics.
+Mobile apps `POST` the same multipart request. If your key is app-restricted, add `X-App-Id` with your package/bundle id (and `X-Android-Cert` when the Android origin pins a signing certificate). See [Browser & mobile uploads](browser-and-mobile-uploads) and [API key restrictions](../getting-started/api-key-restrictions) for platform specifics.
 
 ## Keep storage clean
 

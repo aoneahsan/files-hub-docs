@@ -24,8 +24,8 @@ Finish the real task fast + correctly FIRST; docs/trackers/sync are a footnote (
 | Package manager | yarn (classic) — NEVER npm/pnpm |
 | Node | >=18 |
 | Author | Ahsan Mahmood ([aoneahsan@gmail.com](mailto:aoneahsan@gmail.com)) |
-| Live URL | https://docs.fileshub.zaions.com (Firebase Hosting site `files-hub-docs` + GitHub Pages; CNAME in `static/CNAME`) |
-| Documents | FilesHub API: `X-API-Key` auth, `POST/GET/DELETE /api/v1/objects`, visibility public/private |
+| Live URL | https://fileshub-docs.zaions.com (**GitHub Pages only**; CNAME in `static/CNAME`) |
+| Documents | FilesHub API: `X-API-Key` auth + scopes/restrictions, objects, email (send/templates/schedules), jobs, version/health, visibility public/private; AI surfaces: `/openapi.json` + `/raw/**` mirror |
 | Source product | `/home/ahsan/Documents/01-code/projects/files-hub/` (Laravel + Nova; PRIVATE repo) |
 | Content tracker | `docs/tracking/files-hub-docs-content-tracker.json` |
 | Build gates (2026-06-23) | `yarn install` exit 0 · `yarn build` (docusaurus → `./build`) exit 0 |
@@ -36,7 +36,7 @@ Finish the real task fast + correctly FIRST; docs/trackers/sync are a footnote (
 |---|---|
 | Yarn only | Never `npm install`/`pnpm add`. Only `yarn.lock`. |
 | No dev server in agent runs | Agent runs `yarn build` / `yarn typecheck` to verify; the user runs `yarn start`. |
-| Single source of truth | Every API fact comes from the FilesHub controller source (`files-hub/app/Http/Controllers/Api/ObjectController.php`, `routes/api.php`, `config/fileshub.php`). No invented endpoints/fields. |
+| Single source of truth | Every API fact comes from the FilesHub source (`files-hub/app/Http/Controllers/Api/*Controller.php`, `app/Http/Requests/Api/*`, `routes/api.php`, `config/fileshub.php`, `app/Http/Middleware/ApiKeyAuth.php`). No invented endpoints/fields. |
 | Honest framing | Say what FilesHub does NOT do (single-region, 10 MB default cap, no published SDK). No fabricated stats. |
 | No secrets | PUBLIC repo — never commit any `.env`, key, or token. |
 | One commit per task | One commit per docs change/batch, pushed to `o main`. |
@@ -54,8 +54,12 @@ yarn typecheck       # tsc --noEmit
 
 ## Hosting
 
-- **GitHub Pages:** `.github/workflows/deploy.yml` (enable Pages → "GitHub Actions" once). Custom domain via `static/CNAME`.
-- **Firebase Hosting:** `firebase.json` + `.firebaserc` (site `files-hub-docs`); `yarn firebase:deploy`. Full steps in `DEPLOY.md`.
+- **GitHub Pages only** (Firebase Hosting removed 2026-07-14): `.github/workflows/deploy.yml` auto-deploys `./build` on every push to `main`. Enable Pages → Source "GitHub Actions" once; custom domain `fileshub-docs.zaions.com` via `static/CNAME`. Full steps + DNS in `DEPLOY.md`.
+
+## AI-agent surfaces
+
+- `static/openapi.json` — hand-authored OpenAPI 3.1 (objects, emails, jobs, schedules, templates, version/health). Lint: `npx -y @redocly/cli@latest lint static/openapi.json` (0 errors).
+- `plugins/raw-docs.js` — `postBuild` mirrors every docs page to `build/raw/**.md` + `build/raw/manifest.json`. `src/theme/DocItem/Content/index.tsx` adds a "View raw Markdown" link per page (absolute URL so `onBrokenLinks: throw` ignores the postBuild files). Any relative `/raw/...` link in Markdown must be absolute for the same reason.
 
 ## Package Manager Hierarchy: nvm → npm (global) → yarn (local) (IRON-SOLID)
 
@@ -63,7 +67,7 @@ yarn typecheck       # tsc --noEmit
 
 ## SEO / AEO
 
-robots.txt (AI-bot allowlist), sitemap.xml (Docusaurus), llms.txt + llms-full.txt, pricing.md, humans.txt, `/.well-known/security.txt`, and JSON-LD (WebSite + Organization + SoftwareApplication) are all emitted. Per-page definition-first intros, FAQ, distinct titles/descriptions. Playbook: `~/.claude/rules/seo-aeo-ranking.md`. Last applied: 2026-06-23.
+robots.txt (AI-bot allowlist), sitemap.xml (Docusaurus), llms.txt + llms-full.txt, pricing.md, humans.txt, `/.well-known/security.txt`, `openapi.json`, the `/raw/**` mirror, and JSON-LD (WebSite + Organization + SoftwareApplication) are all emitted. Per-page definition-first intros, FAQ, distinct titles/descriptions. Playbook: `~/.claude/rules/seo-aeo-ranking.md`. Last applied: 2026-07-14.
 
 ## Gitignore Hygiene (IRON-SOLID)
 `.gitignore` stays current with the project structure — ignore only recoverable artifacts (build/`dist`/`www`/`node_modules`/logs/caches/IDE), never lose source. Custom rules always present: `*.ignore.*`, `project-record-ignore/`. This is a **PUBLIC** repo -> secrets/`.env`/keystores are NEVER tracked.
@@ -72,7 +76,7 @@ Gitignore Last Verified: 2026-06-24
 
 ## Last Updated
 
-2026-06-23
+2026-07-14
 
 
 ## Sub-agents & Skills — Main-Context-First (IRON-SOLID)

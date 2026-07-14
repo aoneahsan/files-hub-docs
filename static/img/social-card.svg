@@ -29,5 +29,5 @@
   <text x="360" y="280" font-family="Inter, system-ui, sans-serif" font-size="92" font-weight="800" fill="#ffffff">FilesHub Docs</text>
   <text x="362" y="345" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="500" fill="#a5b4fc">File storage + utility API, keyed by X-API-Key</text>
   <text x="362" y="408" font-family="Inter, system-ui, sans-serif" font-size="30" font-weight="400" fill="#67e8f9">Upload · serve · list · delete — over plain HTTP</text>
-  <text x="362" y="470" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="400" fill="#94a3b8">docs.fileshub.zaions.com  ·  by Ahsan Mahmood</text>
+  <text x="362" y="470" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="400" fill="#94a3b8">fileshub-docs.zaions.com  ·  by Ahsan Mahmood</text>
 </svg>

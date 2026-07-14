@@ -2,7 +2,7 @@
 # Maintained by Ahsan Mahmood (https://aoneahsan.com)
 # Last updated: 2026-06-23
 #
-# Public crawl policy for https://docs.fileshub.zaions.com.
+# Public crawl policy for https://fileshub-docs.zaions.com.
 # Every reputable search-engine and AI/answer-engine bot is allowed so this
 # documentation can be indexed and cited. Low-value scraper bots are blocked.
 # The Sitemap directive at the bottom lets crawlers discover the URL space.
@@ -121,4 +121,4 @@ Allow: /
 
 # --- Sitemap discovery ------------------------------------------------------
 
-Sitemap: https://docs.fileshub.zaions.com/sitemap.xml
+Sitemap: https://fileshub-docs.zaions.com/sitemap.xml

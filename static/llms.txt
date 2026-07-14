@@ -1,64 +1,109 @@
 # FilesHub
 
-> FilesHub is a zero-cost file-storage and developer-utility API. You upload a file
-> over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header and get back a
-> stable public URL plus a ULID. You can list, download, and delete objects, set each
-> file's visibility (`public` or `private`), and optionally auto-expire files. Beyond
-> storage it exposes 50+ utility endpoints (hashing, encoding, converters, QR codes,
-> short URLs, OTP, an encryption vault, image/PDF processing). It is the upload backend
-> used by every Aoneahsan/Zaions project. Built and maintained by Ahsan Mahmood.
+> FilesHub is a zero-cost file-storage, email, and developer-utility API. You upload a file
+> over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header and get back a stable
+> public URL plus a ULID. You can list, download, and delete objects, set each file's
+> visibility (`public` or `private`), auto-expire files, send transactional email from
+> verified domains, run background jobs, and call 40+ developer-utility endpoint groups
+> (hashing, encoding, converters, QR codes, short URLs, OTP, an encryption vault, image/PDF
+> processing). It is the backend used by every Aoneahsan/Zaions project. Built and maintained
+> by Ahsan Mahmood.
 
 - Product: https://fileshub.zaions.com
-- Docs: https://docs.fileshub.zaions.com
+- Docs: https://fileshub-docs.zaions.com
 - API base URL: https://fileshub.zaions.com/api/v1
 - Auth: `X-API-Key: <your project key>` header on every request
+- OpenAPI 3.1 spec: https://fileshub-docs.zaions.com/openapi.json
+- Raw Markdown mirror (every page as .md): https://fileshub-docs.zaions.com/raw/manifest.json
 - License: MIT (docs) · Author: Ahsan Mahmood (https://aoneahsan.com)
 
 ## Core concepts
 
-- Authentication: every request carries an `X-API-Key` header. Keys are per project,
-  with `read` and `write` permissions and optional origin / `X-App-Id` restrictions.
-- Object: an uploaded file. Identified by a ULID `public_id`. Has a `mime_type`,
-  `size_bytes`, a `visibility` (`public` or `private`), an optional `expires_at`, and a
-  `url` you can link to or download.
+- Authentication: every request carries an `X-API-Key` header. Keys are per project, with
+  scopes (`read`, `write`, `email`, `email_template`, per-utility service scopes) and optional
+  restrictions.
+- Restrictions: a key can be marked "restricted" to only work from your own web origin,
+  Android package (optionally pinned to its signing-cert SHA-256/SHA-1 via `X-Android-Cert`),
+  or iOS bundle id (`X-App-Id`). This lets you ship a key in a frontend app with no proxy
+  backend. Self-declared headers (Google-Maps-key trust model), not device attestation.
+- Object: an uploaded file. Identified by a ULID `public_id`. Has a `mime_type`, `size_bytes`,
+  a `visibility` (`public` or `private`), an optional `expires_at`, and a `url`.
 - Visibility: `public` objects are downloadable by anyone at their URL; `private` objects
-  require a `read`-permission key from the same project. The integration default across
-  Aoneahsan/Zaions apps is `visibility: public`.
+  require a `read` key from the same project. The integration default is `visibility: public`.
 
-## Object API (the part every app integrates)
+## Object API
 
-- Upload: `POST /api/v1/objects` — multipart form field `file` (required), optional
-  `visibility` (`public`|`private`), optional `expires_in_days` or `expires_at`. Returns
-  `201` with `{ public_id, project_id, visibility, mime_type, size_bytes, url, expires_at }`.
-- Download / view: `GET /api/v1/objects/{public_id}` — streams the file. No key needed for
-  public objects; a `read` key is required for private ones.
-- List: `GET /api/v1/objects` — paginated (`page`, `per_page` max 100, optional `visibility`
-  filter). Returns `{ data: [...], meta: { current_page, per_page, total } }`.
-- Delete: `DELETE /api/v1/objects/{public_id}` — removes the database record and the stored
-  file. Returns `200`.
+- Upload: `POST /api/v1/objects` (write) — multipart `file` (required), optional `visibility`
+  (`public`|`private`), optional `expires_in_days` or `expires_at`. Returns `201` with
+  `{ public_id, project_id, visibility, mime_type, size_bytes, url, expires_at }`.
+- Download / view: `GET /api/v1/objects/{public_id}` — streams the file. No key for public
+  objects; a `read` key for private ones.
+- List: `GET /api/v1/objects` (read) — paginated (`page`, `per_page` max 100, optional
+  `visibility` filter).
+- Delete: `DELETE /api/v1/objects/{public_id}` (write).
+
+## Email API
+
+- Send: `POST /api/v1/emails/send` (email) — raw (`subject` + `body_html`/`body_text`) or
+  `template` + `variables`. One `to` per call; optional `cc`/`bcc` (<=10), `reply_to`,
+  `from_name`, `attachments` (FilesHub object ULIDs, <=5), `domain` (`aoneahsan.com` default |
+  `zaions.com` | `trizlink.com`), `queue` (default true => `202` + `job_id`; false => sync
+  `201`), `scheduled_at`. Poll the `job_id` for delivery.
+- Templates: `GET /api/v1/emails/templates` (read); `POST`/`PATCH`/`DELETE
+  /api/v1/emails/templates{/slug}` (write + email_template). Slug is immutable.
+- Schedules: `GET`/`POST`/`PATCH`/`DELETE /api/v1/email-schedules{/id}` + `POST
+  /api/v1/email-schedules/{id}/run`. Cron or `@hourly`/`@daily`/`@weekly`/`@monthly`, IANA
+  timezone, <=50 recipients per run. `PATCH {"is_active": false}` pauses.
+
+## Jobs & status
+
+- Jobs: `GET /api/v1/jobs` (paginated 20/max 50) and `GET /api/v1/jobs/{job_id}` (read) —
+  poll a queued operation through `pending` -> `processing` -> `completed`/`failed`.
+- Health: `GET /api/health` (no key) — status + database connectivity + `backend_version`.
+- Version: `GET /api/version` (no key) — `{ backend_version, env }` deploy marker.
+  (Both status endpoints live at `/api`, not `/api/v1`.)
 
 ## Documentation pages
 
-- Introduction: https://docs.fileshub.zaions.com/intro
-- Quick Start: https://docs.fileshub.zaions.com/getting-started/quick-start
-- Authentication: https://docs.fileshub.zaions.com/getting-started/authentication
-- File visibility: https://docs.fileshub.zaions.com/getting-started/file-visibility
-- API overview: https://docs.fileshub.zaions.com/api/overview
-- Upload an object: https://docs.fileshub.zaions.com/api/upload-object
-- Get / download an object: https://docs.fileshub.zaions.com/api/get-object
-- List objects: https://docs.fileshub.zaions.com/api/list-objects
-- Delete an object: https://docs.fileshub.zaions.com/api/delete-object
-- Errors & limits: https://docs.fileshub.zaions.com/api/errors-and-limits
-- Integrate from any app: https://docs.fileshub.zaions.com/guides/integrate-from-any-app
-- Browser & mobile uploads: https://docs.fileshub.zaions.com/guides/browser-and-mobile-uploads
-- Platform services (50+ utilities): https://docs.fileshub.zaions.com/platform-services
-- FAQ: https://docs.fileshub.zaions.com/faq
+- Introduction: https://fileshub-docs.zaions.com/intro
+- Quick Start: https://fileshub-docs.zaions.com/getting-started/quick-start
+- Authentication: https://fileshub-docs.zaions.com/getting-started/authentication
+- API key restrictions (ship a key in a frontend): https://fileshub-docs.zaions.com/getting-started/api-key-restrictions
+- File visibility: https://fileshub-docs.zaions.com/getting-started/file-visibility
+- API overview: https://fileshub-docs.zaions.com/api/overview
+- Upload an object: https://fileshub-docs.zaions.com/api/upload-object
+- Get / download an object: https://fileshub-docs.zaions.com/api/get-object
+- List objects: https://fileshub-docs.zaions.com/api/list-objects
+- Delete an object: https://fileshub-docs.zaions.com/api/delete-object
+- Send an email: https://fileshub-docs.zaions.com/api/emails-send
+- Email templates: https://fileshub-docs.zaions.com/api/email-templates
+- Recurring email schedules: https://fileshub-docs.zaions.com/api/email-schedules
+- Job status: https://fileshub-docs.zaions.com/api/jobs
+- Version & health: https://fileshub-docs.zaions.com/api/version-health
+- Errors & limits: https://fileshub-docs.zaions.com/api/errors-and-limits
+- Developer utilities index: https://fileshub-docs.zaions.com/api/utilities-index
+- OpenAPI spec (for AI agents): https://fileshub-docs.zaions.com/api/openapi
+- Integrate from any app: https://fileshub-docs.zaions.com/guides/integrate-from-any-app
+- Browser & mobile uploads: https://fileshub-docs.zaions.com/guides/browser-and-mobile-uploads
+- Platform services (40+ utilities): https://fileshub-docs.zaions.com/platform-services
+- FAQ: https://fileshub-docs.zaions.com/faq
+
+## For AI coding agents
+
+- Machine-readable API: https://fileshub-docs.zaions.com/openapi.json (OpenAPI 3.1; objects,
+  emails, jobs, schedules, templates, version/health).
+- Every doc page as raw Markdown: prefix any page path with `/raw/` (e.g.
+  https://fileshub-docs.zaions.com/raw/api/emails-send.md). Index:
+  https://fileshub-docs.zaions.com/raw/manifest.json.
 
 ## Honest limits
 
-- FilesHub is currently a single-region, locally-stored backend (not a multi-region CDN).
-  Keep large media on a CDN if you need global edge delivery; FilesHub is built for app
-  assets, user uploads, exports, and share links.
-- Default max upload size is 10 MB (configurable per deployment via `FILESHUB_MAX_UPLOAD_MB`).
-- There is no public client SDK package yet — you integrate over plain HTTP (curl / fetch /
-  axios / any language). A TypeScript SDK is archived pending API stabilisation.
+- FilesHub is single-region, locally-stored (not a multi-region CDN). Keep large media on a CDN
+  for global edge delivery; FilesHub is built for app assets, user uploads, exports, share
+  links, and transactional email.
+- Default max upload size is 10 MB (configurable via `FILESHUB_MAX_UPLOAD_MB`).
+- No public client SDK yet — integrate over plain HTTP. A TypeScript SDK is archived pending
+  API stabilisation.
+- Frontend key restrictions are header allowlisting (not cryptographic attestation): they stop
+  key reuse from other apps/sites, but keep genuinely sensitive high-privilege keys on a server.
+- Email sending is quota-limited per sending account; queued sends retry automatically.

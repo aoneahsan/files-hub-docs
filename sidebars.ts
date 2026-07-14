@@ -14,6 +14,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'getting-started/quick-start',
         'getting-started/authentication',
+        'getting-started/api-key-restrictions',
         'getting-started/file-visibility',
       ],
     },
@@ -23,11 +24,39 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: [
         'api/overview',
-        'api/upload-object',
-        'api/get-object',
-        'api/list-objects',
-        'api/delete-object',
+        {
+          type: 'category',
+          label: 'Objects',
+          collapsed: true,
+          items: [
+            'api/upload-object',
+            'api/get-object',
+            'api/list-objects',
+            'api/delete-object',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Emails',
+          collapsed: true,
+          items: [
+            'api/emails-send',
+            'api/email-templates',
+            'api/email-schedules',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Jobs & Ops',
+          collapsed: true,
+          items: [
+            'api/jobs',
+            'api/version-health',
+          ],
+        },
         'api/errors-and-limits',
+        'api/utilities-index',
+        'api/openapi',
       ],
     },
     {

@@ -4,7 +4,7 @@ title: FAQ
 description: Frequently asked questions about FilesHub — what it is, how to authenticate, public vs private files, size limits, SDKs, deleting files, and how it compares to S3 or Firebase Storage.
 keywords: [fileshub faq, file storage api faq, x-api-key, public private files, upload size limit, fileshub vs s3, fileshub vs firebase storage]
 last_update:
-  date: 2026-06-23
+  date: 2026-07-14
   author: Ahsan Mahmood
 ---
 
@@ -12,11 +12,19 @@ last_update:
 
 ### What is FilesHub?
 
-FilesHub is a zero-cost file-storage and developer-utility API. You upload a file over HTTP with an `X-API-Key` header and get back a stable URL; you can also list, download, and delete objects, set per-file visibility, and call 50+ utility endpoints on the same base URL.
+FilesHub is a zero-cost file-storage and developer-utility API. You upload a file over HTTP with an `X-API-Key` header and get back a stable URL; you can also list, download, and delete objects, set per-file visibility, send transactional email, and call 40+ utility endpoints on the same base URL.
 
 ### How do I authenticate?
 
-Send `X-API-Key: <your project key>` on every request. Keys are created per project in the Nova admin panel and carry `read`/`write` permissions plus optional origin/app restrictions. See [Authentication](getting-started/authentication).
+Send `X-API-Key: <your project key>` on every request. Keys are created per project in the Nova admin panel and carry `read`/`write`/`email` scopes plus optional origin/app restrictions. See [Authentication](getting-started/authentication).
+
+### Can I ship my API key in a React or mobile app (no backend)?
+
+Yes — mark the key **restricted** and add your app's origins. A restricted key only works from an allowlisted web domain, Android package (optionally pinned to its signing certificate via `X-Android-Cert`), or iOS bundle id, so it is safe to embed for public uploads and utility calls. Keep its scopes minimal and keep genuinely sensitive, high-privilege keys on a server. Full setup: [API key restrictions](getting-started/api-key-restrictions).
+
+### Can FilesHub send email?
+
+Yes. `POST /api/v1/emails/send` sends transactional email (raw HTML/text or a saved template) from one of three verified domains, queued by default with a job you can poll. There are also reusable [templates](api/email-templates) and cron-based [recurring schedules](api/email-schedules). See [Send an email](api/emails-send).
 
 ### Do I need an SDK?
 
@@ -44,7 +52,7 @@ Pair every upload with a delete: when you remove the record that owned a file, c
 
 ### Can I upload directly from the browser or a mobile app?
 
-Yes — use a restricted key scoped to your domain (`Origin`/`Referer`) or your bundle id (`X-App-Id`), or proxy uploads through your own backend so the key never reaches the client. See [Browser & mobile uploads](guides/browser-and-mobile-uploads).
+Yes — use a restricted key scoped to your domain (`Origin`) or your app (`X-App-Id`, optionally `X-Android-Cert`), or proxy uploads through your own backend so the key never reaches the client. See [API key restrictions](getting-started/api-key-restrictions) and [Browser & mobile uploads](guides/browser-and-mobile-uploads).
 
 ### How is FilesHub different from S3 or Firebase Storage?
 
@@ -56,4 +64,4 @@ Yes. It is the zero-cost storage backend used across the Aoneahsan/Zaions projec
 
 ### Where do I report a bug or security issue?
 
-Email [aoneahsan@gmail.com](mailto:aoneahsan@gmail.com). For security reports, see the disclosure policy in [`/.well-known/security.txt`](https://docs.fileshub.zaions.com/.well-known/security.txt).
+Email [aoneahsan@gmail.com](mailto:aoneahsan@gmail.com). For security reports, see the disclosure policy in [`/.well-known/security.txt`](https://fileshub-docs.zaions.com/.well-known/security.txt).

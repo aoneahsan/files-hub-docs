@@ -85,3 +85,29 @@
 .fh-author-card a {
   font-weight: 600;
 }
+
+/* ---------------------------------------------------------------------------
+ * "For AI agents" raw-Markdown links, rendered above each doc page's content
+ * (see src/theme/DocItem/Content/index.tsx + plugins/raw-docs.js).
+ * ------------------------------------------------------------------------- */
+.raw-md-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  border: 1px dashed var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-700);
+}
+
+.raw-md-links__label {
+  font-weight: 600;
+}
+
+.raw-md-links a {
+  font-weight: 600;
+}

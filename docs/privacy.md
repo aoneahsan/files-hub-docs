@@ -14,10 +14,10 @@ This page covers two things: the privacy of **this documentation site**, and a s
 
 ## This documentation site
 
-This site (`docs.fileshub.zaions.com`) is a static Docusaurus site hosted on Firebase Hosting and GitHub Pages.
+This site (`fileshub-docs.zaions.com`) is a static Docusaurus site hosted on GitHub Pages.
 
 - **No accounts, no tracking cookies, no advertising.** The site does not ask you to sign in and sets no marketing cookies.
-- **Server logs.** The hosting providers (Firebase/GitHub) keep standard access logs (IP, user-agent, requested path) for security and operations. These are governed by their own privacy policies.
+- **Server logs.** The hosting provider (GitHub Pages) keeps standard access logs (IP, user-agent, requested path) for security and operations. These are governed by its own privacy policy.
 - **No analytics SDKs are bundled** in this docs site. If that changes, this page and the site footer will say so.
 
 ## The FilesHub API (summary)
@@ -39,4 +39,4 @@ You are the controller of the files your app uploads; FilesHub is the processor 
 
 ## Contact
 
-Questions about privacy: [aoneahsan@gmail.com](mailto:aoneahsan@gmail.com) · [aoneahsan.com](https://aoneahsan.com). Security disclosures: [`/.well-known/security.txt`](https://docs.fileshub.zaions.com/.well-known/security.txt).
+Questions about privacy: [aoneahsan@gmail.com](mailto:aoneahsan@gmail.com) · [aoneahsan.com](https://aoneahsan.com). Security disclosures: [`/.well-known/security.txt`](https://fileshub-docs.zaions.com/.well-known/security.txt).

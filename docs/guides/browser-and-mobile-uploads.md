@@ -4,7 +4,7 @@ title: Browser & mobile uploads
 description: How to upload to FilesHub safely from a browser or a mobile app — multipart form data, restricted keys scoped to your domain or bundle id, and the backend-proxy alternative.
 keywords: [fileshub browser upload, mobile file upload, restricted api key, x-app-id, backend proxy upload, capacitor file upload, secure client upload]
 last_update:
-  date: 2026-06-23
+  date: 2026-07-14
   author: Ahsan Mahmood
 ---
 
@@ -30,7 +30,7 @@ await fetch('https://fileshub.zaions.com/api/v1/objects', {
 
 ### Make the browser key restricted
 
-A key embedded in client JavaScript is readable by anyone. Mark it **restricted** in Nova and add your site's domain to its allowed-origins list. FilesHub then checks the request's `Origin`/`Referer`, so the key is useless from any other site. Use a restricted, `write`-only-where-needed key for low-risk public uploads (avatars, attachments).
+A key embedded in client JavaScript is readable by anyone. Mark it **restricted** in Nova and add your site's domain to its allowed-origins list. FilesHub then checks the request's `Origin`/`Referer`, so the key is useless from any other site. Use a restricted, `write`-only-where-needed key for low-risk public uploads (avatars, attachments). Full setup — including `*.example.com` wildcards — is in [API key restrictions](../getting-started/api-key-restrictions).
 
 ### Or proxy through your backend
 
@@ -44,13 +44,15 @@ This keeps the key secret and lets you validate, resize, or virus-scan before st
 
 ## Mobile uploads (Capacitor, React Native, native)
 
-Mobile clients send the same multipart `POST`. If the key is **app-restricted**, include your bundle id and keep a platform user-agent:
+Mobile clients send the same multipart `POST`. If the key is **app-restricted**, include your package/bundle id in `X-App-Id` — and, when the Android origin pins signing certificates, the cert fingerprint in `X-Android-Cert`:
 
 ```http
 X-API-Key: fh_live_xxx
 X-App-Id: com.example.myapp
-User-Agent: MyApp/1.0 (Android 14)
+X-Android-Cert: AB:CD:...   # Android only, when certificate pinning is on
 ```
+
+See [API key restrictions](../getting-started/api-key-restrictions) for computing the fingerprint (`keytool` / a Kotlin snippet) and the iOS bundle-id path.
 
 ```ts title="Capacitor / fetch from a WebView"
 const form = new FormData();

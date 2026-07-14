@@ -1,16 +1,16 @@
 ---
 sidebar_position: 1
 title: API overview
-description: The FilesHub object API is four HTTP endpoints under /api/v1 — upload, download, list, and delete — all authenticated with an X-API-Key header. This page summarises the contract.
-keywords: [fileshub api, object api, rest file api, /api/v1/objects, upload download delete api, x-api-key]
+description: The FilesHub API under /api/v1 covers file objects, transactional email, jobs, and 40+ developer utilities — all authenticated with an X-API-Key header. This page maps the contract.
+keywords: [fileshub api, object api, email api, rest file api, /api/v1/objects, upload download delete api, x-api-key, api scopes]
 last_update:
-  date: 2026-06-23
+  date: 2026-07-14
   author: Ahsan Mahmood
 ---
 
 # API overview
 
-**The FilesHub object API is four endpoints under `/api/v1` — upload, download, list, and delete — each authenticated with an `X-API-Key` header.** This is the surface every app integrates first; the wider [platform services](../platform-services) (hashing, QR codes, converters, and more) share the same base URL and key.
+**The FilesHub API lives under `/api/v1` and is authenticated with an `X-API-Key` header.** File objects are the surface most apps integrate first, but the same base URL and key also cover transactional [email](emails-send), background [jobs](jobs), and 40+ [developer utilities](utilities-index).
 
 ## Base URL
 
@@ -18,9 +18,21 @@ last_update:
 https://fileshub.zaions.com/api/v1
 ```
 
-## Authentication
+Two status endpoints live one level up, at `/api` (not `/api/v1`): [`/health` and `/version`](version-health).
 
-Send `X-API-Key: <key>` on every request. Keys are per project with `read`/`write` permissions and optional origin/app restrictions — see [Authentication](../getting-started/authentication).
+## Authentication & scopes
+
+Send `X-API-Key: <key>` on every request. A key is per project and carries scopes:
+
+| Scope | Grants |
+|---|---|
+| `read` | List and read (download private objects, list jobs/templates/schedules). |
+| `write` | Create and delete (upload, delete, manage schedules/templates). |
+| `email` | Send email (`can_send_emails`). |
+| `email_template` | Manage email templates (with `write`). |
+| service scopes | Per-utility access (e.g. `converter`, `qr_code`) — all enabled by default. |
+
+Keys can also be **restricted** to your own web origins or apps so you can ship one in a frontend — see [Authentication](../getting-started/authentication) and [API key restrictions](../getting-started/api-key-restrictions).
 
 ## Object endpoints
 
@@ -31,11 +43,25 @@ Send `X-API-Key: <key>` on every request. Keys are per project with `read`/`writ
 | `GET` | `/objects` | `read` | [List objects](list-objects) (paginated). |
 | `DELETE` | `/objects/{public_id}` | `write` | [Delete an object](delete-object). |
 
-There is also a public health check:
+## Email endpoints
 
-```
-GET /api/v1/health   →   200 (no key required)
-```
+| Method | Path | Permission | Purpose |
+|---|---|---|---|
+| `POST` | `/emails/send` | `email` | [Send an email](emails-send) (raw or template; queued by default). |
+| `GET` | `/emails/templates` | `read` | [List templates](email-templates). |
+| `POST`/`PATCH`/`DELETE` | `/emails/templates{/slug}` | `write` + `email_template` | [Manage templates](email-templates). |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/email-schedules{/id}` | `read`/`write` | [Recurring schedules](email-schedules). |
+| `POST` | `/email-schedules/{id}/run` | `write` | Run a schedule now. |
+
+## Jobs & status
+
+| Method | Path | Permission | Purpose |
+|---|---|---|---|
+| `GET` | `/jobs` · `/jobs/{job_id}` | `read` | [Poll queued operations](jobs). |
+| `GET` | `/api/health` | none | [Health check](version-health) (no key). |
+| `GET` | `/api/version` | none | [Deploy-version marker](version-health) (no key). |
+
+Beyond these, 40+ stateless [developer utilities](utilities-index) and the stateful [platform services](../platform-services) share the same base URL and key.
 
 ## The object shape
 
@@ -61,3 +87,8 @@ An object returned by the API has these fields (exact set varies by endpoint):
 - **Versioning** — the path is versioned (`/api/v1`); future breaking changes ship under `/api/v2`.
 
 Read the per-endpoint pages for exact parameters, examples, and every response and error body.
+
+## Machine-readable
+
+- **[OpenAPI 3.1 spec](openapi)** — [`/openapi.json`](https://fileshub-docs.zaions.com/openapi.json) covers objects, emails, jobs, schedules, templates, and version/health for AI agents and codegen.
+- **Raw Markdown** — every doc page is mirrored under `/raw/` (index: [`/raw/manifest.json`](https://fileshub-docs.zaions.com/raw/manifest.json)) so an agent can load the docs into its context.

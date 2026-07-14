@@ -1,29 +1,45 @@
 # FilesHub — full LLM context
 
-> FilesHub (https://fileshub.zaions.com) is a zero-cost file-storage and developer-utility
-> API built on Laravel + Nova. This file gives an AI assistant enough detail to answer
-> integration questions accurately without crawling every page. Last updated: 2026-06-23.
+> FilesHub (https://fileshub.zaions.com) is a zero-cost file-storage, email, and
+> developer-utility API built on Laravel + Nova. This file gives an AI assistant enough
+> detail to answer integration questions accurately without crawling every page. A
+> machine-readable OpenAPI 3.1 spec is at https://fileshub-docs.zaions.com/openapi.json, and
+> every doc page is mirrored as raw Markdown under /raw/ (index /raw/manifest.json).
+> Last updated: 2026-07-14.
 
 ## What FilesHub is
 
-A small HTTP API that stores files for you and serves them back at a stable URL, plus a
-large catalogue of stateless developer utilities. Apps use it as their upload backend so
-they never have to run their own storage server. Every request is authenticated with a
-per-project API key sent in the `X-API-Key` header. The API is versioned under `/api/v1`.
+A small HTTP API that stores files for you and serves them back at a stable URL, sends
+transactional email from verified domains, and exposes a large catalogue of stateless
+developer utilities. Apps use it as their upload + email backend so they never have to run
+their own. Every request is authenticated with a per-project API key sent in the `X-API-Key`
+header. The API is versioned under `/api/v1` (two status endpoints, `/health` and `/version`,
+live at `/api`).
 
 Base URL: `https://fileshub.zaions.com/api/v1`
 
 ## Authentication
 
-Send `X-API-Key: <key>` on every request. Keys belong to a project and carry permissions:
+Send `X-API-Key: <key>` on every request. Keys belong to a project and carry scopes:
 
-- `read` — list and download (including private) objects.
-- `write` — upload and delete objects.
+- `read` — list and download (including private) objects; list jobs, templates, schedules.
+- `write` — upload and delete objects; manage templates and schedules.
+- `email` — send email.
+- `email_template` — manage email templates (with `write`).
+- per-utility service scopes (e.g. `converter`, `qr_code`) — all enabled by default.
 
-Keys may be `live` (`fh_live_...`) or `test` (`fh_test_...`). Restricted keys additionally
-validate the request origin: browsers send `Origin`/`Referer` (checked against an allowed
-domain list); mobile apps send `X-App-Id` with the bundle id and a platform user-agent.
-Create and manage keys in the Nova admin panel of your FilesHub deployment.
+Keys may be `live` (`fh_live_...`) or `test` (`fh_test_...`). A **restricted** key only works
+from allowlisted origins so you can ship it in a frontend with no proxy backend:
+
+- Web — the browser's `Origin`/`Referer` is checked against allowed domains (supports
+  `*.example.com` wildcards).
+- Android — send `X-App-Id` (or `X-Android-Package`) with the package name; optionally pin
+  signing certificates and send a matching SHA-256/SHA-1 in `X-Android-Cert`.
+- iOS — send `X-App-Id` with the bundle id.
+
+These are self-declared headers (Google-Maps-key trust model): they stop key reuse from other
+apps/sites but are not cryptographic attestation, so keep high-privilege keys server-side.
+Create and manage keys and their origins in the Nova admin panel.
 
 ## The object lifecycle (storage API)
 
@@ -102,14 +118,41 @@ Errors return a JSON body `{ "message": "..." }` with an appropriate status code
 - `429` — rate limit exceeded.
 - `500` — server error.
 
-## Beyond storage: platform services
+## Email API
 
-FilesHub also exposes 50+ stateless utility endpoints under `/api/v1`, including: hashing and
+- Send — `POST /api/v1/emails/send` (email scope). Raw (`subject` + `body_html`/`body_text`) or
+  `template` + `variables`. One `to` per call; optional `to_name`, `cc`/`bcc` (<=10), `reply_to`,
+  `from_name`, `attachments` (FilesHub object ULIDs, <=5), `domain` (`aoneahsan.com` default,
+  `zaions.com`, `trizlink.com`), `queue` (default true => `202 Accepted` with `job_id` +
+  `status_url`; false => synchronous `201`), `scheduled_at` (one future send). Errors: `422`
+  validation / unknown domain, `429` quota, `503` domain temporarily without capacity.
+- Templates — `GET /api/v1/emails/templates` (read); `POST`/`PATCH`/`DELETE
+  /api/v1/emails/templates{/slug}` (write + email_template). Fields: `name`, `slug` (immutable),
+  `category`, `subject`, `body_html`/`body_text`, `variables`. Send with `template` + `variables`.
+- Schedules — `GET`/`POST`/`PATCH`/`DELETE /api/v1/email-schedules{/id}` + `POST
+  /api/v1/email-schedules/{id}/run`. `cron_expression` (5-field or `@hourly`/`@daily`/`@weekly`/
+  `@monthly`), `timezone` (IANA), `recipients` (1–50, one email each per run), template or raw
+  content. `PATCH {"is_active": false}` pauses.
+
+## Jobs & status
+
+- Jobs — `GET /api/v1/jobs` (read; paginated, default 20 / max 50; filters `status`, `type`) and
+  `GET /api/v1/jobs/{job_id}`. A job serializes `{ id, type, status, attempts, result, error,
+  queued_at, started_at, finished_at }`; status is `pending` -> `processing` -> `completed` /
+  `failed`. Queued email retries 3x with backoff.
+- Health — `GET /api/health` (no key): `{ status, app, version, backend_version, database,
+  timestamp }`; `status` is `ok` or `degraded`.
+- Version — `GET /api/version` (no key): `{ backend_version, env }` deploy marker (code constant,
+  `YYYY.MM.DD.N`).
+
+## Beyond storage: developer utilities
+
+FilesHub also exposes 40+ stateless utility endpoint groups under `/api/v1`, including: hashing and
 verification, Base64/URL encoding, JSON/CSV/XML/YAML converters, UUID/ULID/NanoID generators,
 QR codes, short URLs, OTP send/verify, an encryption vault, image resize/compress/crop/convert,
 PDF generation, link previews, sitemap/feed generation, webhooks, uptime monitors, and scheduled
-tasks. These share the same `X-API-Key` auth and base URL. The storage object API above is the
-part most apps integrate first.
+tasks. Each takes the same `X-API-Key`; write utilities need `write` plus the group's service scope
+(all enabled by default). Summary: https://fileshub-docs.zaions.com/api/utilities-index.
 
 ## Honest limits
 

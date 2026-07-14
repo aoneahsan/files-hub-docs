@@ -1,11 +1,11 @@
 # FilesHub — Security Contact (RFC 9116)
-# https://docs.fileshub.zaions.com/.well-known/security.txt
+# https://fileshub-docs.zaions.com/.well-known/security.txt
 
 Contact: mailto:aoneahsan@gmail.com
 Contact: https://aoneahsan.com
 Expires: 2027-06-23T00:00:00.000Z
 Preferred-Languages: en
-Canonical: https://docs.fileshub.zaions.com/.well-known/security.txt
+Canonical: https://fileshub-docs.zaions.com/.well-known/security.txt
 
 # Responsible disclosure
 #

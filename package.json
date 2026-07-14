@@ -2,7 +2,7 @@
   "name": "files-hub-docs",
   "version": "0.1.0",
   "private": true,
-  "description": "Public documentation site for FilesHub (https://fileshub.zaions.com) — the zero-cost file-storage + utility API backend used by every Aoneahsan/Zaions project. Built with Docusaurus, deployed to Firebase Hosting + GitHub Pages.",
+  "description": "Public documentation site for FilesHub (https://fileshub.zaions.com) — the zero-cost file-storage + email + utility API backend used by every Aoneahsan/Zaions project. Built with Docusaurus, deployed to GitHub Pages.",
   "author": {
     "name": "Ahsan Mahmood",
     "email": "aoneahsan@gmail.com",
@@ -26,10 +26,7 @@
     "serve": "docusaurus serve --port 5995",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc --noEmit",
-    "firebase:emulate": "yarn build && npx -y firebase-tools@latest emulators:start --only hosting",
-    "firebase:deploy": "yarn build && npx -y firebase-tools@latest deploy --only hosting --project files-hub-docs",
-    "firebase:deploy:preview": "yarn build && npx -y firebase-tools@latest hosting:channel:deploy preview --project files-hub-docs --expires 7d"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@docusaurus/core": "^3.10.1",

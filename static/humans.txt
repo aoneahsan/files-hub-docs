@@ -16,10 +16,10 @@ the occasional issue or idea.
 
 /* SITE */
 
-Last update: 2026-06-23
-Standards: HTML5, CSS3, Markdown, JSON-LD
+Last update: 2026-07-14
+Standards: HTML5, CSS3, Markdown, JSON-LD, OpenAPI 3.1
 Components: Docusaurus 3 (https://docusaurus.io/), React 19, TypeScript
 Software: Visual Studio Code, Anthropic Claude (development assistant)
-Hosting: Firebase Hosting + GitHub Pages
+Hosting: GitHub Pages
 Source: https://github.com/aoneahsan/files-hub-docs
 Product: https://fileshub.zaions.com

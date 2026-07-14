@@ -20,7 +20,7 @@ Finish the real task fast + correctly FIRST; docs/trackers/sync are a footnote (
 |---|---|
 | Repo | `github.com/aoneahsan/files-hub-docs` (PUBLIC), remote `o` |
 | Type | Docusaurus 3 (classic preset + Mermaid), yarn-only, Node ≥18 |
-| Live URL | https://docs.fileshub.zaions.com (Firebase Hosting `files-hub-docs` + GitHub Pages) |
+| Live URL | https://fileshub-docs.zaions.com (**GitHub Pages only**; Firebase removed 2026-07-14) |
 | Source product | `/home/ahsan/Documents/01-code/projects/files-hub/` (Laravel + Nova, PRIVATE) |
 | Content tracker | `docs/tracking/files-hub-docs-content-tracker.json` |
 | Author | Ahsan Mahmood (aoneahsan@gmail.com) |
@@ -39,16 +39,15 @@ yarn serve           # preview built site :5995
 
 - **Yarn only** — never npm/pnpm; only `yarn.lock`.
 - **No dev/preview servers in agent runs** — verify via `yarn build`/`yarn typecheck` only.
-- **Single source of truth** — every API fact comes from the FilesHub source (`ObjectController.php`, `routes/api.php`, `config/fileshub.php`). No invented endpoints, params, or response fields.
-- **Honest framing** — document FilesHub's real limits (single-region, 10 MB default cap, no published SDK). No fabricated stats; cite the product, not guesses.
+- **Single source of truth** — every API fact comes from the FilesHub source (`app/Http/Controllers/Api/*`, `app/Http/Requests/Api/*`, `routes/api.php`, `config/fileshub.php`, `app/Http/Middleware/ApiKeyAuth.php`). No invented endpoints, params, or response fields.
+- **Honest framing** — document FilesHub's real limits (single-region, 10 MB default cap, no published SDK, restrictions = header allowlisting not attestation). No fabricated stats.
+- **AI surfaces** — `static/openapi.json` (lint with `npx -y @redocly/cli@latest lint`) + `plugins/raw-docs.js` `/raw/**` mirror + `src/theme/DocItem/Content` "View raw" link. Any `/raw/...` link in Markdown must be an ABSOLUTE URL (postBuild files are invisible to `onBrokenLinks: throw`).
 - **PUBLIC repo — NO secrets.** Never commit any `.env`, API key, or token.
 - **One commit per task**, pushed to `o main`.
 
 ## Hosting
 
-- GitHub Pages: `.github/workflows/deploy.yml` + `static/CNAME` (`docs.fileshub.zaions.com`).
-- Firebase Hosting: `firebase.json` + `.firebaserc` (site `files-hub-docs`), `yarn firebase:deploy`.
-- Deploy + DNS steps (human-only): `DEPLOY.md`.
+- **GitHub Pages only** (Firebase removed 2026-07-14): `.github/workflows/deploy.yml` + `static/CNAME` (`fileshub-docs.zaions.com`). Deploy + DNS steps (human-only): `DEPLOY.md`.
 
 ## Gitignore Hygiene (IRON-SOLID)
 `.gitignore` stays current with the project structure — ignore only recoverable artifacts (build/`dist`/`www`/`node_modules`/logs/caches/IDE), never lose source. Custom rules always present: `*.ignore.*`, `project-record-ignore/`. This is a **PUBLIC** repo -> secrets/`.env`/keystores are NEVER tracked.
@@ -57,7 +56,7 @@ Gitignore Last Verified: 2026-06-24
 
 ## Last Updated
 
-2026-06-23
+2026-07-14
 
 
 ## Sub-agents & Skills — Main-Context-First (IRON-SOLID)

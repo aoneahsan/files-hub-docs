@@ -1,45 +1,175 @@
 {
-  "$schema": "files-hub-docs-content-tracker",
-  "description": "Tracks documentation content coverage for the FilesHub docs site. Resumable across sessions.",
-  "site": "https://docs.fileshub.zaions.com",
-  "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
-  "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
-  "lastUpdated": "2026-06-23",
-  "author": "Ahsan Mahmood",
-  "buildGates": {
-    "yarnInstall": "exit 0 expected",
-    "yarnBuild": "docusaurus build -> ./build, exit 0 expected"
+ "$schema": "files-hub-docs-content-tracker",
+ "description": "Tracks documentation content coverage for the FilesHub docs site. Resumable across sessions.",
+ "site": "https://fileshub-docs.zaions.com",
+ "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
+ "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
+ "lastUpdated": "2026-07-14",
+ "author": "Ahsan Mahmood",
+ "buildGates": {
+  "yarnInstall": "exit 0 expected",
+  "yarnBuild": "docusaurus build -> ./build, exit 0 expected"
+ },
+ "pages": [
+  {
+   "id": "intro",
+   "path": "docs/intro.md",
+   "status": "complete",
+   "seoFloor": true
   },
-  "pages": [
-    { "id": "intro", "path": "docs/intro.md", "status": "complete", "seoFloor": true },
-    { "id": "getting-started/quick-start", "path": "docs/getting-started/quick-start.md", "status": "complete", "seoFloor": true },
-    { "id": "getting-started/authentication", "path": "docs/getting-started/authentication.md", "status": "complete", "seoFloor": true },
-    { "id": "getting-started/file-visibility", "path": "docs/getting-started/file-visibility.md", "status": "complete", "seoFloor": true },
-    { "id": "api/overview", "path": "docs/api/overview.md", "status": "complete", "seoFloor": true },
-    { "id": "api/upload-object", "path": "docs/api/upload-object.md", "status": "complete", "seoFloor": true },
-    { "id": "api/get-object", "path": "docs/api/get-object.md", "status": "complete", "seoFloor": true },
-    { "id": "api/list-objects", "path": "docs/api/list-objects.md", "status": "complete", "seoFloor": true },
-    { "id": "api/delete-object", "path": "docs/api/delete-object.md", "status": "complete", "seoFloor": true },
-    { "id": "api/errors-and-limits", "path": "docs/api/errors-and-limits.md", "status": "complete", "seoFloor": true },
-    { "id": "guides/integrate-from-any-app", "path": "docs/guides/integrate-from-any-app.md", "status": "complete", "seoFloor": true },
-    { "id": "guides/browser-and-mobile-uploads", "path": "docs/guides/browser-and-mobile-uploads.md", "status": "complete", "seoFloor": true },
-    { "id": "platform-services", "path": "docs/platform-services.md", "status": "complete", "seoFloor": true },
-    { "id": "faq", "path": "docs/faq.md", "status": "complete", "seoFloor": true },
-    { "id": "privacy", "path": "docs/privacy.md", "status": "complete", "seoFloor": false },
-    { "id": "changelog", "path": "docs/changelog.md", "status": "complete", "seoFloor": false },
-    { "id": "about-the-author", "path": "docs/about-the-author.md", "status": "complete", "seoFloor": false }
-  ],
-  "totalPages": 17,
-  "completePages": 17,
-  "nextBatchSuggestion": {
-    "rationale": "Baseline complete. Future batches: per-utility reference pages for the platform-services catalogue (hashing, QR, short-urls, OTP, vault, image/PDF) once their exact request/response shapes are confirmed from the controllers — one category per batch.",
-    "candidateCategories": ["email", "short-urls", "qr-codes", "otp", "encryption-vault", "image-processing", "hashing-encoding-converters"]
+  {
+   "id": "getting-started/quick-start",
+   "path": "docs/getting-started/quick-start.md",
+   "status": "complete",
+   "seoFloor": true
   },
-  "runHistory": [
-    {
-      "date": "2026-06-23",
-      "summary": "Created files-hub-docs from the native-update-docs template; adapted brand/URLs/JSON-LD/SEO files; wrote 17 baseline pages (intro, 3 getting-started, 6 API reference, 2 guides, platform-services, FAQ, privacy, changelog, author). Source-accurate from ObjectController.php. yarn install + yarn build verified.",
-      "commit": "pending"
-    }
-  ]
+  {
+   "id": "getting-started/authentication",
+   "path": "docs/getting-started/authentication.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "getting-started/file-visibility",
+   "path": "docs/getting-started/file-visibility.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "api/overview",
+   "path": "docs/api/overview.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "api/upload-object",
+   "path": "docs/api/upload-object.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "api/get-object",
+   "path": "docs/api/get-object.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "api/list-objects",
+   "path": "docs/api/list-objects.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "api/delete-object",
+   "path": "docs/api/delete-object.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "api/errors-and-limits",
+   "path": "docs/api/errors-and-limits.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "guides/integrate-from-any-app",
+   "path": "docs/guides/integrate-from-any-app.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "guides/browser-and-mobile-uploads",
+   "path": "docs/guides/browser-and-mobile-uploads.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "platform-services",
+   "path": "docs/platform-services.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "faq",
+   "path": "docs/faq.md",
+   "status": "complete",
+   "seoFloor": true
+  },
+  {
+   "id": "privacy",
+   "path": "docs/privacy.md",
+   "status": "complete",
+   "seoFloor": false
+  },
+  {
+   "id": "changelog",
+   "path": "docs/changelog.md",
+   "status": "complete",
+   "seoFloor": false
+  },
+  {
+   "id": "about-the-author",
+   "path": "docs/about-the-author.md",
+   "status": "complete",
+   "seoFloor": false
+  },
+  {
+   "path": "getting-started/api-key-restrictions.md",
+   "status": "complete",
+   "note": "Frontend-key restrictions: web origins+wildcards, Android package+SHA-256/SHA-1 cert, iOS bundle, honest framing, proxy-when."
+  },
+  {
+   "path": "api/emails-send.md",
+   "status": "complete",
+   "note": "POST /emails/send raw+template, multi-domain, queue/202+job."
+  },
+  {
+   "path": "api/email-templates.md",
+   "status": "complete",
+   "note": "Template list + CRUD (write+email_template)."
+  },
+  {
+   "path": "api/email-schedules.md",
+   "status": "complete",
+   "note": "Cron recurring schedules CRUD + run-now."
+  },
+  {
+   "path": "api/jobs.md",
+   "status": "complete",
+   "note": "GET /jobs + /jobs/{id} queued-op polling."
+  },
+  {
+   "path": "api/version-health.md",
+   "status": "complete",
+   "note": "/api/health + /api/version (no auth)."
+  },
+  {
+   "path": "api/utilities-index.md",
+   "status": "complete",
+   "note": "Summarized 40+ utility groups index."
+  },
+  {
+   "path": "api/openapi.md",
+   "status": "complete",
+   "note": "OpenAPI 3.1 /openapi.json + raw-md mirror for AI agents."
+  }
+ ],
+ "totalPages": 25,
+ "completePages": 25,
+ "nextBatchSuggestion": {
+  "id": "none",
+  "note": "All pages complete; refresh on backend API changes."
+ },
+ "runHistory": [
+  {
+   "date": "2026-06-23",
+   "summary": "Created files-hub-docs from the native-update-docs template; adapted brand/URLs/JSON-LD/SEO files; wrote 17 baseline pages (intro, 3 getting-started, 6 API reference, 2 guides, platform-services, FAQ, privacy, changelog, author). Source-accurate from ObjectController.php. yarn install + yarn build verified.",
+   "commit": "pending"
+  },
+  {
+   "date": "2026-07-14",
+   "summary": "Full API docs (email/jobs/schedules/templates/version) + key-restrictions guide + AI surfaces (openapi.json, /raw mirror). 17 -> 25 pages. Domain -> fileshub-docs.zaions.com; GH Pages only.",
+   "by": "Opus 4.8"
+  }
+ ]
 }
