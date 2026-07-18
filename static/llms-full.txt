@@ -145,6 +145,41 @@ Errors return a JSON body `{ "message": "..." }` with an appropriate status code
 - Version — `GET /api/version` (no key): `{ backend_version, env }` deploy marker (code constant,
   `YYYY.MM.DD.N`).
 
+## Management API (control plane)
+
+Alongside the data plane, FilesHub has a server-side **Management API** at
+`https://fileshub.zaions.com/api/public/v1` for administering the account itself: projects, API keys,
+and origin restrictions. It is authenticated by a **user-level access token** (prefix `fh_pat_`) sent
+as `Authorization: Bearer fh_pat_...` (or `X-Access-Token`). This is a different token family from the
+per-project `fh_live_` API keys — an `fh_live_` key is rejected here (`INVALID_ACCESS_TOKEN_FORMAT`)
+and an `fh_pat_` token does nothing on `/api/v1`. The plane sends no CORS headers and is server/CLI
+only; never put an access token in a browser or a committed file.
+
+A token covers all projects (existing and future — the default) or an explicit subset; a resource the
+token does not cover returns `404 NOT_FOUND`, never 403, so scopes cannot be enumerated. Success is
+`{ "data": ... }`; errors are `{ "error": { "code", "message", "details? } }`. The plane is rate
+limited to 120 requests/minute. Create tokens in the FilesHub admin under Access Tokens.
+
+Endpoints:
+- `GET /token` — introspect the token (name, scope, expiry). The intended first call.
+- Projects — `GET /projects` (`?q=` name/slug search, `?status=`, paginated), `POST /projects`,
+  and `GET|PATCH|DELETE /projects/{project}` where `{project}` is an id, ULID public_id, or slug.
+  Delete cascades the project's keys, origins, stored objects, and audit logs.
+- API keys — `GET|POST /projects/{project}/api-keys`, `GET|PATCH|DELETE /projects/{project}/api-keys/{id}`,
+  `POST .../{id}/rotate` (new secret, old dies), `POST .../{id}/reveal` (re-read the stored plaintext).
+  Create and rotate return `plaintext_key` once; the list/detail representation never includes the
+  hash or plaintext.
+- Origins — `GET|POST /projects/{project}/api-keys/{id}/origins` and `PATCH|DELETE .../origins/{id}`.
+  Domain values are validated against the same scheme+port policy as the dashboard and stored
+  canonically (`example.com` -> `https://example.com`); `http://` on a public host is a 422, a repeat
+  is a 409. Android origins may pin `sha256_fingerprints` / `sha1_fingerprints`.
+- Lookup — `POST /api-keys/lookup` with `{ "api_key": "fh_live_..." }` returns that key's project,
+  safe representation, and origins (or 404). This is what lets an AI coding agent read a local
+  project's `.env`, learn which FilesHub project it belongs to, and enforce origin restrictions.
+
+Full reference: https://fileshub-docs.zaions.com/management-api/overview and the agent recipe at
+https://fileshub-docs.zaions.com/management-api/agent-workflow.
+
 ## Beyond storage: developer utilities
 
 FilesHub also exposes 40+ stateless utility endpoint groups under `/api/v1`, including: hashing and

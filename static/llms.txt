@@ -63,9 +63,29 @@
 - Version: `GET /api/version` (no key) — `{ backend_version, env }` deploy marker.
   (Both status endpoints live at `/api`, not `/api/v1`.)
 
+## Management API (fh_pat_ access tokens)
+
+- A server/CLI-only control plane at `https://fileshub.zaions.com/api/public/v1`, authenticated by a
+  user-level access token (prefix `fh_pat_`) sent as `Authorization: Bearer fh_pat_...`. Distinct from
+  per-project `fh_live_` API keys: an `fh_live_` key does NOT work here, and an `fh_pat_` token does NOT
+  work on the data plane. No CORS — not callable from a browser.
+- A token covers all projects (existing + future, default) or a chosen subset; out-of-scope resources
+  return 404 (never 403). Errors are `{"error": {"code", "message"}}`; success is `{"data": ...}`.
+- Endpoints: `GET /token` (introspect) · `GET|POST /projects`, `GET|PATCH|DELETE /projects/{project}`
+  (id/public_id/slug; `?q=` search) · `GET|POST /projects/{project}/api-keys`,
+  `GET|PATCH|DELETE /projects/{project}/api-keys/{id}`, `POST .../{id}/rotate`, `POST .../{id}/reveal` ·
+  `GET|POST .../{id}/origins`, `PATCH|DELETE .../origins/{id}` · `POST /api-keys/lookup` (map an
+  `fh_live_` key to its project + origins). Create/rotate/reveal return the plaintext key.
+- Use it to have an AI coding agent map a local project's `.env` key to its FilesHub project and enforce
+  origin restrictions automatically. See the Management API docs + agent workflow below.
+
 ## Documentation pages
 
 - Introduction: https://fileshub-docs.zaions.com/intro
+- Management API overview: https://fileshub-docs.zaions.com/management-api/overview
+- Management API authentication: https://fileshub-docs.zaions.com/management-api/authentication
+- Management API endpoints: https://fileshub-docs.zaions.com/management-api/endpoints
+- Management API agent workflow: https://fileshub-docs.zaions.com/management-api/agent-workflow
 - Quick Start: https://fileshub-docs.zaions.com/getting-started/quick-start
 - Authentication: https://fileshub-docs.zaions.com/getting-started/authentication
 - API key restrictions (ship a key in a frontend): https://fileshub-docs.zaions.com/getting-started/api-key-restrictions
@@ -91,7 +111,8 @@
 ## For AI coding agents
 
 - Machine-readable API: https://fileshub-docs.zaions.com/openapi.json (OpenAPI 3.1; objects,
-  emails, jobs, schedules, templates, version/health).
+  emails, jobs, schedules, templates, version/health, AND the Management API — projects, api-keys,
+  origins, lookup — under the fh_pat_ BearerAuth scheme).
 - Every doc page as raw Markdown: prefix any page path with `/raw/` (e.g.
   https://fileshub-docs.zaions.com/raw/api/emails-send.md). Index:
   https://fileshub-docs.zaions.com/raw/manifest.json.

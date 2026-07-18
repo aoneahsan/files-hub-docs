@@ -12,6 +12,11 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-07-18 — Management API
+
+- Documented the new **[Management API](management-api/overview)** — a server-side control plane that manages projects, API keys, and origin restrictions with a user-level `fh_pat_` access token: [overview](management-api/overview), [authentication](management-api/authentication), the [endpoint reference](management-api/endpoints), and an [AI agent workflow](management-api/agent-workflow) for auto-configuring a project's API key.
+- Extended the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) with the `/api/public/v1/*` endpoints under a new `BearerAuth` scheme, and added a Management API section to `llms.txt` / `llms-full.txt`.
+
 ## 2026-07-14 — Full API docs + AI surfaces, GitHub Pages
 
 - Moved to **`fileshub-docs.zaions.com`** on **GitHub Pages** as the single host (Firebase Hosting removed).

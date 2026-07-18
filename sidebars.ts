@@ -61,6 +61,17 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Management API',
+      collapsed: false,
+      items: [
+        'management-api/overview',
+        'management-api/authentication',
+        'management-api/endpoints',
+        'management-api/agent-workflow',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Integration Guides',
       collapsed: true,
       items: [
