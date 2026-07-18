@@ -1,35 +1,54 @@
 ---
 sidebar_position: 4
 title: API key restrictions (ship a key in a frontend)
-description: Restrict a FilesHub API key to your own web origins, Android package + signing certificate, or iOS bundle id — so you can embed the key in a React/mobile app without a proxy backend.
-keywords: [fileshub api key restriction, restrict api key origin, allowed origins, android signing certificate, X-App-Id, X-Android-Cert, frontend api key, no backend, sha256 fingerprint]
+description: Restrict a FilesHub API key to your own web origins, browser-extension ids, Android package + signing certificate, or iOS bundle id — so you can embed the key in a React/mobile/extension app without a proxy backend.
+keywords: [fileshub api key restriction, restrict api key origin, allowed origins, android signing certificate, X-App-Id, X-Android-Cert, frontend api key, no backend, sha256 fingerprint, chrome-extension origin, allow_no_origin]
 last_update:
-  date: 2026-07-14
+  date: 2026-07-18
   author: Ahsan Mahmood
 ---
 
 # API key restrictions
 
-**Restrict a key to your own app so you can ship it in the frontend.** A restricted key only works when the request comes from an origin or app you allowlisted — a web domain, an Android package (optionally pinned to its signing certificate), or an iOS bundle id. That lets a React, Capacitor, or native app call FilesHub directly, with no proxy backend just to hide the key.
+**Restrict a key to your own app so you can ship it in the frontend.** A restricted key only works when the request comes from an origin or app you allowlisted — a web origin, a browser-extension id, an Android package (optionally pinned to its signing certificate), or an iOS bundle id. That lets a React, Capacitor, extension, or native app call FilesHub directly, with no proxy backend just to hide the key.
 
 ## The `restricted` flag
 
 Every key has a `restricted` toggle (set it in the admin panel, on the key's **Restricted** field):
 
-- **`restricted` off** (default) — the key works from anywhere. Use this for server-side keys kept in an environment variable.
-- **`restricted` on** — every request is checked against the key's **allowed origins**. A restricted key with **no** origins configured **denies everything** — add at least one origin.
+- **`restricted` off** (default) — the key works from anywhere. Use this only for a key you can keep secret.
+- **`restricted` on** — every request is checked against the key's **allowed origins**, plus any **global origins** the administrator has configured. A restricted key with no origins of either kind **denies everything**.
 
 You add origins as child rows on the key, each with a **type** (`domain`, `android`, or `ios`) and a **value**.
 
 ## Web origins
 
-For a browser app, add a `domain` origin. The browser sends the `Origin` header automatically on cross-site requests, and FilesHub matches it against your allowlist.
+For a browser app, add a `domain` origin. The browser sends the `Origin` header automatically, and FilesHub matches it against your allowlist.
+
+**Scheme and port are part of the origin and are matched exactly** — an entry is stored as `scheme://host[:port]`, which is precisely what a browser sends. A bare host is canonicalized on save, so `example.com` becomes `https://example.com`.
 
 | Value | Matches |
 |---|---|
-| `example.com` | `https://example.com` (exact host) |
-| `https://app.example.com` | that exact host (the scheme/path are normalized away) |
-| `*.example.com` | any subdomain — `app.example.com`, `admin.example.com` — and the bare `example.com` |
+| `example.com` → `https://example.com` | `https://example.com` only (not `http://`, not another port) |
+| `*.example.com` | any subdomain over https — `app.example.com`, `admin.example.com` — and the bare `example.com` |
+| `http://localhost:3843` | that port only |
+| `http://localhost:*` | any port on localhost |
+| `https://localhost` | the Capacitor **Android** WebView origin |
+| `capacitor://localhost` | the Capacitor **iOS** WebView origin |
+
+`http://`, `capacitor://` and `ionic://` are accepted for localhost and private IPs only; typing `http://` on a public host is rejected rather than silently upgraded, so you are never left believing you allowed an origin the browser will not send.
+
+## Browser extensions
+
+An extension page or service worker sends its own origin, so add a `domain` origin with the extension scheme — the **host is the extension id**:
+
+```
+chrome-extension://ihafdbecgnhendhckoknblmcminoikdb
+```
+
+`moz-extension://<uuid>` and `safari-web-extension://<uuid>` work the same way. These carry no port and no wildcard.
+
+> Only **Chrome** extension ids are stable (fixed once you publish, or once your manifest pins a `key`). A Firefox or Safari extension id is a **per-install UUID**, so such an entry only ever matches one machine — for those, rely on your other origins.
 
 ```js title="Browser fetch — the Origin header is automatic"
 await fetch('https://fileshub.zaions.com/api/v1/objects', {
@@ -108,6 +127,18 @@ X-App-Id: com.example.myapp
 
 iOS uses bundle-id matching (no certificate pinning).
 
+## Server-side consumers: `allow_no_origin`
+
+A restricted key refuses any request that sends **neither** an `Origin` **nor** an `X-App-Id` header. Browsers always send `Origin` — but Laravel/Guzzle, Cloudflare Workers, Node CLIs and Flutter's `dart:io` send none, so a key used from a backend could not be restricted at all.
+
+Turn on the key's **Allow No Origin** flag and it accepts header-less requests, while every request that *does* carry an `Origin` is still matched against the allowlist. So a browser cannot borrow the key for another site, and your server keeps working.
+
+Be clear about the guarantee: the absence of a header proves nothing, so `curl` also passes. This is **weaker** than an origin check and **much stronger** than leaving the key unrestricted — use it for keys that otherwise have no restriction at all.
+
+## Global origins
+
+An administrator can register origins that **every** restricted key accepts, across every project — typically local dev hosts and the Capacitor WebView origins. They apply automatically and never appear in a key's own origin list, so a key with no rows of its own may still accept those. Global origins are dashboard-managed; there is no API for them.
+
 ## How honest is this? (read before you rely on it)
 
 `X-App-Id` and `X-Android-Cert` are **self-declared headers**. This is the same trust model as Google Maps' Android API-key restrictions: it stops your key from being reused on **other** sites and apps, which is what makes shipping a public client key practical. It is **not** cryptographic device attestation — a determined attacker who fully reverse-engineers your app can replay its headers.
@@ -126,8 +157,12 @@ In those cases, route calls through a small backend (a Cloudflare Worker is enou
 
 | Platform | Add origin type | Value | Headers the app sends |
 |---|---|---|---|
-| Web | `domain` | `example.com` or `*.example.com` | `Origin` (automatic) |
-| Android | `android` | `com.example.myapp` | `X-App-Id` (+ `X-Android-Cert` if pinned) |
-| iOS | `ios` | `com.example.myapp` | `X-App-Id` |
+| Web | `domain` | `https://example.com` or `*.example.com` | `Origin` (automatic) |
+| Local dev | `domain` | `http://localhost:5173` or `http://localhost:*` | `Origin` (automatic) |
+| Browser extension | `domain` | `chrome-extension://<id>` | `Origin` (automatic) |
+| Capacitor Android / iOS WebView | `domain` | `https://localhost` / `capacitor://localhost` | `Origin` (automatic) |
+| Android native | `android` | `com.example.myapp` | `X-App-Id` (+ `X-Android-Cert` if pinned) |
+| iOS native | `ios` | `com.example.myapp` | `X-App-Id` |
+| Server / CLI / Flutter | — | set **Allow No Origin** on the key | none |
 
 A rejected request returns `403` with a short reason (`Origin / app not allowed. …`). See [Errors & limits](../api/errors-and-limits).

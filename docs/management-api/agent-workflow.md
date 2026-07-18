@@ -60,11 +60,29 @@ curl -s ".../projects?q=my-web-app" -H "Authorization: Bearer $FILESHUB_ACCESS_T
 # or create the project
 curl -s -X POST .../projects -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" \
   -H 'Content-Type: application/json' -d '{"name":"My Web App"}'
-# mint a key (returns plaintext once)
+# mint a key (returns plaintext once, flat under data)
 curl -s -X POST ".../projects/$PROJECT/api-keys" \
   -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
-  -d '{"name":"web frontend","restricted":true}'
+  -d '{"name":"web frontend","can_read":true,"can_write":true,"restricted":true}'
+# -> { "data": { "id": 7, ..., "plaintext_key": "fh_live_..." } }
 ```
+
+Read `data.id` and `data.plaintext_key`. **Ask for every capability you want** — an omitted boolean
+defaults to `false`.
+
+**6. Keys used from a server, CLI or Flutter app.** Those clients send no `Origin`, so a restricted
+key would refuse them. Set `allow_no_origin` instead of leaving the key unrestricted:
+```bash
+curl -s -X PATCH ".../projects/$PROJECT/api-keys/$KEY_ID" \
+  -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"restricted":true,"allow_no_origin":true}'
+```
+Browser traffic is still matched against the allowlist; header-less traffic is let through. Weaker
+than an origin check (so is `curl`), far better than an unrestricted key.
+
+**Browser extensions** use a `domain` origin with the extension scheme —
+`chrome-extension://<id>`, where the host is the id (no port, no wildcard). Only Chrome ids are
+stable; Firefox and Safari ids are per-install UUIDs.
 
 ## Origins are scheme + port sensitive
 
@@ -74,6 +92,11 @@ browser sends:
 - Production web: `https://myapp.com` (and `https://*.myapp.com` for subdomains).
 - Local dev: `http://localhost:5173` for that port only, or `http://localhost:*` for any port.
 - Capacitor Android: `https://localhost`. Capacitor iOS: `capacitor://localhost`.
+- Browser extension: `chrome-extension://<id>` (also `moz-extension://`, `safari-web-extension://`).
+
+Some origins are configured platform-wide by the administrator (**global origins**) and apply to
+every restricted key without appearing in `GET .../origins` — so a key may accept an origin you
+never added to it.
 
 `http://` is accepted only for local hosts; a public host must be `https://`. A duplicate returns
 `409`, so adding the same origin twice is safe to attempt. Full policy:

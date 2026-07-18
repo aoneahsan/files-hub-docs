@@ -1379,7 +1379,7 @@
           "Management API"
         ],
         "summary": "Create an API key",
-        "description": "Create a key and return its plaintext ONCE.",
+        "description": "Create a key and return its plaintext once, flat under data. Every omitted boolean defaults to false.",
         "operationId": "createApiKey",
         "servers": [
           {
@@ -1401,15 +1401,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "api_key": {
-                          "$ref": "#/components/schemas/ApiKeySafe"
-                        },
-                        "plaintext_key": {
-                          "type": "string"
-                        }
-                      }
+                      "$ref": "#/components/schemas/ApiKeyWithSecret"
                     }
                   }
                 }
@@ -1464,6 +1456,10 @@
                   },
                   "restricted": {
                     "type": "boolean"
+                  },
+                  "allow_no_origin": {
+                    "type": "boolean",
+                    "description": "Restricted keys only: let through requests that carry no Origin and no X-App-Id, so a backend/Worker/CLI/Flutter consumer can use a restricted key. Requests that DO send an Origin are still matched against the allowlist."
                   },
                   "email_daily_limit": {
                     "type": "integer",
@@ -1647,6 +1643,10 @@
                   "restricted": {
                     "type": "boolean"
                   },
+                  "allow_no_origin": {
+                    "type": "boolean",
+                    "description": "Restricted keys only: let through requests that carry no Origin and no X-App-Id, so a backend/Worker/CLI/Flutter consumer can use a restricted key. Requests that DO send an Origin are still matched against the allowlist."
+                  },
                   "email_daily_limit": {
                     "type": "integer",
                     "nullable": true
@@ -1767,15 +1767,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "api_key": {
-                          "$ref": "#/components/schemas/ApiKeySafe"
-                        },
-                        "plaintext_key": {
-                          "type": "string"
-                        }
-                      }
+                      "$ref": "#/components/schemas/ApiKeyWithSecret"
                     }
                   }
                 }
@@ -1972,7 +1964,7 @@
           "Management API"
         ],
         "summary": "Add an origin",
-        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically.",
+        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here.",
         "operationId": "createOrigin",
         "servers": [
           {
@@ -3215,6 +3207,10 @@
           "restricted": {
             "type": "boolean"
           },
+          "allow_no_origin": {
+            "type": "boolean",
+            "description": "Restricted keys only: allow requests that send no Origin and no X-App-Id (server/CLI/native consumers)."
+          },
           "is_active": {
             "type": "boolean"
           },
@@ -3316,6 +3312,23 @@
             }
           }
         }
+      },
+      "ApiKeyWithSecret": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiKeySafe"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "plaintext_key": {
+                "type": "string",
+                "description": "The full key. Shown only by create, rotate and reveal."
+              }
+            }
+          }
+        ],
+        "description": "The key fields flat, plus the plaintext. Create and rotate previously nested this under data.api_key; both are flat as of 2026-07-18."
       }
     }
   }

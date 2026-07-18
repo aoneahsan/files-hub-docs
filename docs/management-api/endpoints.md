@@ -61,19 +61,37 @@ rotate, and reveal.
 List the project's keys (prefix, permissions, `restricted`, `is_active`, `origins_count`).
 
 ### `POST /projects/{project}/api-keys`
-Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_send_emails` (default
-true), `restricted` (default false), `email_daily_limit`, `rate_limit_per_minute`, `permissions`
-object, `is_test`. **Returns the plaintext once:**
+Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_send_emails`,
+`restricted`, `allow_no_origin`, `email_daily_limit`, `rate_limit_per_minute`, `permissions`
+object, `is_test`. **Every omitted boolean defaults to `false`** — ask for the capabilities you
+want. **Returns the plaintext once, flat under `data`** alongside the key's fields:
 ```json
-{ "data": { "api_key": { "id": 7, "key_prefix": "fh_live_ab12", "restricted": false, ... }, "plaintext_key": "fh_live_ab12..." } }
+{ "data": { "id": 7, "key_prefix": "fh_live_ab12", "can_read": true, "restricted": false, "plaintext_key": "fh_live_ab12..." } }
 ```
+:::note Changed 2026-07-18
+Create and rotate used to nest the key under `data.api_key`, so `data.id` read back as `undefined`.
+Both are flat now, matching every other key endpoint. Omitted booleans also stored as `null` before;
+they are real `false` values now.
+:::
 
 ### `GET /projects/{project}/api-keys/{apiKey}`
 Fetch one key (safe representation).
 
 ### `PATCH /projects/{project}/api-keys/{apiKey}`
-Update `name`, the `can_*` flags, `restricted`, limits, `permissions`, or `is_active`. Turning
-`restricted` on with no origins denies every request — add origins first (below).
+Update `name`, the `can_*` flags, `restricted`, `allow_no_origin`, limits, `permissions`, or
+`is_active`. Turning `restricted` on with no origins denies every request — add origins first
+(below), or rely on the platform-wide **global origins** an administrator has configured.
+
+#### `allow_no_origin` — restricting a server-side key
+
+A restricted key refuses any request that carries neither an `Origin` nor an `X-App-Id` header.
+Browsers always send `Origin`; server-side HTTP clients (Laravel/Guzzle, Cloudflare Workers, Node
+CLIs, Flutter's `dart:io`) send none, so such keys had to be left unrestricted.
+
+Set `allow_no_origin: true` and a restricted key accepts header-less requests while still matching
+every request that *does* send an `Origin` against its allowlist. Be honest about the guarantee:
+absence of a header proves nothing, so `curl` passes too — this is weaker than an origin check, and
+much stronger than leaving the key unrestricted.
 
 ### `DELETE /projects/{project}/api-keys/{apiKey}`
 Delete a key; its origins cascade.
@@ -94,6 +112,15 @@ sends (`example.com` → `https://example.com`). See
 
 ### `GET .../api-keys/{apiKey}/origins`
 List the key's origins.
+
+Browser extensions use `type: "domain"` with an extension scheme —
+`chrome-extension://<id>` (also `moz-extension://`, `safari-web-extension://`), where the host is
+the extension id. These carry no port and no wildcard. Only Chrome ids are stable: a Firefox or
+Safari extension id is a per-install UUID, so such an entry matches a single machine.
+
+Some origins are configured platform-wide by an administrator (**global origins**) and are accepted
+by *every* restricted key without appearing in this list — typically local dev hosts and the
+Capacitor WebView origins. They are dashboard-managed and have no endpoint here.
 
 ### `POST .../api-keys/{apiKey}/origins`
 Add one. Body: `type` (`domain` / `android` / `ios`), `value`, and — android only —
