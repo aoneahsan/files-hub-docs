@@ -4,7 +4,7 @@
     "title": "FilesHub API",
     "version": "1.0.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
-    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups \u2014 all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health). The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.",
+    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health). The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.",
     "contact": {
       "name": "Ahsan Mahmood",
       "url": "https://aoneahsan.com",
@@ -1317,7 +1317,7 @@
           "Management API"
         ],
         "summary": "List API keys",
-        "description": "List a project's API keys (safe representation \u2014 no secrets).",
+        "description": "List a project's API keys (safe representation — no secrets).",
         "operationId": "listApiKeys",
         "servers": [
           {
@@ -1815,7 +1815,7 @@
           "Management API"
         ],
         "summary": "Reveal an API key",
-        "description": "Re-read the stored plaintext. 409 PLAINTEXT_UNAVAILABLE for legacy keys \u2014 rotate instead.",
+        "description": "Re-read the stored plaintext. 409 PLAINTEXT_UNAVAILABLE for legacy keys — rotate instead.",
         "operationId": "revealApiKey",
         "servers": [
           {
@@ -2341,6 +2341,232 @@
           }
         }
       }
+    },
+    "/supabase-projects": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List registered Supabase projects",
+        "description": "Safe summaries (no secret values). Gated by the token's `can_manage_supabase` scope.",
+        "operationId": "listSupabaseProjects",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Match on name, url or organization."
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter on the keep-alive flag."
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of Supabase project summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SupabaseProjectSummary"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/supabase-projects/{supabaseProject}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Read one Supabase project (no secret values)",
+        "description": "Summary plus derived endpoints and non-secret config. `{supabaseProject}` is the numeric id or the project ref. Gated by `can_manage_supabase`.",
+        "operationId": "showSupabaseProject",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supabaseProject",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or project ref."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supabase project detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SupabaseProjectDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/supabase-projects/{supabaseProject}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal a Supabase project's secrets + env blocks",
+        "description": "Detail plus every stored secret plus ready-to-paste React/Node/Laravel .env blocks. Recorded on every call. Gated by `can_manage_supabase`.",
+        "operationId": "revealSupabaseProject",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supabaseProject",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or project ref."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supabase project with secrets and env blocks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SupabaseProjectReveal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2355,7 +2581,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "fh_pat_",
-        "description": "User-level access token (prefix fh_pat_) for the Public Management API. Send as \"Authorization: Bearer fh_pat_...\". Server / CLI only \u2014 never a browser. The \"X-Access-Token\" header is accepted as a fallback."
+        "description": "User-level access token (prefix fh_pat_) for the Public Management API. Send as \"Authorization: Bearer fh_pat_...\". Server / CLI only — never a browser. The \"X-Access-Token\" header is accepted as a fallback."
       }
     },
     "parameters": {
@@ -3275,6 +3501,10 @@
           "all_projects": {
             "type": "boolean"
           },
+          "can_manage_supabase": {
+            "type": "boolean",
+            "description": "Whether the token may read the Supabase project vault (separate axis from the project scope; off by default)."
+          },
           "expires_at": {
             "type": "string",
             "format": "date-time",
@@ -3329,6 +3559,257 @@
           }
         ],
         "description": "The key fields flat, plus the plaintext. Create and rotate previously nested this under data.api_key; both are flat as of 2026-07-18."
+      },
+      "SupabaseProjectSummary": {
+        "type": "object",
+        "description": "Safe list/summary view of a registered Supabase project. No secret values; `has` flags say which secrets a reveal would return.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string",
+            "nullable": true,
+            "description": "The `<ref>` label of a `<ref>.supabase.co` URL; null for self-hosted/custom-domain."
+          },
+          "url": {
+            "type": "string"
+          },
+          "organization": {
+            "type": "string",
+            "nullable": true
+          },
+          "region": {
+            "type": "string",
+            "nullable": true
+          },
+          "account_email": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "keepalive": {
+            "type": "object",
+            "properties": {
+              "last_run_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "last_status": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "ok",
+                  "failed",
+                  null
+                ]
+              }
+            }
+          },
+          "has": {
+            "type": "object",
+            "description": "Presence flags per secret column, tested WITHOUT decrypting.",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "last_revealed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "SupabaseProjectDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupabaseProjectSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "endpoints": {
+                "type": "object",
+                "description": "Derived from the project URL, not stored. `realtime`/`dashboard` are null when there is no ref.",
+                "properties": {
+                  "api": {
+                    "type": "string"
+                  },
+                  "rest": {
+                    "type": "string"
+                  },
+                  "auth": {
+                    "type": "string"
+                  },
+                  "storage": {
+                    "type": "string"
+                  },
+                  "graphql": {
+                    "type": "string"
+                  },
+                  "functions": {
+                    "type": "string"
+                  },
+                  "realtime": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "dashboard": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "config": {
+                "type": "object",
+                "description": "Non-secret configuration.",
+                "properties": {
+                  "publishable_key": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "legacy_anon_key": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "database": {
+                    "type": "object",
+                    "properties": {
+                      "host": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "port": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "database": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "user": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "storage_s3": {
+                    "type": "object",
+                    "properties": {
+                      "endpoint": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "region": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "access_key_id": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SupabaseProjectReveal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupabaseProjectDetail"
+          },
+          {
+            "type": "object",
+            "description": "Detail plus every stored secret and ready-to-paste env blocks. An unreadable secret (e.g. encrypted under a rotated APP_KEY) comes back null.",
+            "properties": {
+              "secrets": {
+                "type": "object",
+                "properties": {
+                  "api": {
+                    "type": "object",
+                    "properties": {
+                      "secret_key": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "legacy_service_role_key": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "jwt_secret": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "database": {
+                    "type": "object",
+                    "properties": {
+                      "password": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "url_direct": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "url_session_pooler": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "url_transaction_pooler": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "storage_s3": {
+                    "type": "object",
+                    "properties": {
+                      "secret_access_key": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              },
+              "env": {
+                "type": "object",
+                "description": "Ready-to-paste .env fragments; a block absent when it would be empty.",
+                "properties": {
+                  "react_vite": {
+                    "type": "string"
+                  },
+                  "node": {
+                    "type": "string"
+                  },
+                  "laravel": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }

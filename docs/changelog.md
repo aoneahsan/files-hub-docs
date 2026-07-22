@@ -4,13 +4,18 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-07-14
+  date: 2026-07-22
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-07-22 — Supabase project vault (Management API)
+
+- Documented the **[Supabase project vault](management-api/supabase-projects)** — read and **reveal** a registered Supabase project's full credential set (API keys, JWT secret, Postgres connection details, S3 keys) plus ready-to-paste React/Node/Laravel `.env` blocks, over the Management API. Gated by the new **`can_manage_supabase`** access-token scope (off by default), which is a separate axis from the project scope.
+- Extended the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) with the `/api/public/v1/supabase-projects` endpoints (list, show, reveal) and added `can_manage_supabase` to the token introspection; noted the scope in [overview](management-api/overview) and [authentication](management-api/authentication), and added a Supabase section to `llms.txt` / `llms-full.txt`.
 
 ## 2026-07-18 — Management API
 

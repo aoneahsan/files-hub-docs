@@ -67,6 +67,7 @@ const sidebars: SidebarsConfig = {
         'management-api/overview',
         'management-api/authentication',
         'management-api/endpoints',
+        'management-api/supabase-projects',
         'management-api/agent-workflow',
       ],
     },

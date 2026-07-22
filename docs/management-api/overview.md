@@ -42,6 +42,10 @@ a chosen set. A project the token does not cover is indistinguishable from one t
 both return **404**, never 403. Create a token and set its scope in the FilesHub admin under
 **Access Tokens**.
 
+A **separate** boolean, **`can_manage_supabase`** (off by default), gates the [Supabase project
+vault](./supabase-projects.md) — those resources are account-wide, so they sit on their own axis rather
+than the project scope. A token without it gets a `403`, not a `404`.
+
 ## What you can do
 
 - **Projects** — list (with `?q=` search), create, read, update, delete.
@@ -50,6 +54,10 @@ both return **404**, never 403. Create a token and set its scope in the FilesHub
 - **Origins** — list, create, update, delete a key's allowed web origins / Android packages / iOS
   bundle ids, with the same scheme + port canonicalization the dashboard uses.
 - **Lookup** — hand it an `fh_live_` key and get back its project and origin list.
+- **Supabase projects** — list, read, and **reveal** a registered Supabase project's full credential
+  set (keys, JWT secret, Postgres connection, S3 keys) plus ready-to-paste React/Node/Laravel `.env`
+  blocks. Read-only, and gated by the `can_manage_supabase` scope. See
+  [Supabase project vault](./supabase-projects.md).
 
-See [Authentication](./authentication.md), the [Endpoint reference](./endpoints.md), and the
-[Agent workflow](./agent-workflow.md).
+See [Authentication](./authentication.md), the [Endpoint reference](./endpoints.md), the
+[Supabase project vault](./supabase-projects.md), and the [Agent workflow](./agent-workflow.md).

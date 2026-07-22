@@ -156,9 +156,11 @@ and an `fh_pat_` token does nothing on `/api/v1`. The plane sends no CORS header
 only; never put an access token in a browser or a committed file.
 
 A token covers all projects (existing and future — the default) or an explicit subset; a resource the
-token does not cover returns `404 NOT_FOUND`, never 403, so scopes cannot be enumerated. Success is
-`{ "data": ... }`; errors are `{ "error": { "code", "message", "details? } }`. The plane is rate
-limited to 120 requests/minute. Create tokens in the FilesHub admin under Access Tokens.
+token does not cover returns `404 NOT_FOUND`, never 403, so scopes cannot be enumerated. A separate,
+off-by-default boolean `can_manage_supabase` gates the Supabase project vault (below) — a distinct axis
+from the project scope, and `GET /token` reports it. Success is `{ "data": ... }`; errors are
+`{ "error": { "code", "message", "details? } }`. The plane is rate limited to 120 requests/minute.
+Create tokens in the FilesHub admin under Access Tokens.
 
 Endpoints:
 - `GET /token` — introspect the token (name, scope, expiry). The intended first call.
@@ -176,8 +178,19 @@ Endpoints:
 - Lookup — `POST /api-keys/lookup` with `{ "api_key": "fh_live_..." }` returns that key's project,
   safe representation, and origins (or 404). This is what lets an AI coding agent read a local
   project's `.env`, learn which FilesHub project it belongs to, and enforce origin restrictions.
+- Supabase project vault — `GET /supabase-projects` (paginated, `?q=`/`?active=`),
+  `GET /supabase-projects/{idOrRef}`, and `POST /supabase-projects/{idOrRef}/reveal`. Read and reveal a
+  registered Supabase project's full credential set — API keys, JWT secret, Postgres connection details,
+  S3 keys — plus ready-to-paste React (`VITE_*`), Node, and Laravel (`DB_*`) `.env` blocks. Read-only
+  (projects are created/edited in the FilesHub admin), gated by the `can_manage_supabase` scope (a token
+  without it gets 403 `TOKEN_PERMISSION_DENIED`, not 404, since the scope is a property of the caller's
+  token). `{idOrRef}` is the numeric id or the `<ref>` of a `<ref>.supabase.co` URL. Every reveal is
+  recorded. Secret presence (`has` flags) is reported without decrypting; a stored secret that cannot be
+  decrypted (e.g. under a rotated APP_KEY) comes back `null` rather than failing the call. Derived
+  endpoints (rest/auth/storage/graphql/functions/realtime/dashboard) are computed from the project URL.
 
-Full reference: https://fileshub-docs.zaions.com/management-api/overview and the agent recipe at
+Full reference: https://fileshub-docs.zaions.com/management-api/overview, the Supabase vault at
+https://fileshub-docs.zaions.com/management-api/supabase-projects, and the agent recipe at
 https://fileshub-docs.zaions.com/management-api/agent-workflow.
 
 ## Beyond storage: developer utilities

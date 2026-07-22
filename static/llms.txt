@@ -78,6 +78,12 @@
   `fh_live_` key to its project + origins). Create/rotate/reveal return the plaintext key.
 - Use it to have an AI coding agent map a local project's `.env` key to its FilesHub project and enforce
   origin restrictions automatically. See the Management API docs + agent workflow below.
+- Supabase project vault: `GET /supabase-projects`, `GET /supabase-projects/{idOrRef}`,
+  `POST /supabase-projects/{idOrRef}/reveal` — read and reveal a registered Supabase project's full
+  credential set (API keys, JWT secret, Postgres connection, S3 keys) plus ready-to-paste
+  React/Node/Laravel `.env` blocks. Read-only (projects are created/edited in the FilesHub admin) and
+  gated by a separate, off-by-default token scope `can_manage_supabase` (a token without it gets 403,
+  not 404). An unreadable secret comes back null; `has` flags report presence without decrypting.
 
 ## Documentation pages
 
@@ -85,6 +91,7 @@
 - Management API overview: https://fileshub-docs.zaions.com/management-api/overview
 - Management API authentication: https://fileshub-docs.zaions.com/management-api/authentication
 - Management API endpoints: https://fileshub-docs.zaions.com/management-api/endpoints
+- Management API Supabase project vault: https://fileshub-docs.zaions.com/management-api/supabase-projects
 - Management API agent workflow: https://fileshub-docs.zaions.com/management-api/agent-workflow
 - Quick Start: https://fileshub-docs.zaions.com/getting-started/quick-start
 - Authentication: https://fileshub-docs.zaions.com/getting-started/authentication
@@ -112,7 +119,7 @@
 
 - Machine-readable API: https://fileshub-docs.zaions.com/openapi.json (OpenAPI 3.1; objects,
   emails, jobs, schedules, templates, version/health, AND the Management API — projects, api-keys,
-  origins, lookup — under the fh_pat_ BearerAuth scheme).
+  origins, lookup, supabase-projects — under the fh_pat_ BearerAuth scheme).
 - Every doc page as raw Markdown: prefix any page path with `/raw/` (e.g.
   https://fileshub-docs.zaions.com/raw/api/emails-send.md). Index:
   https://fileshub-docs.zaions.com/raw/manifest.json.

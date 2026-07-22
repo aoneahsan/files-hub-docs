@@ -41,6 +41,7 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "name": "Claude Code CLI",
     "token_prefix": "fh_pat_XzTJC7PU",
     "all_projects": true,
+    "can_manage_supabase": true,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -49,7 +50,8 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
 ```
 
 When the token is scoped to specific projects, `all_projects` is `false` and a `projects` array lists
-exactly what it may manage.
+exactly what it may manage. `can_manage_supabase` is a separate, off-by-default axis that gates the
+[Supabase project vault](./supabase-projects.md) — it is independent of the project scope.
 
 ## Auth errors
 
