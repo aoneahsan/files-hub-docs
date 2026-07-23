@@ -25,7 +25,7 @@ POST /api/v1/objects
 | Header | Required | Notes |
 |---|---|---|
 | `X-API-Key` | Yes | A key with `write` permission. |
-| `X-App-Id` | If the key is app-restricted | Your mobile bundle id (e.g. `com.example.myapp`). |
+| `X-App-Id` | If the key is restricted to a native app | Your Android package / iOS bundle id (e.g. `com.example.myapp`). On a key restricted by **web origin**, this header is optional audit metadata — sending it never causes a rejection when your `Origin` is allowed. |
 
 Do **not** set `Content-Type` manually in browsers/`fetch` — let the client set the multipart boundary.
 
@@ -105,3 +105,8 @@ Persist `url` (and optionally `public_id`) on your own record. `expires_at` is `
 - The `public_id` is a [ULID](https://github.com/ulid/spec): time-sortable and URL-safe.
 - The stored file keeps its original filename for downloads (`Content-Disposition`).
 - Set `visibility` deliberately — see [File visibility](../getting-started/file-visibility).
+- **`mime_type` is detected from the file's *contents*, not from any `Content-Type` you set on the
+  multipart part.** FilesHub sniffs the bytes (so a mislabelled file can't be served as, say,
+  `text/html`) and serves the object with that detected type. A `Content-Type` you declare on the part
+  is **ignored** — don't rely on it round-tripping, and read `mime_type` back off the response as
+  authoritative. There is no field to override it, so treat the server's detection as final.

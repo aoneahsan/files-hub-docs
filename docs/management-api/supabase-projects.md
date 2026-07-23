@@ -119,15 +119,19 @@ One project: the summary above **plus** `notes`, the derived `endpoints`, and th
 }
 ```
 
-Endpoints are **derived from the project URL**, not stored, so they cannot drift. `realtime` and
-`dashboard` are `null` for a self-hosted or custom-domain project where there is no ref to infer.
+Endpoints are **derived from the project URL**, not stored, so they cannot drift. `dashboard` is `null`
+when the URL has no inferable project ref (a self-hosted or custom-domain project); `realtime` is derived
+from the URL's **host**, so it is present for those too and is `null` only when the URL has no parseable
+host.
 
 ## `POST /supabase-projects/{supabaseProject}/reveal`
 
 Everything from the show response **plus every stored secret plus ready-to-paste `.env` blocks**. This is
-the call that hands out live credentials, so it is a `POST` and it is **always recorded** (token name, IP,
-user-agent and which field names were revealed — never a value — with `last_revealed_at` stamped on the
-project and every reveal listed in the FilesHub admin).
+the call that hands out live credentials, so it is a `POST` and it is **recorded** (best-effort: token
+name, IP, user-agent and which field names were revealed — never a value — with `last_revealed_at`
+stamped on the project and every reveal listed in the FilesHub admin). The audit write is best-effort by
+design: if it fails it is logged, but it never blocks the caller from receiving the credentials they
+legitimately requested.
 
 ```json
 {

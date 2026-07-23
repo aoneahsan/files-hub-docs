@@ -2713,7 +2713,8 @@
             ]
           },
           "mime_type": {
-            "type": "string"
+            "type": "string",
+            "description": "Server-detected MIME type, sniffed from the file's contents. Any Content-Type declared on the uploaded multipart part is ignored, and this is also the type the object is served with. Treat as authoritative — there is no field to override it."
           },
           "size_bytes": {
             "type": "integer"
@@ -3645,7 +3646,7 @@
               },
               "endpoints": {
                 "type": "object",
-                "description": "Derived from the project URL, not stored. `realtime`/`dashboard` are null when there is no ref.",
+                "description": "Derived from the project URL, not stored. dashboard is null when the URL has no inferable project ref; realtime is derived from the URL host and is null only when the URL has no parseable host.",
                 "properties": {
                   "api": {
                     "type": "string"
