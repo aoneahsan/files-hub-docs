@@ -30,13 +30,24 @@ function extractMeta(content) {
   return { title, description };
 }
 
+/**
+ * Internal files that live under docs/ for the fixed-path rule but must NEVER
+ * be published — this repo is public. Mirrors docs.exclude in
+ * docusaurus.config.ts; the plugin exclude does not reach this raw mirror, so
+ * the list has to be repeated here.
+ */
+const NEVER_PUBLISH = new Set(['MANUAL-TASKS.md']);
+const NEVER_PUBLISH_DIRS = new Set(['tracking']);
+
 /** Recursively collect every .md / .mdx file under a directory. */
 function collectDocs(dir, acc = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
+      if (NEVER_PUBLISH_DIRS.has(entry.name) || entry.name.startsWith('_')) continue;
       collectDocs(full, acc);
     } else if (/\.mdx?$/.test(entry.name)) {
+      if (NEVER_PUBLISH.has(entry.name) || entry.name.startsWith('_')) continue;
       acc.push(full);
     }
   }
