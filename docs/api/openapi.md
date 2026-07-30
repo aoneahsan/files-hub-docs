@@ -4,7 +4,7 @@ title: OpenAPI spec (for AI agents & codegen)
 description: FilesHub ships a machine-readable OpenAPI 3.1 spec at /openapi.json covering the core APIs — feed it to Claude Code, Codex, or an OpenAPI generator to integrate without guesswork.
 keywords: [fileshub openapi, openapi 3.1, /openapi.json, ai agent api, codegen, claude code, codex, machine readable api]
 last_update:
-  date: 2026-07-14
+  date: 2026-07-30
   author: Ahsan Mahmood
 ---
 
@@ -24,8 +24,9 @@ The core integration surface, with full request/response schemas:
 - **Emails** — send (raw + template), template CRUD, recurring schedules.
 - **Jobs** — poll queued operations.
 - **Status** — `health` and `version` (documented at `/api`, not `/api/v1`).
+- **[Management API](../management-api/overview.md)** — projects, API keys (create, rotate, reveal), per-key origins, global origins, key lookup, and the Supabase project vault.
 
-The security scheme is `X-API-Key` (an API-key header), and the app-restriction headers (`X-App-Id`, `X-Android-Cert`) are declared as optional parameters on secured operations.
+Two security schemes are declared. The data plane uses `X-API-Key` (an API-key header), with the app-restriction headers (`X-App-Id`, `X-Android-Cert`) as optional parameters on secured operations. The Management API operations use `BearerAuth` (a user-level `fh_pat_` access token) and each carries its own `servers` block pointing at `/api/public/v1`, since it is a different base URL.
 
 It does **not** enumerate the 40+ stateless [developer utilities](utilities-index) — those share the same base URL and key but are summarized rather than fully schematized, to keep the spec focused on what apps integrate.
 

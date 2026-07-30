@@ -1,10 +1,10 @@
 ---
 sidebar_position: 3
 title: Management API endpoints
-description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, and reverse key lookup, with request and response examples.
-keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, api-keys lookup, access token]
+description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
+keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
 last_update:
-  date: 2026-07-18
+  date: 2026-07-30
   author: Ahsan Mahmood
 ---
 
@@ -80,7 +80,8 @@ Fetch one key (safe representation).
 ### `PATCH /projects/{project}/api-keys/{apiKey}`
 Update `name`, the `can_*` flags, `restricted`, `allow_no_origin`, limits, `permissions`, or
 `is_active`. Turning `restricted` on with no origins denies every request — add origins first
-(below), or rely on the platform-wide **global origins** an administrator has configured.
+(below), or rely on the platform-wide [global origins](#global-origins) an administrator has
+configured (check those first; a key does not need its own copy of one).
 
 #### `allow_no_origin` — restricting a server-side key
 
@@ -120,7 +121,9 @@ Safari extension id is a per-install UUID, so such an entry matches a single mac
 
 Some origins are configured platform-wide by an administrator (**global origins**) and are accepted
 by *every* restricted key without appearing in this list — typically local dev hosts and the
-Capacitor WebView origins. They are dashboard-managed and have no endpoint here.
+Capacitor WebView origins. They are dashboard-managed, but they are **readable** here: see
+[Global origins](#global-origins) below, and check them **before** adding anything, or you will add
+duplicates the key never needed.
 
 ### `POST .../api-keys/{apiKey}/origins`
 Add one. Body: `type` (`domain` / `android` / `ios`), `value`, and — android only —
@@ -139,6 +142,73 @@ Change `value` and/or the fingerprint lists. Type is immutable — change it by 
 
 ### `DELETE .../origins/{origin}`
 Remove one origin.
+
+## Global origins
+
+Origins an administrator has registered **platform-wide**: every restricted key accepts them in
+addition to its own. Both endpoints are **read-only** and open to any valid token — writes stay in
+the dashboard, because a global rule affects every project.
+
+**Check here before you add an origin to a key.** An origin the platform already covers is a
+duplicate that only adds noise.
+
+### `GET /global-origins`
+List every **active** global rule. Inactive rules are omitted, because they are invisible to
+enforcement too. Each row carries the administrator's `note` — why that origin is trusted for every
+key.
+
+```bash
+curl -s .../global-origins -H "Authorization: Bearer $TOKEN"
+```
+```json
+{ "data": [ { "id": 4, "type": "domain", "value": "http://localhost:*",
+              "sha256_fingerprints": null, "sha1_fingerprints": null,
+              "note": "Local dev on any port, all projects", "created_at": "2026-07-18T..." } ] }
+```
+
+### `POST /global-origins/check`
+Ask whether specific origins are **already covered**, and add only the ones that are not.
+
+Use this rather than comparing the list yourself — matching is **not string equality**, and the
+difference is not intuitive:
+
+- `https://*.example.com` covers `https://app.example.com` **and** the bare apex `https://example.com`.
+- `https://example.com` (an apex rule) covers **no** subdomain at all.
+- `http://localhost:*` covers every port.
+
+Body takes up to **50** candidates, each `type` + `value` — the same objects you would hand to
+`POST .../origins`. An `android` candidate may add `cert_fingerprint` (the value the app sends as
+`X-Android-Cert`), since a rule that pins signing certificates refuses the package without one.
+
+```bash
+curl -X POST .../global-origins/check -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"origins":[{"type":"domain","value":"app.example.com"},{"type":"domain","value":"https://app.zaions.com"}]}'
+```
+```json
+{ "data": [
+  { "type": "domain", "value": "app.example.com", "canonical_value": "https://app.example.com",
+    "covered": true,  "matched_by": { "id": 3, "value": "https://*.example.com", "note": "…" } },
+  { "type": "domain", "value": "https://app.zaions.com", "canonical_value": "https://app.zaions.com",
+    "covered": false, "matched_by": null }
+] }
+```
+
+Verdicts come back **one per candidate, in request order**, so you can zip them onto your own list.
+`canonical_value` shows the normalisation (`example.com` → `https://example.com`) — the exact string
+a browser sends and the exact string `POST .../origins` would store.
+
+A value that can never be a legal origin is a **verdict, not an error**: you get `200` with
+`covered: false` and a `reason`, so one typo does not discard the answers for every other candidate
+in the batch — and the message is the same one `POST .../origins` would have refused it with.
+
+| `reason.code` | Meaning |
+| --- | --- |
+| `INVALID_ORIGIN` | The value violates origin policy (e.g. `http://` on a public host), so it can never be covered. |
+| `CERT_FINGERPRINT_REQUIRED` | A global rule allows this android package but pins certificates, and you sent no `cert_fingerprint`. |
+| `CERT_FINGERPRINT_NOT_ALLOWED` | The package is pinned and the fingerprint you sent is not one of the pinned ones. |
+
+These are verdict codes **inside a `200` body** — not HTTP errors, and not in the table below.
 
 ## Lookup
 

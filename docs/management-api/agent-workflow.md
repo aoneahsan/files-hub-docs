@@ -1,10 +1,10 @@
 ---
 sidebar_position: 4
 title: Agent workflow — auto-configure a project's API key
-description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API.
-keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, fh_pat access token workflow, wire up api key from env]
+description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates.
+keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, global origins check, fh_pat access token workflow, wire up api key from env]
 last_update:
-  date: 2026-07-18
+  date: 2026-07-30
   author: Ahsan Mahmood
 ---
 
@@ -35,24 +35,40 @@ curl -s -X POST https://fileshub.zaions.com/api/public/v1/api-keys/lookup \
 ```
 The response tells you the project, whether the key is `restricted`, and its current `origins`.
 
-**4. Fix the restrictions if needed.** For a key that ships inside a frontend bundle, it must be
-restricted to your own origins. Turn `restricted` on and add the canonical origins:
+**4. Check which origins are already global — before adding any.** Some origins are allowed
+platform-wide and every restricted key already accepts them. Adding a per-key copy of one is a
+duplicate that buys nothing, so ask first and add only what comes back `covered: false`:
+
+```bash
+curl -s -X POST .../global-origins/check \
+  -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"origins":[{"type":"domain","value":"https://myapp.com"},
+                  {"type":"domain","value":"http://localhost:5173"},
+                  {"type":"domain","value":"https://localhost"}]}'
+```
+
+**Do not compare `GET /global-origins` yourself.** Matching is not string equality, and both
+mistakes are easy: `https://*.myapp.com` already covers `https://app.myapp.com`, while an apex rule
+`https://myapp.com` covers **no** subdomain. Guessing either way leaves you with a redundant entry
+or a key that 403s in production. The check endpoint runs the same matcher enforcement uses.
+
+**5. Fix the restrictions.** For a key that ships inside a frontend bundle, it must be restricted to
+your own origins. Turn `restricted` on and add **only the origins step 4 reported as not covered**:
 ```bash
 # restrict the key
 curl -s -X PATCH ".../projects/$PROJECT/api-keys/$KEY_ID" \
   -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
   -d '{"restricted":true}'
 
-# allow the production host and local dev
+# add each origin that came back covered:false — skip the rest
 curl -s -X POST ".../projects/$PROJECT/api-keys/$KEY_ID/origins" \
   -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
   -d '{"type":"domain","value":"https://myapp.com"}'
-curl -s -X POST ".../projects/$PROJECT/api-keys/$KEY_ID/origins" \
-  -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
-  -d '{"type":"domain","value":"http://localhost:5173"}'
 ```
+Adding a globally-covered origin anyway still succeeds — nothing rejects it — which is exactly why
+the check is on you.
 
-**5. If there is no key locally, create one.** Find the project (or create it), mint a key, and write
+**6. If there is no key locally, create one.** Find the project (or create it), mint a key, and write
 the returned plaintext to the project's `.env`:
 ```bash
 # find by name
@@ -70,7 +86,7 @@ curl -s -X POST ".../projects/$PROJECT/api-keys" \
 Read `data.id` and `data.plaintext_key`. **Ask for every capability you want** — an omitted boolean
 defaults to `false`.
 
-**6. Keys used from a server, CLI or Flutter app.** Those clients send no `Origin`, so a restricted
+**7. Keys used from a server, CLI or Flutter app.** Those clients send no `Origin`, so a restricted
 key would refuse them. Set `allow_no_origin` instead of leaving the key unrestricted:
 ```bash
 curl -s -X PATCH ".../projects/$PROJECT/api-keys/$KEY_ID" \
@@ -96,7 +112,9 @@ browser sends:
 
 Some origins are configured platform-wide by the administrator (**global origins**) and apply to
 every restricted key without appearing in `GET .../origins` — so a key may accept an origin you
-never added to it.
+never added to it. Read them with `GET /global-origins`, and test candidates against them with
+`POST /global-origins/check` (step 4) rather than comparing strings: a `*.` rule covers its subdomains
+**and** its apex, while an apex rule covers neither.
 
 `http://` is accepted only for local hosts; a public host must be `https://`. A duplicate returns
 `409`, so adding the same origin twice is safe to attempt. Full policy:
@@ -104,5 +122,6 @@ never added to it.
 
 ## Verify
 
-After changes, `lookup` again (or `GET .../origins`) and confirm `restricted` is `true` with the
+Remember a key's own list will **not** show the global origins it also accepts — that is expected, not
+a missing entry. After changes, `lookup` again (or `GET .../origins`) and confirm `restricted` is `true` with the
 origins you expect. Then the frontend key is safe to ship: it only works from your own app.

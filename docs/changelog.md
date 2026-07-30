@@ -4,13 +4,18 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-07-22
+  date: 2026-07-30
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-07-30 — Global origins are readable over the Management API
+
+- Documented two read-only endpoints — **`GET /global-origins`** and **`POST /global-origins/check`** — in the [endpoint reference](management-api/endpoints). Global origins apply to every restricted key and never appear in a key's own list, so previously there was no way to see them over the API; the docs said outright that none existed. Writes stay in the dashboard. The [agent workflow](management-api/agent-workflow) now checks coverage *before* adding origins and adds only what comes back `covered: false`, and [API key restrictions](getting-started/api-key-restrictions) records that the read API exists.
+- The check endpoint runs the same matcher request-time enforcement uses, because coverage is **not** string equality: `https://*.example.com` covers its subdomains *and* the bare apex, an apex rule covers no subdomain, and `http://localhost:*` covers every port. Extended the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) with both paths and the `GlobalOriginPublic` / `GlobalOriginCheckResult` schemas, and added the guidance to `llms.txt` / `llms-full.txt`.
 
 ## 2026-07-22 — Supabase project vault (Management API)
 

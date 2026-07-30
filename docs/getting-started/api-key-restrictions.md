@@ -4,7 +4,7 @@ title: API key restrictions (ship a key in a frontend)
 description: Restrict a FilesHub API key to your own web origins, browser-extension ids, Android package + signing certificate, or iOS bundle id — so you can embed the key in a React/mobile/extension app without a proxy backend.
 keywords: [fileshub api key restriction, restrict api key origin, allowed origins, android signing certificate, X-App-Id, X-Android-Cert, frontend api key, no backend, sha256 fingerprint, chrome-extension origin, allow_no_origin]
 last_update:
-  date: 2026-07-18
+  date: 2026-07-30
   author: Ahsan Mahmood
 ---
 
@@ -137,7 +137,9 @@ Be clear about the guarantee: the absence of a header proves nothing, so `curl` 
 
 ## Global origins
 
-An administrator can register origins that **every** restricted key accepts, across every project — typically local dev hosts and the Capacitor WebView origins. They apply automatically and never appear in a key's own origin list, so a key with no rows of its own may still accept those. Global origins are dashboard-managed; there is no API for them.
+An administrator can register origins that **every** restricted key accepts, across every project — typically local dev hosts and the Capacitor WebView origins. They apply automatically and never appear in a key's own origin list, so a key with no rows of its own may still accept those.
+
+Global origins are **created and edited only in the dashboard** — a rule that affects every project is an operator decision. They are **readable** through the Management API: `GET /global-origins` lists them, and `POST /global-origins/check` answers whether specific origins are already covered. Check before adding an origin to a key, so you do not create a duplicate the key never needed. See [Management API endpoints](../management-api/endpoints.md#global-origins).
 
 ## How honest is this? (read before you rely on it)
 

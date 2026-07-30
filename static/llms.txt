@@ -74,8 +74,15 @@
 - Endpoints: `GET /token` (introspect) · `GET|POST /projects`, `GET|PATCH|DELETE /projects/{project}`
   (id/public_id/slug; `?q=` search) · `GET|POST /projects/{project}/api-keys`,
   `GET|PATCH|DELETE /projects/{project}/api-keys/{id}`, `POST .../{id}/rotate`, `POST .../{id}/reveal` ·
-  `GET|POST .../{id}/origins`, `PATCH|DELETE .../origins/{id}` · `POST /api-keys/lookup` (map an
-  `fh_live_` key to its project + origins). Create/rotate/reveal return the plaintext key.
+  `GET|POST .../{id}/origins`, `PATCH|DELETE .../origins/{id}` · `GET /global-origins`,
+  `POST /global-origins/check` · `POST /api-keys/lookup` (map an `fh_live_` key to its project +
+  origins). Create/rotate/reveal return the plaintext key.
+- Global origins are allowed for EVERY restricted key, platform-wide, and never appear in a key's own
+  origin list. They are read-only over the API (created/edited in the admin dashboard). Before adding an
+  origin to a key, POST the candidates to `/global-origins/check` and add only those reporting
+  `covered: false` — matching is NOT string equality, so do not compare the list yourself:
+  `https://*.example.com` covers its subdomains AND the bare apex, an apex rule covers NO subdomain, and
+  `http://localhost:*` covers every port. The check runs the same matcher request-time enforcement uses.
 - Use it to have an AI coding agent map a local project's `.env` key to its FilesHub project and enforce
   origin restrictions automatically. See the Management API docs + agent workflow below.
 - Supabase project vault: `GET /supabase-projects`, `GET /supabase-projects/{idOrRef}`,

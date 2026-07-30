@@ -175,6 +175,20 @@ Endpoints:
   Domain values are validated against the same scheme+port policy as the dashboard and stored
   canonically (`example.com` -> `https://example.com`); `http://` on a public host is a 422, a repeat
   is a 409. Android origins may pin `sha256_fingerprints` / `sha1_fingerprints`.
+- Global origins — `GET /global-origins` lists every active origin an administrator has registered
+  platform-wide; every restricted key accepts these in addition to its own, and they never appear in a
+  key's own origin list. Read-only over the API: they are created and edited only in the dashboard,
+  because a rule that affects every project is an operator decision. `POST /global-origins/check` takes
+  up to 50 `{type, value}` candidates (android may add `cert_fingerprint`) and returns one verdict each,
+  in request order, saying whether the platform already covers it and which rule matched. Add only the
+  candidates reporting `covered: false`. Use the check rather than comparing the list yourself, because
+  matching is not string equality: `https://*.example.com` covers its subdomains AND the bare apex, an
+  apex rule such as `https://example.com` covers no subdomain at all, and `http://localhost:*` covers
+  every port. It runs the same matcher request-time enforcement uses, so it cannot disagree with it. A
+  value that can never be a legal origin is a verdict (200, `covered: false`, plus a `reason` code such
+  as `INVALID_ORIGIN`), not a request-level error, so one bad candidate does not discard the rest.
+  Adding a globally-covered origin to a key is still accepted — nothing rejects it — so the check is the
+  only thing preventing a redundant entry.
 - Lookup — `POST /api-keys/lookup` with `{ "api_key": "fh_live_..." }` returns that key's project,
   safe representation, and origins (or 404). This is what lets an AI coding agent read a local
   project's `.env`, learn which FilesHub project it belongs to, and enforce origin restrictions.

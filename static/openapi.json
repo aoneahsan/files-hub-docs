@@ -1964,7 +1964,7 @@
           "Management API"
         ],
         "summary": "Add an origin",
-        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here.",
+        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here — read them with GET /global-origins and test candidates with POST /global-origins/check before adding, so you do not create a duplicate the key never needed.",
         "operationId": "createOrigin",
         "servers": [
           {
@@ -2257,6 +2257,153 @@
             "description": "Origin id."
           }
         ]
+      }
+    },
+    "/global-origins": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List global origins",
+        "description": "Every ACTIVE origin an administrator has registered platform-wide. Each is accepted by every restricted API key in addition to that key's own origins, and never appears in a key's own origin list. Read-only and open to any valid access token; global origins are created and edited only in the dashboard, because a rule that affects every project is an operator decision. Check these before adding an origin to a key, so you do not create a duplicate the key never needed.",
+        "operationId": "listGlobalOrigins",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active global origins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GlobalOriginPublic"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/global-origins/check": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Check whether origins are already covered globally",
+        "description": "Ask whether specific origins are already allowed platform-wide, then add only the ones reporting covered=false. Use this instead of comparing the list yourself: matching is not string equality. A wildcard rule https://*.example.com covers its subdomains AND the bare apex, an apex rule https://example.com covers no subdomain at all, and http://localhost:* covers every port. This endpoint runs the same matcher request-time enforcement uses, so its answer cannot disagree with it. Up to 50 candidates per request; verdicts return one per candidate in request order. A value that can never be a legal origin is a verdict (200 with covered=false and a reason), not a request-level error, so one bad candidate does not discard the answers for the rest.",
+        "operationId": "checkGlobalOrigins",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One verdict per candidate, in request order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GlobalOriginCheckResult"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "origins"
+                ],
+                "properties": {
+                  "origins": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "value"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "domain",
+                            "android",
+                            "ios"
+                          ]
+                        },
+                        "value": {
+                          "type": "string",
+                          "maxLength": 255,
+                          "description": "The origin to test. A domain may be written bare (example.com); it is canonicalized before matching."
+                        },
+                        "cert_fingerprint": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "maxLength": 255,
+                          "description": "Android only: the signing fingerprint the app sends as X-Android-Cert (colons optional). A global rule that pins certificates cannot report covered without it."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api-keys/lookup": {
@@ -3487,6 +3634,119 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          }
+        }
+      },
+      "GlobalOriginPublic": {
+        "type": "object",
+        "description": "An origin every restricted API key accepts, platform-wide. Only active rules are ever returned, so there is no is_active field.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "domain",
+              "android",
+              "ios"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "description": "Canonical origin for domains (scheme://host[:port], possibly with a *. host wildcard or a :* port wildcard); package/bundle id for android/ios."
+          },
+          "sha256_fingerprints": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "sha1_fingerprints": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The administrator's reason this origin is trusted for every key."
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "GlobalOriginCheckResult": {
+        "type": "object",
+        "description": "One candidate's verdict. Add the candidate to a key only when covered is false.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "domain",
+              "android",
+              "ios"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "description": "The candidate exactly as submitted."
+          },
+          "canonical_value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The canonical form the candidate was matched on — the exact origin a browser sends, and the exact string POST .../origins would store. Null for android/ios, and for a domain that violates origin policy."
+          },
+          "covered": {
+            "type": "boolean",
+            "description": "True when an active global rule already allows this candidate for every restricted key."
+          },
+          "matched_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/GlobalOriginPublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The global rule that covered the candidate; null when covered is false."
+          },
+          "reason": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Present only when there is something extra to say about a covered=false verdict. This is a verdict code inside a 200 body, not an HTTP error.",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "INVALID_ORIGIN",
+                  "CERT_FINGERPRINT_REQUIRED",
+                  "CERT_FINGERPRINT_NOT_ALLOWED"
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            }
           }
         }
       },
