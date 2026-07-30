@@ -1082,8 +1082,10 @@
                     "maxLength": 255
                   },
                   "slug": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "status": {
                     "type": "string",
@@ -1093,8 +1095,10 @@
                     ]
                   },
                   "notes": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 }
               }
@@ -1242,8 +1246,10 @@
                     ]
                   },
                   "notes": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 }
               }
@@ -1462,12 +1468,16 @@
                     "description": "Restricted keys only: let through requests that carry no Origin and no X-App-Id, so a backend/Worker/CLI/Flutter consumer can use a restricted key. Requests that DO send an Origin are still matched against the allowlist."
                   },
                   "email_daily_limit": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   },
                   "rate_limit_per_minute": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   },
                   "permissions": {
                     "type": "object",
@@ -1648,12 +1658,16 @@
                     "description": "Restricted keys only: let through requests that carry no Origin and no X-App-Id, so a backend/Worker/CLI/Flutter consumer can use a restricted key. Requests that DO send an Origin are still matched against the allowlist."
                   },
                   "email_daily_limit": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   },
                   "rate_limit_per_minute": {
-                    "type": "integer",
-                    "nullable": true
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   },
                   "permissions": {
                     "type": "object",
@@ -3500,9 +3514,11 @@
                 "type": "string"
               },
               "details": {
-                "type": "object",
-                "additionalProperties": true,
-                "nullable": true
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": true
               }
             }
           }
@@ -3531,13 +3547,17 @@
             ]
           },
           "notes": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3564,16 +3584,22 @@
             "type": "boolean"
           },
           "email_daily_limit": {
-            "type": "integer",
-            "nullable": true
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "rate_limit_per_minute": {
-            "type": "integer",
-            "nullable": true
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "permissions": {
-            "type": "object",
-            "nullable": true,
+            "type": [
+              "object",
+              "null"
+            ],
             "additionalProperties": {
               "type": "boolean"
             }
@@ -3592,9 +3618,11 @@
             "type": "integer"
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3617,23 +3645,29 @@
             "description": "Canonical origin for domains (scheme://host[:port]); package/bundle id for android/ios."
           },
           "sha256_fingerprints": {
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           },
           "sha1_fingerprints": {
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3767,23 +3801,31 @@
             "description": "Whether the token may read the Supabase project vault (separate axis from the project scope; off by default)."
           },
           "expires_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "last_used_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "projects": {
-            "type": "array",
-            "nullable": true,
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "type": "object",
               "properties": {
@@ -3832,24 +3874,32 @@
             "type": "string"
           },
           "ref": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "The `<ref>` label of a `<ref>.supabase.co` URL; null for self-hosted/custom-domain."
           },
           "url": {
             "type": "string"
           },
           "organization": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "region": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "account_email": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "is_active": {
             "type": "boolean"
@@ -3858,13 +3908,17 @@
             "type": "object",
             "properties": {
               "last_run_at": {
-                "type": "string",
-                "format": "date-time",
-                "nullable": true
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
               },
               "last_status": {
-                "type": "string",
-                "nullable": true,
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "enum": [
                   "ok",
                   "failed",
@@ -3881,14 +3935,18 @@
             }
           },
           "last_revealed_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3901,8 +3959,10 @@
             "type": "object",
             "properties": {
               "notes": {
-                "type": "string",
-                "nullable": true
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "endpoints": {
                 "type": "object",
@@ -3927,12 +3987,16 @@
                     "type": "string"
                   },
                   "realtime": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "dashboard": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 }
               },
@@ -3941,31 +4005,43 @@
                 "description": "Non-secret configuration.",
                 "properties": {
                   "publishable_key": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "legacy_anon_key": {
-                    "type": "string",
-                    "nullable": true
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "database": {
                     "type": "object",
                     "properties": {
                       "host": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "port": {
-                        "type": "integer",
-                        "nullable": true
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
                       },
                       "database": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "user": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     }
                   },
@@ -3973,16 +4049,22 @@
                     "type": "object",
                     "properties": {
                       "endpoint": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "region": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "access_key_id": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     }
                   }
@@ -4008,16 +4090,22 @@
                     "type": "object",
                     "properties": {
                       "secret_key": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "legacy_service_role_key": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "jwt_secret": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     }
                   },
@@ -4025,20 +4113,28 @@
                     "type": "object",
                     "properties": {
                       "password": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "url_direct": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "url_session_pooler": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "url_transaction_pooler": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     }
                   },
@@ -4046,8 +4142,10 @@
                     "type": "object",
                     "properties": {
                       "secret_access_key": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     }
                   }

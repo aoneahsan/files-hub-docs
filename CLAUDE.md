@@ -58,7 +58,7 @@ yarn typecheck       # tsc --noEmit
 
 ## AI-agent surfaces
 
-- `static/openapi.json` — hand-authored OpenAPI 3.1 (objects, emails, jobs, schedules, templates, version/health). Lint: `npx -y @redocly/cli@latest lint static/openapi.json` (0 errors).
+- `static/openapi.json` — hand-authored OpenAPI 3.1 (objects, emails, jobs, schedules, templates, version/health, Management API). Lint: `npx -y @redocly/cli@latest lint static/openapi.json` → **0 errors, 2 accepted warnings**. The two are `operation-4xx-response` on `GET /health` and `GET /version`, which carry no auth or throttle middleware, so no 4xx is reachable — documenting a fake one to silence the linter would make the spec lie. 🔴 **This is a 3.1 spec: express a nullable field as `"type": ["string", "null"]`. Never `"nullable": true`** — that is a 3.0 keyword, ignored in 3.1, so it silently claims the field is non-nullable (49 such fields were corrected 2026-07-30).
 - `plugins/raw-docs.js` — `postBuild` mirrors every docs page to `build/raw/**.md` + `build/raw/manifest.json`. `src/theme/DocItem/Content/index.tsx` adds a "View raw Markdown" link per page (absolute URL so `onBrokenLinks: throw` ignores the postBuild files). Any relative `/raw/...` link in Markdown must be absolute for the same reason.
 
 ## Package Manager Hierarchy: nvm → npm (global) → yarn (local) (IRON-SOLID)

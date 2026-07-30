@@ -41,7 +41,8 @@ yarn serve           # preview built site :5995
 - **No dev/preview servers in agent runs** — verify via `yarn build`/`yarn typecheck` only.
 - **Single source of truth** — every API fact comes from the FilesHub source (`app/Http/Controllers/Api/*`, `app/Http/Requests/Api/*`, `routes/api.php`, `config/fileshub.php`, `app/Http/Middleware/ApiKeyAuth.php`). No invented endpoints, params, or response fields.
 - **Honest framing** — document FilesHub's real limits (single-region, 10 MB default cap, no published SDK, restrictions = header allowlisting not attestation). No fabricated stats.
-- **AI surfaces** — `static/openapi.json` (lint with `npx -y @redocly/cli@latest lint`) + `plugins/raw-docs.js` `/raw/**` mirror + `src/theme/DocItem/Content` "View raw" link. Any `/raw/...` link in Markdown must be an ABSOLUTE URL (postBuild files are invisible to `onBrokenLinks: throw`).
+- **AI surfaces** — `static/openapi.json` (lint with `npx -y @redocly/cli@latest lint` → **0 errors, 2 accepted warnings**: `operation-4xx-response` on `GET /health` + `GET /version`, which have no auth or throttle so no 4xx is reachable) + `plugins/raw-docs.js` `/raw/**` mirror + `src/theme/DocItem/Content` "View raw" link. Any `/raw/...` link in Markdown must be an ABSOLUTE URL (postBuild files are invisible to `onBrokenLinks: throw`).
+- 🔴 **The spec is OpenAPI 3.1** — a nullable field is `"type": ["string", "null"]`, **never `"nullable": true`** (a 3.0 keyword that 3.1 ignores, so it silently asserts the field is non-nullable; 49 were corrected 2026-07-30).
 - **PUBLIC repo — NO secrets.** Never commit any `.env`, API key, or token.
 - **One commit per task**, pushed to `o main`.
 
