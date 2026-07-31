@@ -54,6 +54,7 @@ const sidebars: SidebarsConfig = {
             'api/version-health',
           ],
         },
+        'api/pagination',
         'api/errors-and-limits',
         'api/utilities-index',
         'api/openapi',

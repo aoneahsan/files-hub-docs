@@ -949,21 +949,10 @@
                       }
                     },
                     "meta": {
-                      "type": "object",
-                      "properties": {
-                        "current_page": {
-                          "type": "integer"
-                        },
-                        "per_page": {
-                          "type": "integer"
-                        },
-                        "total": {
-                          "type": "integer"
-                        },
-                        "last_page": {
-                          "type": "integer"
-                        }
-                      }
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    },
+                    "message": {
+                      "$ref": "#/components/schemas/PaginationMessage"
                     }
                   }
                 }
@@ -2841,20 +2830,87 @@
       },
       "PaginationMeta": {
         "type": "object",
+        "description": "Pagination state for every list endpoint. Default page size is 20 and the hard maximum is 50; a larger `per_page` is CLAMPED to 50, never rejected, and `message` says so. Offset-based on purpose: a page number and a total cannot be expressed by cursor pagination.",
         "properties": {
           "current_page": {
-            "type": "integer"
-          },
-          "last_page": {
-            "type": "integer"
+            "type": "integer",
+            "description": "1-based page you are holding."
           },
           "per_page": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Rows in this page, after clamping to max_per_page."
           },
           "total": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Total rows matching the query across all pages."
+          },
+          "last_page": {
+            "type": "integer",
+            "description": "Number of the final page; equals current_page on the last one."
+          },
+          "from": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "1-based index of the first row in this page; null when empty."
+          },
+          "to": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "1-based index of the last row in this page; null when empty."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Rows actually returned in this response."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "True when further pages exist. Equivalent to next_page != null."
+          },
+          "remaining_items": {
+            "type": "integer",
+            "description": "Rows after this page. Zero on the last page."
+          },
+          "remaining_pages": {
+            "type": "integer",
+            "description": "Pages after this one. Zero on the last page."
+          },
+          "next_page": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Send this as ?page= to continue; null on the last page."
+          },
+          "prev_page": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Previous page number; null on the first page."
+          },
+          "max_per_page": {
+            "type": "integer",
+            "description": "Hard ceiling for per_page (50). A larger request is clamped."
+          },
+          "default_per_page": {
+            "type": "integer",
+            "description": "Page size used when per_page is omitted (20)."
           }
-        }
+        },
+        "required": [
+          "current_page",
+          "per_page",
+          "total",
+          "last_page",
+          "has_more",
+          "remaining_items",
+          "remaining_pages",
+          "max_per_page"
+        ]
       },
       "StoredObject": {
         "type": "object",
@@ -4168,6 +4224,15 @@
               }
             }
           }
+        ]
+      },
+      "PaginationMessage": {
+        "type": "string",
+        "description": "A human- and agent-readable restatement of `meta`: position, how much remains, and the exact query string for the next page. Also states when per_page was capped, so a truncated response is never mistaken for missing data.",
+        "examples": [
+          "Showing 1-20 of 137 (page 1 of 7). 117 more available - request page 2 to continue (?page=2&per_page=20).",
+          "Showing 121-137 of 137 (page 7 of 7). This is the last page.",
+          "No results."
         ]
       }
     }
