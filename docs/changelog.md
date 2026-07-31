@@ -4,13 +4,21 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-07-30
+  date: 2026-07-31
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-07-31 — Project vault
+
+- New page: **[Project vault](management-api/project-vault)**. FilesHub now stores every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Clarity, Amplitude, Cloudflare, Capacitor signing, GitHub, the three store consoles, OpenAI, SMTP, plus a freeform bucket — and reads them back over the Management API, including ready-to-paste `.env` blocks for Vite, Next, Node and Laravel. Supabase is *linked* to the existing [account-wide vault](management-api/supabase-projects) rather than duplicated.
+- **Two new opt-in token scopes**, both off by default and documented in [Authentication](management-api/authentication): `can_read_vault` sees metadata and *which* credentials exist — presence flags, never a value — while `can_reveal_vault` sees the values, the file bytes and the env blocks. A token missing one gets `403 TOKEN_PERMISSION_DENIED` with `details.required_scope`, not the anti-enumeration `404` used for resources; that distinction is now stated in the [endpoint reference](management-api/endpoints) error table.
+- `GET /vault/services` publishes the **field registry itself** — every field's label, where in that console to find it, whether it is secret, whether it may ship in a browser bundle, and its `.env` name. Schema discovery, so an agent never has to guess what a project can hold.
+- The generated `VITE_` / `NEXT_PUBLIC_` blocks contain **only** fields marked `client_safe`, and a field marked `secret` is always `client_safe: false`. A server secret is structurally unable to appear in a client env block rather than merely omitted by convention.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.1.0**: 7 new paths and 8 new schemas, all using the 3.1 nullable form. The [agent workflow](management-api/agent-workflow) gained a bootstrap-a-machine-from-the-vault recipe.
 
 ## 2026-07-30 — Global origins are readable over the Management API
 

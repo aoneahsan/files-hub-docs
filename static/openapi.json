@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
     "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health). The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.",
     "contact": {
@@ -2717,6 +2717,536 @@
           }
         }
       }
+    },
+    "/vault/services": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "The vault field registry (schema discovery)",
+        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project — it describes the SHAPE of the vault, never its contents — so any valid token may read it.",
+        "operationId": "listVaultServices",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The field registry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/VaultServiceRegistry"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/vault/projects": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Projects with vault metadata",
+        "description": "Projects this token can see, each with its identifiers and which services are configured. Requires `can_read_vault`. Paginated: default 20, max 50.",
+        "operationId": "listVaultProjects",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Matches name, slug or app identifier."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive"
+              ]
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 50
+            },
+            "description": "Clamped to 50 rather than rejected."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated project summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectVaultSummary"
+                      }
+                    },
+                    "meta": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/vault": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "One project's vault, without secret values",
+        "description": "Metadata, links, the non-secret config per service, and `has` presence flags saying which credentials a reveal would return. Requires `can_read_vault`. No secret VALUE appears in this response.",
+        "operationId": "showProjectVault",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project vault without secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/vault/{service}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "One service of one project, without secret values",
+        "description": "As `GET /projects/{project}/vault`, narrowed to a single service. Requires `can_read_vault`.",
+        "operationId": "showProjectVaultService",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Registry service key, e.g. `firebase`. Unknown -> 404 listing the valid ones."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One service without secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/VaultServicePayload"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/vault/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal every credential, plus .env blocks",
+        "description": "Every stored credential value, the file inventory, ready-to-paste .env blocks for vite/next/node/laravel, and `undecryptable[]`. Requires `can_reveal_vault`. Recorded against the project — field NAMES only, never values. The vite and next blocks contain ONLY values the registry marks `client_safe`, so a server secret cannot reach a browser bundle.",
+        "operationId": "revealProjectVault",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project vault with secrets and env blocks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultReveal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/vault/{service}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal one service's credentials",
+        "description": "As the full reveal, narrowed to a single service. Requires `can_reveal_vault`. Recorded.",
+        "operationId": "revealProjectVaultService",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Registry service key, e.g. `firebase`. Unknown -> 404 listing the valid ones."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One service with secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultReveal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/vault-files/{file}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Download a stored config file",
+        "description": "The real bytes of a stored file — google-services.json, a plist, a service-account JSON, an Android keystore — with its original filename and an `X-Checksum-Sha256` header. Requires `can_reveal_vault`. A file that is stored but cannot be decrypted returns 409 PLAINTEXT_UNAVAILABLE with `details.reason: \"undecryptable\"`, which is a different answer from missing.",
+        "operationId": "downloadProjectVaultFile",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "`service.key`, e.g. `firebase.google_services_json` — the identifier a reveal returns in each file's `download`."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file bytes",
+            "headers": {
+              "X-Checksum-Sha256": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "sha256 of the plaintext bytes."
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4233,6 +4763,353 @@
           "Showing 1-20 of 137 (page 1 of 7). 117 more available - request page 2 to continue (?page=2&per_page=20).",
           "Showing 121-137 of 137 (page 7 of 7). This is the last page.",
           "No results."
+        ]
+      },
+      "VaultFieldDefinition": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "help": {
+            "type": "string",
+            "description": "Where in that service's console the value is found."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "textarea",
+              "url",
+              "file"
+            ]
+          },
+          "secret": {
+            "type": "boolean",
+            "description": "Encrypted at rest and withheld from every non-reveal response."
+          },
+          "client_safe": {
+            "type": "boolean",
+            "description": "May appear in a generated VITE_/NEXT_PUBLIC_ block. Always false when `secret` is true."
+          },
+          "env_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Unprefixed .env name, or null when the value never belongs in one."
+          }
+        }
+      },
+      "VaultServiceDefinition": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "console": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "freeform": {
+            "type": "boolean",
+            "description": "True for `general`, where you name the keys yourself."
+          },
+          "linked": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set on `supabase`, which links to the account-wide vault instead of storing its own fields."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VaultFieldDefinition"
+            }
+          }
+        }
+      },
+      "VaultServiceRegistry": {
+        "type": "object",
+        "properties": {
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VaultServiceDefinition"
+            }
+          }
+        }
+      },
+      "VaultServicePayload": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "has": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Which fields hold a value. Tested without decrypting, so a value stored under a rotated APP_KEY still reports true."
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "Non-secret values only, unless this came from a reveal."
+          }
+        }
+      },
+      "VaultFileMetadata": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "checksum": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "download": {
+            "type": "string",
+            "description": "Path to fetch the bytes. Present on reveal responses."
+          }
+        }
+      },
+      "ProjectVaultSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "public_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "app_identifier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reverse-DNS app id. IMMUTABLE once published to a store."
+          },
+          "primary_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "repo": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "is_public": {
+                "type": [
+                  "boolean",
+                  "null"
+                ],
+                "description": "Null means unknown."
+              }
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tech_stack": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "configured_services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ProjectVaultDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProjectVaultSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "type_label": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              },
+              "supabase": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Pointer to the account-wide Supabase vault; its credentials need the can_manage_supabase scope."
+              },
+              "services": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/VaultServicePayload"
+                }
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/VaultFileMetadata"
+                }
+              },
+              "last_revealed_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ProjectVaultReveal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProjectVaultDetail"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "env": {
+                "type": "object",
+                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values.",
+                "properties": {
+                  "vite": {
+                    "type": "string"
+                  },
+                  "next": {
+                    "type": "string"
+                  },
+                  "node": {
+                    "type": "string"
+                  },
+                  "laravel": {
+                    "type": "string"
+                  }
+                }
+              },
+              "undecryptable": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "`service.field` names that HOLD a value which could not be decrypted — stored under a previous APP_KEY. Reported honestly so you can tell 'not set' from 'set but unreadable'. Re-enter those in the dashboard."
+              }
+            }
+          }
         ]
       }
     }

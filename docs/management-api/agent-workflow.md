@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 title: Agent workflow — auto-configure a project's API key
 description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates.
 keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, global origins check, fh_pat access token workflow, wire up api key from env]
@@ -125,3 +125,40 @@ never added to it. Read them with `GET /global-origins`, and test candidates aga
 Remember a key's own list will **not** show the global origins it also accepts — that is expected, not
 a missing entry. After changes, `lookup` again (or `GET .../origins`) and confirm `restricted` is `true` with the
 origins you expect. Then the frontend key is safe to ship: it only works from your own app.
+
+## Bootstrapping a whole project from the vault
+
+The workflow above wires up FilesHub itself. The **[project vault](./project-vault.md)** does the same for
+everything *else* a project needs — Firebase config, OAuth client ids, a Sentry DSN, an OneSignal key,
+`google-services.json`, signing fingerprints — so a fresh machine can be brought up without opening a
+single console.
+
+```bash
+BASE=https://fileshub.zaions.com/api/public/v1
+
+# What can this token do?
+curl -s $BASE/token -H "Authorization: Bearer $FH_PAT" \
+  | jq '.data | {can_read_vault, can_reveal_vault}'
+
+# What does the vault even hold? (schema, not contents — any valid token)
+curl -s $BASE/vault/services -H "Authorization: Bearer $FH_PAT" \
+  | jq -r '.data.services[] | "\(.service): \(.fields | length) fields"'
+
+# Which services is THIS project configured for? (no secret leaves the vault)
+curl -s $BASE/projects/my-app/vault -H "Authorization: Bearer $FH_PAT" \
+  | jq '.data.configured_services'
+
+# Write the env file and fetch the Android config
+curl -s -X POST $BASE/projects/my-app/vault/reveal -H "Authorization: Bearer $FH_PAT" \
+  | jq -r '.data.env.vite' > .env.local
+curl -s $BASE/projects/my-app/vault-files/firebase.google_services_json \
+  -H "Authorization: Bearer $FH_PAT" -o android/app/google-services.json
+```
+
+Two things worth knowing before you call it:
+
+- **The scopes are off by default.** `can_read_vault` and `can_reveal_vault` are separate booleans on the
+  token; without them you get `403 TOKEN_PERMISSION_DENIED` naming the one you need. Enable them in the
+  admin.
+- **The `vite` and `next` env blocks contain only values marked `client_safe`.** A server secret is not
+  omitted by luck — it is structurally unable to appear there, which is the point.

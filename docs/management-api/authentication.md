@@ -42,6 +42,8 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "token_prefix": "fh_pat_XzTJC7PU",
     "all_projects": true,
     "can_manage_supabase": true,
+    "can_read_vault": true,
+    "can_reveal_vault": false,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -50,8 +52,19 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
 ```
 
 When the token is scoped to specific projects, `all_projects` is `false` and a `projects` array lists
-exactly what it may manage. `can_manage_supabase` is a separate, off-by-default axis that gates the
-[Supabase project vault](./supabase-projects.md) — it is independent of the project scope.
+exactly what it may manage.
+
+Three further booleans are **separate, off-by-default axes**, independent of the project scope:
+
+| Flag | Gates |
+|---|---|
+| `can_manage_supabase` | The [Supabase project vault](./supabase-projects.md) — account-wide, so the project scope cannot express it |
+| `can_read_vault` | The [project vault](./project-vault.md): metadata, links, and **which** credentials exist — never a value |
+| `can_reveal_vault` | The project vault's credential **values**, config-file bytes and `.env` blocks. Implies read |
+
+A token missing one of these gets **`403 TOKEN_PERMISSION_DENIED`** with `details.required_scope`, rather
+than the anti-enumeration `404` used for resources — the scope is a property of your own token, so an
+honest error is more useful than pretending the resource does not exist.
 
 ## Auth errors
 

@@ -221,12 +221,42 @@ the key is unknown or outside this token's scope.
 { "data": { "project": { "slug": "my-web-app", ... }, "api_key": { "restricted": true, ... }, "origins": [ { "type": "domain", "value": "https://myapp.com" } ] } }
 ```
 
+## Project vault
+
+Every third-party credential, config file and identifier a project needs. Gated by **two** opt-in token
+scopes — `can_read_vault` (metadata and presence flags) and `can_reveal_vault` (the values). Full guide:
+**[Project vault](./project-vault.md)**.
+
+### `GET /vault/services`
+The field registry — every service, field, label, help text, `secret`, `client_safe` and `env_key`.
+Schema discovery; any valid token may read it.
+
+### `GET /vault/projects`
+Projects with vault metadata. Query `q`, `status`, `per_page` (max 50), `page`.
+
+### `GET /projects/{project}/vault`
+One project **without secret values** — non-secret config plus `has` presence flags.
+
+### `GET /projects/{project}/vault/{service}`
+The same, narrowed to one service. Unknown service → `404`, listing the valid ones.
+
+### `POST /projects/{project}/vault/reveal`
+Every credential, plus `.env` blocks for `vite` / `next` / `node` / `laravel`, plus `undecryptable[]`.
+Recorded against the project.
+
+### `POST /projects/{project}/vault/{service}/reveal`
+The same, narrowed to one service.
+
+### `GET /projects/{project}/vault-files/{service}.{key}`
+The real bytes of a stored config file, with its original filename and `X-Checksum-Sha256`.
+
 ## Error codes
 
 | HTTP | `code` | When |
 | --- | --- | --- |
 | 401 | `MISSING_ACCESS_TOKEN`, `INVALID_ACCESS_TOKEN_FORMAT`, `INVALID_ACCESS_TOKEN`, `TOKEN_REVOKED`, `TOKEN_EXPIRED` | Auth (see [Authentication](./authentication.md)) |
-| 404 | `NOT_FOUND` | Project / key / origin unknown **or** outside the token's scope |
-| 409 | `ORIGIN_ALREADY_EXISTS`, `PLAINTEXT_UNAVAILABLE` | Duplicate origin; legacy key has no stored plaintext |
+| 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope** — `can_manage_supabase`, `can_read_vault` or `can_reveal_vault`. `details.required_scope` names it. Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
+| 404 | `NOT_FOUND` | Project / key / origin / service unknown **or** outside the token's scope |
+| 409 | `ORIGIN_ALREADY_EXISTS`, `PLAINTEXT_UNAVAILABLE` | Duplicate origin; a stored value that cannot be decrypted (`details.reason`) |
 | 422 | `VALIDATION_FAILED` | Bad body — `details` holds the per-field messages |
 | 429 | — | Over 120 requests/minute |
