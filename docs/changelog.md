@@ -12,6 +12,14 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-08-01 — Supabase account tokens
+
+- New page: **[Supabase account tokens](management-api/supabase-accounts)**. A Supabase personal access token (`sbp_…`) belongs to an *account*, not a project — it drives the Supabase Management API and `supabase login --token`, so one token reaches every project that account owns, including projects that do not exist yet. It now lives on its own account record, entered once for all the projects underneath it, and is read back over three new endpoints: `GET /supabase-accounts`, `GET /supabase-accounts/{idOrEmail}` and `POST /supabase-accounts/{idOrEmail}/reveal`. The reveal returns `env.cli` = `SUPABASE_ACCESS_TOKEN=…`, so `supabase link` / `db push` / `functions deploy` need no interactive login.
+- **A new opt-in token scope, `can_read_supabase_tokens`**, off by default — and the part worth reading twice: **`can_manage_supabase` does not grant it.** The two have different blast radii, so they are different switches; a token holding only `can_manage_supabase` gets `403` from every account endpoint. Documented in [Authentication](management-api/authentication) (now four separate axes, with which of them imply each other stated explicitly), [overview](management-api/overview) and the [endpoint reference](management-api/endpoints).
+- The [Supabase project vault](management-api/supabase-projects) payload gained an `account` **pointer** — which account owns the project, whether it has a token stored, and the endpoint plus scope that would return it. It is a pointer and never a credential: no project endpoint returns a personal access token, whatever scopes the caller holds.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.2.0**: 3 new paths and 3 new schemas. Token introspection also gained `can_read_vault` and `can_reveal_vault`, which the spec had been missing since they shipped — a client generated from 1.1.0 was unaware of both.
+- `llms.txt` and `llms-full.txt` gained the account endpoints **and the project vault**, which had been omitted when that page shipped on 2026-07-31.
+
 ## 2026-07-31 — Project vault
 
 - New page: **[Project vault](management-api/project-vault)**. FilesHub now stores every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Clarity, Amplitude, Cloudflare, Capacitor signing, GitHub, the three store consoles, OpenAI, SMTP, plus a freeform bucket — and reads them back over the Management API, including ready-to-paste `.env` blocks for Vite, Next, Node and Laravel. Supabase is *linked* to the existing [account-wide vault](management-api/supabase-projects) rather than duplicated.

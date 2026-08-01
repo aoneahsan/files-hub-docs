@@ -91,6 +91,19 @@
   React/Node/Laravel `.env` blocks. Read-only (projects are created/edited in the FilesHub admin) and
   gated by a separate, off-by-default token scope `can_manage_supabase` (a token without it gets 403,
   not 404). An unreadable secret comes back null; `has` flags report presence without decrypting.
+- Supabase account tokens: `GET /supabase-accounts`, `GET /supabase-accounts/{idOrEmail}`,
+  `POST /supabase-accounts/{idOrEmail}/reveal` — read an account's personal access token (`sbp_…`) plus
+  the `SUPABASE_ACCESS_TOKEN` line the Supabase CLI reads, so `supabase link` / `db push` /
+  `functions deploy` need no interactive login. Gated by its OWN off-by-default scope
+  `can_read_supabase_tokens`; `can_manage_supabase` does NOT grant it, because a PAT reaches every
+  project the account owns rather than one project's credentials. A project payload carries only an
+  `account` POINTER (`credentials_via` + `requires_scope`), never the token.
+- Project vault: `GET /vault/services`, `GET /vault/projects`, `GET /projects/{project}/vault`,
+  `POST /projects/{project}/vault/reveal`, `GET /projects/{project}/vault-files/{service}.{key}` — every
+  third-party credential, config file and identifier a project needs (Firebase, OAuth, Sentry, OneSignal,
+  signing keys, `google-services.json`). Two off-by-default scopes: `can_read_vault` for metadata and
+  presence flags, `can_reveal_vault` for the values, file bytes and `.env` blocks. The generated
+  `vite`/`next` blocks contain only fields marked client-safe.
 
 ## Documentation pages
 
@@ -99,6 +112,8 @@
 - Management API authentication: https://fileshub-docs.zaions.com/management-api/authentication
 - Management API endpoints: https://fileshub-docs.zaions.com/management-api/endpoints
 - Management API Supabase project vault: https://fileshub-docs.zaions.com/management-api/supabase-projects
+- Management API Supabase account tokens: https://fileshub-docs.zaions.com/management-api/supabase-accounts
+- Management API project vault: https://fileshub-docs.zaions.com/management-api/project-vault
 - Management API agent workflow: https://fileshub-docs.zaions.com/management-api/agent-workflow
 - Quick Start: https://fileshub-docs.zaions.com/getting-started/quick-start
 - Authentication: https://fileshub-docs.zaions.com/getting-started/authentication

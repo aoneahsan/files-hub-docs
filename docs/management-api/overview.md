@@ -46,6 +46,11 @@ A **separate** boolean, **`can_manage_supabase`** (off by default), gates the [S
 vault](./supabase-projects.md) — those resources are account-wide, so they sit on their own axis rather
 than the project scope. A token without it gets a `403`, not a `404`.
 
+**`can_read_supabase_tokens`** (also off by default) is a further axis again, and
+`can_manage_supabase` does **not** imply it: it gates a [Supabase account's personal access
+token](./supabase-accounts.md), which reaches every project that account owns rather than one project's
+credentials.
+
 ## What you can do
 
 - **Projects** — list (with `?q=` search), create, read, update, delete.
@@ -58,6 +63,10 @@ than the project scope. A token without it gets a `403`, not a `404`.
   set (keys, JWT secret, Postgres connection, S3 keys) plus ready-to-paste React/Node/Laravel `.env`
   blocks. Read-only, and gated by the `can_manage_supabase` scope. See
   [Supabase project vault](./supabase-projects.md).
+- **Supabase accounts** — list, read, and **reveal** an account's personal access token (`sbp_…`) plus
+  the `SUPABASE_ACCESS_TOKEN` line the Supabase CLI reads. Read-only, and gated by the separate
+  `can_read_supabase_tokens` scope. See [Supabase account tokens](./supabase-accounts.md).
 
 See [Authentication](./authentication.md), the [Endpoint reference](./endpoints.md), the
-[Supabase project vault](./supabase-projects.md), and the [Agent workflow](./agent-workflow.md).
+[Supabase project vault](./supabase-projects.md), [Supabase account tokens](./supabase-accounts.md),
+and the [Agent workflow](./agent-workflow.md).

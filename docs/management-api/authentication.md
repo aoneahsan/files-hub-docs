@@ -44,6 +44,7 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "can_manage_supabase": true,
     "can_read_vault": true,
     "can_reveal_vault": false,
+    "can_read_supabase_tokens": false,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -54,13 +55,18 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
 When the token is scoped to specific projects, `all_projects` is `false` and a `projects` array lists
 exactly what it may manage.
 
-Three further booleans are **separate, off-by-default axes**, independent of the project scope:
+Four further booleans are **separate, off-by-default axes**, independent of the project scope:
 
 | Flag | Gates |
 |---|---|
 | `can_manage_supabase` | The [Supabase project vault](./supabase-projects.md) — account-wide, so the project scope cannot express it |
 | `can_read_vault` | The [project vault](./project-vault.md): metadata, links, and **which** credentials exist — never a value |
 | `can_reveal_vault` | The project vault's credential **values**, config-file bytes and `.env` blocks. Implies read |
+| `can_read_supabase_tokens` | A [Supabase account's personal access token](./supabase-accounts.md) (`sbp_…`) — the whole account, not one project |
+
+Only `can_reveal_vault` implies another (`can_read_vault`). The rest grant nothing but themselves — in
+particular **`can_manage_supabase` does not grant `can_read_supabase_tokens`**: one reaches a project's
+credentials, the other reaches the account that owns every project.
 
 A token missing one of these gets **`403 TOKEN_PERMISSION_DENIED`** with `details.required_scope`, rather
 than the anti-enumeration `404` used for resources — the scope is a property of your own token, so an

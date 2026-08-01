@@ -156,9 +156,14 @@ and an `fh_pat_` token does nothing on `/api/v1`. The plane sends no CORS header
 only; never put an access token in a browser or a committed file.
 
 A token covers all projects (existing and future — the default) or an explicit subset; a resource the
-token does not cover returns `404 NOT_FOUND`, never 403, so scopes cannot be enumerated. A separate,
-off-by-default boolean `can_manage_supabase` gates the Supabase project vault (below) — a distinct axis
-from the project scope, and `GET /token` reports it. Success is `{ "data": ... }`; errors are
+token does not cover returns `404 NOT_FOUND`, never 403, so scopes cannot be enumerated. Four separate,
+off-by-default booleans sit on their own axes beside the project scope, and `GET /token` reports all of
+them: `can_manage_supabase` (the Supabase project vault, below), `can_read_supabase_tokens` (a Supabase
+account's personal access token, below), `can_read_vault` (project-vault metadata and presence flags) and
+`can_reveal_vault` (project-vault values, file bytes and `.env` blocks; implies read). Only that last pair
+implies anything — in particular `can_manage_supabase` does NOT grant `can_read_supabase_tokens`. A
+missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`, not 404, because a scope is
+a property of the caller's own token. Success is `{ "data": ... }`; errors are
 `{ "error": { "code", "message", "details? } }`. The plane is rate limited to 120 requests/minute.
 Create tokens in the FilesHub admin under Access Tokens.
 
@@ -202,9 +207,31 @@ Endpoints:
   recorded. Secret presence (`has` flags) is reported without decrypting; a stored secret that cannot be
   decrypted (e.g. under a rotated APP_KEY) comes back `null` rather than failing the call. Derived
   endpoints (rest/auth/storage/graphql/functions/realtime/dashboard) are computed from the project URL.
+  A project payload carries an `account` POINTER — which account owns it, whether that account has a
+  personal access token stored, and the endpoint plus scope that would return it — but never the token.
+- Supabase account tokens — `GET /supabase-accounts` (paginated, `?q=`/`?active=`),
+  `GET /supabase-accounts/{idOrEmail}`, and `POST /supabase-accounts/{idOrEmail}/reveal`. A personal
+  access token (`sbp_…`) belongs to the supabase.com ACCOUNT, not a project: it drives the Supabase
+  Management API and `supabase login --token`, so it reaches every project that account owns, including
+  ones that do not exist yet. It is therefore stored once per account and gated by its own scope,
+  `can_read_supabase_tokens` — `can_manage_supabase` does not grant it, and a token holding only that
+  gets 403 here. The reveal returns the token plus `env.cli` = `SUPABASE_ACCESS_TOKEN=…`, the variable
+  the Supabase CLI reads, so `supabase link` / `db push` / `functions deploy` work without an
+  interactive login. Read-only (accounts are created/edited in the FilesHub admin); every reveal is
+  recorded with field names only.
+- Project vault — `GET /vault/services` (the field registry; any valid token), `GET /vault/projects`,
+  `GET /projects/{project}/vault` and `/vault/{service}`, `POST /projects/{project}/vault/reveal` and
+  `/vault/{service}/reveal`, `GET /projects/{project}/vault-files/{service}.{key}`. Every third-party
+  credential, config file and identifier a project needs — Firebase, OAuth clients, Sentry, OneSignal,
+  signing fingerprints, `google-services.json` — so a fresh machine is provisioned without opening a
+  console. Two scopes: `can_read_vault` (metadata and presence flags, never a value) and
+  `can_reveal_vault` (values, file bytes, `.env` blocks; implies read). The generated `vite` and `next`
+  blocks contain only fields marked client-safe, so a server secret cannot appear in one.
 
 Full reference: https://fileshub-docs.zaions.com/management-api/overview, the Supabase vault at
-https://fileshub-docs.zaions.com/management-api/supabase-projects, and the agent recipe at
+https://fileshub-docs.zaions.com/management-api/supabase-projects, Supabase account tokens at
+https://fileshub-docs.zaions.com/management-api/supabase-accounts, the project vault at
+https://fileshub-docs.zaions.com/management-api/project-vault, and the agent recipe at
 https://fileshub-docs.zaions.com/management-api/agent-workflow.
 
 ## Beyond storage: developer utilities

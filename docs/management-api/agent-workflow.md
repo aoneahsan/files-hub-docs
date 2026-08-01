@@ -162,3 +162,27 @@ Two things worth knowing before you call it:
   admin.
 - **The `vite` and `next` env blocks contain only values marked `client_safe`.** A server secret is not
   omitted by luck — it is structurally unable to appear there, which is the point.
+
+## Deploying to Supabase without an interactive login
+
+`supabase link`, `supabase db push` and `supabase functions deploy` all read `SUPABASE_ACCESS_TOKEN`, and
+the vault hands you exactly that line:
+
+```bash
+export SUPABASE_ACCESS_TOKEN=$(
+  curl -s -X POST $BASE/supabase-accounts/you@example.com/reveal \
+    -H "Authorization: Bearer $FH_PAT" | jq -r '.data.secrets.personal_access_token'
+)
+supabase link --project-ref <ref>
+```
+
+This needs **`can_read_supabase_tokens`**, which is its own switch — a token holding `can_manage_supabase`
+gets `403` here. That is deliberate: `can_manage_supabase` reads one project's credentials, while an
+account token can create and delete every project the account owns. Check both before you script anything:
+
+```bash
+curl -s $BASE/token -H "Authorization: Bearer $FH_PAT" \
+  | jq '.data | {can_manage_supabase, can_read_supabase_tokens}'
+```
+
+See [Supabase account tokens](./supabase-accounts.md).

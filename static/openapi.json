@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
     "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health). The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.",
     "contact": {
@@ -2718,6 +2718,231 @@
         }
       }
     },
+    "/supabase-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List registered Supabase accounts",
+        "description": "Safe summaries — never the personal access token, only whether one is stored. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns.",
+        "operationId": "listSupabaseAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Match on email, label or organization."
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SupabaseAccountSummary"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/supabase-accounts/{account}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Show one Supabase account",
+        "description": "The account, its dashboard pages and the projects under it. No token value. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns.",
+        "operationId": "showSupabaseAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or the account's login email (matched case-insensitively)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SupabaseAccountDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/supabase-accounts/{account}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal a Supabase account's personal access token",
+        "description": "Returns the sbp_... token plus the SUPABASE_ACCESS_TOKEN env line the Supabase CLI reads. Every call is recorded (token name, IP, user-agent and field NAMES — never a value). Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns.",
+        "operationId": "revealSupabaseAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or the account's login email (matched case-insensitively)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SupabaseAccountReveal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
     "/vault/services": {
       "get": {
         "tags": [
@@ -4386,6 +4611,18 @@
             "type": "boolean",
             "description": "Whether the token may read the Supabase project vault (separate axis from the project scope; off by default)."
           },
+          "can_read_vault": {
+            "type": "boolean",
+            "description": "Whether the token may read project-vault metadata and presence flags (never a value; off by default)."
+          },
+          "can_reveal_vault": {
+            "type": "boolean",
+            "description": "Whether the token may read project-vault credential VALUES, file bytes and .env blocks. Implies can_read_vault; off by default."
+          },
+          "can_read_supabase_tokens": {
+            "type": "boolean",
+            "description": "Whether the token may read a Supabase account's personal access token (sbp_...). A separate axis: can_manage_supabase does NOT grant it, because a PAT reaches every project the account owns. Off by default."
+          },
           "expires_at": {
             "type": [
               "string",
@@ -4486,6 +4723,39 @@
               "string",
               "null"
             ]
+          },
+          "account": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Pointer to the Supabase account that owns this project — never its credential. null when the project is not linked to an account.",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "email": {
+                "type": "string"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "has_personal_access_token": {
+                "type": "boolean",
+                "description": "Whether that account has a PAT stored."
+              },
+              "credentials_via": {
+                "type": "string",
+                "description": "Path to the account endpoint that can return it."
+              },
+              "requires_scope": {
+                "type": "string",
+                "description": "The token scope that endpoint requires."
+              }
+            }
           },
           "is_active": {
             "type": "boolean"
@@ -5111,6 +5381,161 @@
             }
           }
         ]
+      },
+      "SupabaseAccountSummary": {
+        "type": "object",
+        "description": "Safe view of a Supabase account — never the personal access token, only whether one is stored.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "email": {
+            "type": "string",
+            "description": "The supabase.com login."
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "organization": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "has": {
+            "type": "object",
+            "description": "Which credentials this account holds, tested without decrypting.",
+            "properties": {
+              "personal_access_token": {
+                "type": "boolean"
+              }
+            }
+          },
+          "projects_count": {
+            "type": "integer",
+            "description": "Registered Supabase projects a reveal of this account would reach."
+          },
+          "last_revealed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "SupabaseAccountDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupabaseAccountSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dashboard": {
+                "type": "object",
+                "description": "Derived supabase.com pages for this account.",
+                "properties": {
+                  "account": {
+                    "type": "string"
+                  },
+                  "tokens": {
+                    "type": "string"
+                  },
+                  "organizations": {
+                    "type": "string"
+                  }
+                }
+              },
+              "projects": {
+                "type": "array",
+                "description": "Supabase projects registered under this account.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "ref": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "credentials_via": {
+                      "type": "string",
+                      "description": "That project's own vault endpoint — a different scope (can_manage_supabase)."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "description": "One account with its dashboard pages and the projects underneath it. Still no token value."
+      },
+      "SupabaseAccountReveal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupabaseAccountDetail"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "secrets": {
+                "type": "object",
+                "properties": {
+                  "personal_access_token": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "The sbp_... token, or null when stored but undecryptable."
+                  }
+                }
+              },
+              "env": {
+                "type": "object",
+                "description": "Ready-to-paste .env fragment. Omitted keys mean no value is stored.",
+                "properties": {
+                  "cli": {
+                    "type": "string",
+                    "description": "SUPABASE_ACCESS_TOKEN=... — the variable the Supabase CLI reads."
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "description": "Everything, the personal access token included. Recorded on every call."
       }
     }
   }

@@ -221,6 +221,18 @@ the key is unknown or outside this token's scope.
 { "data": { "project": { "slug": "my-web-app", ... }, "api_key": { "restricted": true, ... }, "origins": [ { "type": "domain", "value": "https://myapp.com" } ] } }
 ```
 
+## Supabase
+
+Two separate surfaces, on two separate scopes, and neither returns the other's credential:
+
+| Surface | Scope | Guide |
+| --- | --- | --- |
+| `GET`/`POST /supabase-projects…` — one project's keys, JWT secret, Postgres and S3 credentials | `can_manage_supabase` | **[Supabase project vault](./supabase-projects.md)** |
+| `GET`/`POST /supabase-accounts…` — an account's personal access token (`sbp_…`) | `can_read_supabase_tokens` | **[Supabase account tokens](./supabase-accounts.md)** |
+
+`can_manage_supabase` does **not** imply `can_read_supabase_tokens`: a project key reaches one project, an
+account token reaches every project that account owns.
+
 ## Project vault
 
 Every third-party credential, config file and identifier a project needs. Gated by **two** opt-in token
@@ -255,7 +267,7 @@ The real bytes of a stored config file, with its original filename and `X-Checks
 | HTTP | `code` | When |
 | --- | --- | --- |
 | 401 | `MISSING_ACCESS_TOKEN`, `INVALID_ACCESS_TOKEN_FORMAT`, `INVALID_ACCESS_TOKEN`, `TOKEN_REVOKED`, `TOKEN_EXPIRED` | Auth (see [Authentication](./authentication.md)) |
-| 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope** — `can_manage_supabase`, `can_read_vault` or `can_reveal_vault`. `details.required_scope` names it. Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
+| 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope** — `can_manage_supabase`, `can_read_vault`, `can_reveal_vault` or `can_read_supabase_tokens`. `details.required_scope` names it. Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
 | 404 | `NOT_FOUND` | Project / key / origin / service unknown **or** outside the token's scope |
 | 409 | `ORIGIN_ALREADY_EXISTS`, `PLAINTEXT_UNAVAILABLE` | Duplicate origin; a stored value that cannot be decrypted (`details.reason`) |
 | 422 | `VALIDATION_FAILED` | Bad body — `details` holds the per-field messages |

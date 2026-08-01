@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 4
 title: Supabase project vault
 description: Read and reveal a Supabase project's full credential set — API keys, JWT secret, Postgres connection details, and S3 keys — over the FilesHub Management API, plus ready-to-paste React, Node and Laravel .env blocks.
 keywords: [supabase credentials api, supabase vault, reveal supabase keys, supabase service_role key api, supabase connection string, can_manage_supabase scope, wire supabase into react node laravel, supabase project management api]
@@ -17,6 +17,13 @@ needs to wire that Supabase project into a React, Node or Laravel app.
 
 These endpoints are **read-only** (list, show, reveal). Creating and editing Supabase projects stays in
 the FilesHub admin by design — a vault is filled by a person, and read by a machine.
+
+:::note The account's personal access token is not here
+A Supabase **personal access token** (`sbp_…`) belongs to the account, not to a project, and it reaches
+every project that account owns. It lives on the account record instead, behind its own scope — see
+[Supabase account tokens](./supabase-accounts.md). No endpoint on this page returns one, whatever scopes
+your token holds.
+:::
 
 Base URL `https://fileshub.zaions.com/api/public/v1`, same `Authorization: Bearer fh_pat_...` as the rest
 of the [Management API](./overview.md).
@@ -67,6 +74,14 @@ saying which secrets a reveal would return:
       "organization": "My Org",
       "region": "ap-southeast-1",
       "account_email": "you@example.com",
+      "account": {
+        "id": 1,
+        "email": "you@example.com",
+        "label": "main free-tier account",
+        "has_personal_access_token": true,
+        "credentials_via": "/api/public/v1/supabase-accounts/1",
+        "requires_scope": "can_read_supabase_tokens"
+      },
       "is_active": true,
       "keepalive": { "last_run_at": "2026-07-22T00:00:00+00:00", "last_status": "ok" },
       "has": {
@@ -84,6 +99,10 @@ saying which secrets a reveal would return:
 
 Presence in `has` is tested **without decrypting**, so a secret that was stored under a rotated `APP_KEY`
 still reports `true` — see the note under [reveal](#post-supabase-projectssupabaseprojectreveal).
+
+`account` is a **pointer, never a credential**: it says which account owns the project, whether that account
+has a personal access token stored, and which endpoint and scope would return it. It is `null` for a project
+not yet linked to an account. See [Supabase account tokens](./supabase-accounts.md).
 
 ## `GET /supabase-projects/{supabaseProject}`
 
