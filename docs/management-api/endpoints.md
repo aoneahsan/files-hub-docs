@@ -353,20 +353,18 @@ code — see [Errors & limits](../api/errors-and-limits.md).)
 
 The value is not uniform yet, so read it defensively:
 
-| Gate | What it returns **today** |
+| Gate | What it returns |
 | --- | --- |
 | Project vault read | `can_read_vault` |
 | Project vault reveal | `can_reveal_vault` |
-| Supabase **project** vault | `supabase_projects` |
-| Supabase **account** token | `supabase_tokens` |
+| Supabase **project** vault | `can_manage_supabase` |
+| Supabase **account** token | `can_read_supabase_tokens` |
 
-The two vault gates already report their token column names; the two Supabase gates report shorter labels
-that match no column.
+All four now report the token's own column name, so the 403 names the switch to enable in Nova.
 
-:::note Pending change — not deployed yet
-A committed but **undeployed** change makes the Supabase pair report their column names too —
-`can_manage_supabase` and `can_read_supabase_tokens`. The table above is what the live API returns as of
-2026-08-04 (`backend_version` `2026.08.01.2`). **Accept all six strings** and neither release breaks your
-client. Verify which is live with `curl -s https://fileshub.zaions.com/api/version` rather than inferring it
-from a document.
+:::note Older releases returned two shorter labels
+Before `2026.08.04.1` (deployed 2026-08-04) the Supabase pair reported `supabase_projects` and
+`supabase_tokens`, which matched no column and no Nova field. **Accepting all six strings** costs nothing and
+survives either release. Verify which is live with `curl -s https://fileshub.zaions.com/api/version` rather
+than inferring it from a document — including this one.
 :::

@@ -49,9 +49,10 @@ of your own token — an honest error is more useful than pretending the resourc
   "details": { "required_scope": "supabase_tokens" } } }
 ```
 
-:::note `required_scope` is `supabase_tokens` today, `can_read_supabase_tokens` in the next release
-That short label is what the live API returns as of 2026-08-04; a committed but undeployed change makes it
-report the token's column name instead. Match on **both** and neither release breaks you — see
+:::note `required_scope` is `can_read_supabase_tokens` — the token's column name
+Live since `2026.08.04.1` (deployed 2026-08-04). Releases before it returned the shorter label
+`supabase_tokens`, which matched no column, so an older client may still match on that — accepting **both**
+forms costs nothing. See
 [`details.required_scope`](./endpoints.md#detailsrequired_scope--match-on-both-forms).
 :::
 
