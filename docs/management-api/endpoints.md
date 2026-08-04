@@ -4,49 +4,85 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
 last_update:
-  date: 2026-07-30
+  date: 2026-08-04
   author: Ahsan Mahmood
 ---
 
 # Endpoint reference
 
 Base URL `https://fileshub.zaions.com/api/public/v1`. Every request needs
-`Authorization: Bearer fh_pat_...` (see [Authentication](./authentication.md)). Lists are paginated
-(`per_page` default 20, max 50) and return `{"data": [...], "meta": {...}}`. Everything else returns
-`{"data": ...}`. The machine spec is in [`openapi.json`](https://fileshub-docs.zaions.com/openapi.json).
+`Authorization: Bearer fh_pat_...` (see [Authentication](./authentication.md)).
+
+Success is always `{"data": ...}`; failure is always `{"error": {"code", "message", "details"?}}`. Most lists
+are paginated and add `meta` + `message` — see [Pagination](../api/pagination.md) for the full contract and
+the three deliberately unpaginated exceptions.
+
+The machine spec is [`openapi.json`](https://fileshub-docs.zaions.com/openapi.json). It is **hand-maintained,
+not generated**, so where it and the running API disagree the API is right — please report the divergence.
 
 ## Token
 
 ### `GET /token`
-Introspect the current token — name, scope, expiry, last use. The intended first call.
+Introspect the current token — name, `token_prefix`, expiry, last use, and the four capability booleans
+(`can_manage_supabase`, `can_read_vault`, `can_reveal_vault`, `can_read_supabase_tokens`), **all off by
+default**. The intended first call: it turns a later `403` into something you predicted.
+
+`projects[]` appears **only when `all_projects` is `false`**. On an all-projects token the key is absent
+entirely — not `null`, not `[]` — because such a token also covers projects that do not exist yet, so no
+list could describe it. Test with `'projects' in data`. Full detail: [Authentication](./authentication.md).
 
 ## Projects
+
+A project carries more than a name. Alongside `id` / `public_id` / `name` / `slug` / `status` / `notes` /
+`created_at`, every read returns **`description`**, **`app_identifier`**, **`primary_url`**, **`repo_url`**,
+**`repo_is_public`**, **`platforms[]`** and **`tech_stack[]`** — and all seven are writable on create and
+update. `platforms` and `tech_stack` are always arrays, empty rather than `null`.
+
+:::note One field is not yours to change later
+`app_identifier` is the reverse-DNS app id. It is **immutable once the app is published to a store** —
+changing it orphans every existing install. The API will accept the write; the store will not forgive it.
+:::
 
 ### `GET /projects`
 List the projects this token may manage. Query: `q` (substring match on name or slug), `status`
 (`active` / `inactive`), `per_page`, `page`. Each item includes `api_keys_count`.
 
 ### `POST /projects`
-Create a project. Body: `name` (required), optional `slug` (auto-generated from the name if omitted),
-`status` (`active` default), `notes`.
+Create a project. Body: `name` (required, ≤255) plus any of `slug`, `status` (`active` default), `notes`,
+`description`, `app_identifier`, `primary_url`, `repo_url`, `repo_is_public`, `platforms[]`,
+`tech_stack[]`.
+
+`slug` accepts lowercase letters, digits and hyphens only. **Omit it and a unique one is generated from the
+name; supply one and it is used verbatim** — so a duplicate comes back as `409 SLUG_ALREADY_EXISTS` rather
+than being quietly de-duplicated for you.
 
 ```bash
 curl -X POST .../projects -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' -d '{"name":"My Web App"}'
 ```
 ```json
-{ "data": { "id": 42, "public_id": "01KX...", "name": "My Web App", "slug": "my-web-app", "status": "active", "notes": null, "created_at": "2026-07-18T..." } }
+{ "data": { "id": 42, "public_id": "01KX...", "name": "My Web App", "slug": "my-web-app",
+            "status": "active", "notes": null, "description": null, "app_identifier": null,
+            "primary_url": null, "repo_url": null, "repo_is_public": null,
+            "platforms": [], "tech_stack": [], "created_at": "2026-07-18T..." } }
 ```
 
+A token scoped to specific projects is **attached to the project it just created**, so its next call to that
+project resolves instead of 404-ing.
+
 ### `GET /projects/{project}`
-Fetch one project by **numeric id, ULID `public_id`, or slug**. Includes a summary `api_keys` list.
+Fetch one project by **numeric id, ULID `public_id`, or slug**. Adds an abbreviated `api_keys` list —
+`id`, `name`, `key_prefix`, `restricted`, `is_active` per key, newest first. For the full key representation
+call the api-keys endpoints below.
 
 ### `PATCH /projects/{project}`
-Update `name`, `slug`, `status`, or `notes`.
+Update any of the project's own fields. Send only what you are changing; an omitted key is left alone.
+`platforms`, `tech_stack` and `permissions` **replace** rather than merge. Unlike on create, `slug` does not
+accept `null` here — omit it to leave the slug alone. A duplicate slug is `409 SLUG_ALREADY_EXISTS`.
 
 ### `DELETE /projects/{project}`
-Delete a project. **Cascades** its API keys, origins, stored objects, and audit logs. The response
-reports what went with it:
+Delete a project. At the database level this **cascades** its API keys, origins, stored objects and audit
+logs; the response reports counts for the two worth knowing:
 ```json
 { "data": { "deleted": true, "cascade": { "api_keys": 3, "stored_objects": 128 } } }
 ```
@@ -58,7 +94,10 @@ representation never includes the hash or plaintext — the secret is returned *
 rotate, and reveal.
 
 ### `GET /projects/{project}/api-keys`
-List the project's keys (prefix, permissions, `restricted`, `is_active`, `origins_count`).
+List the project's keys, newest first (prefix, permissions, `restricted`, `is_active`, `origins_count`).
+**Paginated** — `per_page` (default 20, max 50) and `page`, with the usual `meta` and `message`. Rotating
+and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit: loop on
+`meta.has_more` rather than assuming one call returned them all.
 
 ### `POST /projects/{project}/api-keys`
 Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_send_emails`,
@@ -95,14 +134,33 @@ absence of a header proves nothing, so `curl` passes too — this is weaker than
 much stronger than leaving the key unrestricted.
 
 ### `DELETE /projects/{project}/api-keys/{apiKey}`
-Delete a key; its origins cascade.
+Delete a key; its origins cascade, and the count comes back as
+`{ "deleted": true, "cascade": { "origins": 2 } }`. To stop a key working while keeping its record, prefer
+`PATCH { "is_active": false }`.
+
+:::note There is no `revoke`, `deprecate` or `restrictions` endpoint
+All three return `404`. Deactivating is `PATCH { "is_active": false }`; restricting is
+`PATCH { "restricted": true }` plus the origins sub-resource. Those verbs belong to a *different* product's
+management API and are easy to conflate with this one.
+:::
 
 ### `POST /projects/{project}/api-keys/{apiKey}/rotate`
-Issue a new secret. The old key stops working immediately. Returns the new `plaintext_key`.
+Issue a new secret. The old key stops working **immediately** — update every consumer in the same change.
+Returns the key's fields plus the new `plaintext_key`.
 
 ### `POST /projects/{project}/api-keys/{apiKey}/reveal`
-Re-read the stored plaintext for a key you already created. Returns `409 PLAINTEXT_UNAVAILABLE` for
-legacy keys minted before plaintext was retained — rotate to get a fresh one.
+Re-read the stored plaintext for a key you already created. The response is **only**
+`{ "plaintext_key": "fh_live_..." }` — not the key's other fields; `GET` the key for those.
+
+Two different causes share `409 PLAINTEXT_UNAVAILABLE`, told apart by `details.reason`:
+
+| `reason` | Meaning | Remedy |
+| --- | --- | --- |
+| `not_retained` | The key predates plaintext retention — nothing is stored. | Rotate. |
+| `undecryptable` | A value **is** stored but was encrypted under a different `APP_KEY`. | Rotate. |
+
+The remedy is the same, which is why they share a status; the distinction exists so an operator can tell a
+historical gap from a key-management problem.
 
 ## Origins
 
@@ -239,12 +297,19 @@ Every third-party credential, config file and identifier a project needs. Gated 
 scopes — `can_read_vault` (metadata and presence flags) and `can_reveal_vault` (the values). Full guide:
 **[Project vault](./project-vault.md)**.
 
+:::warning These endpoints are live; the data is not
+As of 2026-08-04 **no registered project has any configured service**, so a reveal returns the empty
+skeleton. An empty service means *not entered*, never *not applicable*. The
+[Project vault](./project-vault.md) page explains what that does and does not let you conclude.
+:::
+
 ### `GET /vault/services`
-The field registry — every service, field, label, help text, `secret`, `client_safe` and `env_key`.
-Schema discovery; any valid token may read it.
+The field registry — every service, field, label, help text, `secret`, `client_safe` and `env_key`. Schema
+discovery: **any valid token may read it, with no vault scope at all**, because it describes the shape of the
+vault and never its contents. It is the one vault endpoint that cannot return `403`.
 
 ### `GET /vault/projects`
-Projects with vault metadata. Query `q`, `status`, `per_page` (max 50), `page`.
+Projects with vault metadata. Query `q` (name / slug / app identifier), `status`, `per_page` (max 50), `page`.
 
 ### `GET /projects/{project}/vault`
 One project **without secret values** — non-secret config plus `has` presence flags.
@@ -254,21 +319,54 @@ The same, narrowed to one service. Unknown service → `404`, listing the valid 
 
 ### `POST /projects/{project}/vault/reveal`
 Every credential, plus `.env` blocks for `vite` / `next` / `node` / `laravel`, plus `undecryptable[]`.
-Recorded against the project.
+Recorded against the project. **A block that would be empty is dropped**, so `env` can be `{}`.
 
 ### `POST /projects/{project}/vault/{service}/reveal`
 The same, narrowed to one service.
 
 ### `GET /projects/{project}/vault-files/{service}.{key}`
-The real bytes of a stored config file, with its original filename and `X-Checksum-Sha256`.
+The real bytes of a stored config file, with its original filename, `Content-Disposition`,
+`Content-Length` and `X-Checksum-Sha256`. Note the path segment is **`vault-files`**, not `vault/files` —
+the latter would be ambiguous with `vault/{service}/reveal`.
 
 ## Error codes
+
+Every failure on this plane uses one envelope — `{"error": {"code", "message", "details"?}}`. Branch on
+`code`, never on the message text. (The v1 data plane is different: a bare `{"message": "..."}` with no
+code — see [Errors & limits](../api/errors-and-limits.md).)
 
 | HTTP | `code` | When |
 | --- | --- | --- |
 | 401 | `MISSING_ACCESS_TOKEN`, `INVALID_ACCESS_TOKEN_FORMAT`, `INVALID_ACCESS_TOKEN`, `TOKEN_REVOKED`, `TOKEN_EXPIRED` | Auth (see [Authentication](./authentication.md)) |
-| 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope** — `can_manage_supabase`, `can_read_vault`, `can_reveal_vault` or `can_read_supabase_tokens`. `details.required_scope` names it. Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
-| 404 | `NOT_FOUND` | Project / key / origin / service unknown **or** outside the token's scope |
-| 409 | `ORIGIN_ALREADY_EXISTS`, `PLAINTEXT_UNAVAILABLE` | Duplicate origin; a stored value that cannot be decrypted (`details.reason`) |
+| 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope**; `details.required_scope` names it (values below). Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
+| 403 | `FORBIDDEN` | The action is not allowed for this token |
+| 404 | `NOT_FOUND` | Project / key / origin / account / service unknown **or** outside the token's scope |
+| 409 | `SLUG_ALREADY_EXISTS` | A project slug you supplied is taken |
+| 409 | `ORIGIN_ALREADY_EXISTS` | That key already has an origin with the same type and value |
+| 409 | `PLAINTEXT_UNAVAILABLE` | A secret cannot be handed back; `details.reason` is `not_retained` or `undecryptable` |
 | 422 | `VALIDATION_FAILED` | Bad body — `details` holds the per-field messages |
-| 429 | — | Over 120 requests/minute |
+| 429 | — | Over **120 requests/minute** per token. This plane's limit is fixed, unlike the per-key limit on the data plane |
+
+`details` is **absent** when a code does not carry one — never `null`.
+
+### `details.required_scope` — match on both forms
+
+The value is not uniform yet, so read it defensively:
+
+| Gate | What it returns **today** |
+| --- | --- |
+| Project vault read | `can_read_vault` |
+| Project vault reveal | `can_reveal_vault` |
+| Supabase **project** vault | `supabase_projects` |
+| Supabase **account** token | `supabase_tokens` |
+
+The two vault gates already report their token column names; the two Supabase gates report shorter labels
+that match no column.
+
+:::note Pending change — not deployed yet
+A committed but **undeployed** change makes the Supabase pair report their column names too —
+`can_manage_supabase` and `can_read_supabase_tokens`. The table above is what the live API returns as of
+2026-08-04 (`backend_version` `2026.08.01.2`). **Accept all six strings** and neither release breaks your
+client. Verify which is live with `curl -s https://fileshub.zaions.com/api/version` rather than inferring it
+from a document.
+:::

@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
-    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health). The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.",
+    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES — do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand — nothing generates it from the Laravel routes — so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nONE KNOWN PENDING CHANGE: on a 403 TOKEN_PERMISSION_DENIED, the two Supabase gates currently report details.required_scope as `supabase_projects` / `supabase_tokens`, while the two vault gates already report their column names. A committed but UNDEPLOYED change makes the Supabase pair report column names too (`can_manage_supabase` / `can_read_supabase_tokens`). This spec documents the values live today; match on both forms and neither release breaks you.",
     "contact": {
       "name": "Ahsan Mahmood",
       "url": "https://aoneahsan.com",
@@ -871,7 +871,7 @@
           "Management API"
         ],
         "summary": "Introspect the access token",
-        "description": "Confirm the token works and learn its scope. The intended first call.",
+        "description": "Confirm the token works and learn its scope. The intended first call: it reports the four capability booleans, all off by default, so a 403 later is predictable rather than surprising. Takes no parameters and no body, so 401 and 429 are its only failures.",
         "operationId": "introspectToken",
         "servers": [
           {
@@ -901,12 +901,6 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "422": {
             "$ref": "#/components/responses/ManagementError"
           },
           "429": {
@@ -945,7 +939,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ProjectPublic"
+                        "$ref": "#/components/schemas/ProjectListItem"
                       }
                     },
                     "meta": {
@@ -960,9 +954,6 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "404": {
             "$ref": "#/components/responses/ManagementError"
           },
           "422": {
@@ -1046,7 +1037,7 @@
           "401": {
             "$ref": "#/components/responses/ManagementError"
           },
-          "404": {
+          "409": {
             "$ref": "#/components/responses/ManagementError"
           },
           "422": {
@@ -1074,7 +1065,10 @@
                     "type": [
                       "string",
                       "null"
-                    ]
+                    ],
+                    "maxLength": 255,
+                    "pattern": "^[a-z0-9\\-]+$",
+                    "description": "Lowercase letters, digits and hyphens only. Omit it to have one generated uniquely from the name; supply one and it is used verbatim, so a duplicate is a 409 SLUG_ALREADY_EXISTS rather than being de-duplicated for you."
                   },
                   "status": {
                     "type": "string",
@@ -1087,7 +1081,63 @@
                     "type": [
                       "string",
                       "null"
+                    ],
+                    "maxLength": 5000
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 5000
+                  },
+                  "app_identifier": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255,
+                    "description": "Reverse-DNS app id. IMMUTABLE once published to a store."
+                  },
+                  "primary_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255
+                  },
+                  "repo_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255
+                  },
+                  "repo_is_public": {
+                    "type": [
+                      "boolean",
+                      "null"
                     ]
+                  },
+                  "platforms": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "string",
+                      "maxLength": 64
+                    }
+                  },
+                  "tech_stack": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "string",
+                      "maxLength": 64
+                    }
                   }
                 }
               }
@@ -1124,7 +1174,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/ProjectPublic"
+                      "$ref": "#/components/schemas/ProjectWithApiKeys"
                     }
                   }
                 }
@@ -1135,9 +1185,6 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "422": {
             "$ref": "#/components/responses/ManagementError"
           },
           "429": {
@@ -1161,7 +1208,7 @@
           "Management API"
         ],
         "summary": "Update a project",
-        "description": "Update name, slug, status, or notes.",
+        "description": "Update any of the project's own fields. Send only the keys you are changing; an omitted key is left untouched.",
         "operationId": "updateProject",
         "servers": [
           {
@@ -1196,6 +1243,9 @@
           "404": {
             "$ref": "#/components/responses/ManagementError"
           },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
           "422": {
             "$ref": "#/components/responses/ManagementError"
           },
@@ -1222,10 +1272,14 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                   },
                   "slug": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "pattern": "^[a-z0-9\\-]+$",
+                    "description": "Lowercase letters, digits and hyphens only. Unlike on create, a null is not accepted here — omit the key to leave the slug alone. A duplicate is a 409 SLUG_ALREADY_EXISTS."
                   },
                   "status": {
                     "type": "string",
@@ -1238,7 +1292,65 @@
                     "type": [
                       "string",
                       "null"
+                    ],
+                    "maxLength": 5000
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 5000
+                  },
+                  "app_identifier": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255,
+                    "description": "Reverse-DNS app id. IMMUTABLE once published to a store — do not change it on a shipped app."
+                  },
+                  "primary_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255
+                  },
+                  "repo_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255
+                  },
+                  "repo_is_public": {
+                    "type": [
+                      "boolean",
+                      "null"
                     ]
+                  },
+                  "platforms": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "description": "Replaces the whole list — this is not a merge.",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 64
+                    }
+                  },
+                  "tech_stack": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "description": "Replaces the whole list — this is not a merge.",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 64
+                    }
                   }
                 }
               }
@@ -1251,7 +1363,7 @@
           "Management API"
         ],
         "summary": "Delete a project",
-        "description": "Delete a project; cascades its api keys, origins, stored objects and audit logs.",
+        "description": "Delete a project. At the database level this cascades its API keys, origins, stored objects and audit logs; the response reports counts for api_keys and stored_objects only.",
         "operationId": "deleteProject",
         "servers": [
           {
@@ -1273,7 +1385,24 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "object"
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        },
+                        "cascade": {
+                          "type": "object",
+                          "description": "What went with it. Counted before the delete, so these are the rows removed.",
+                          "properties": {
+                            "api_keys": {
+                              "type": "integer"
+                            },
+                            "stored_objects": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -1284,9 +1413,6 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "422": {
             "$ref": "#/components/responses/ManagementError"
           },
           "429": {
@@ -1312,7 +1438,7 @@
           "Management API"
         ],
         "summary": "List API keys",
-        "description": "List a project's API keys (safe representation — no secrets).",
+        "description": "List a project's API keys, newest first (safe representation — no secrets). PAGINATED: rotating and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit. Loop on meta.has_more rather than assuming one call returned them all.",
         "operationId": "listApiKeys",
         "servers": [
           {
@@ -1327,7 +1453,7 @@
         ],
         "responses": {
           "200": {
-            "description": "API keys",
+            "description": "Paginated API keys",
             "content": {
               "application/json": {
                 "schema": {
@@ -1338,6 +1464,12 @@
                       "items": {
                         "$ref": "#/components/schemas/ApiKeySafe"
                       }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    },
+                    "message": {
+                      "$ref": "#/components/schemas/PaginationMessage"
                     }
                   }
                 }
@@ -1348,9 +1480,6 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "422": {
             "$ref": "#/components/responses/ManagementError"
           },
           "429": {
@@ -1366,6 +1495,23 @@
               "type": "string"
             },
             "description": "Project id, ULID public_id, or slug."
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 50
+            },
+            "description": "Clamped to 50, never rejected."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
           }
         ]
       },
@@ -1469,7 +1615,11 @@
                     ]
                   },
                   "permissions": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "description": "Per-service utility permissions. An access token has no such map — this is an API-key-only field.",
                     "additionalProperties": {
                       "type": "boolean"
                     }
@@ -1659,7 +1809,11 @@
                     ]
                   },
                   "permissions": {
-                    "type": "object",
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "description": "Replaces the whole map — this is not a merge.",
                     "additionalProperties": {
                       "type": "boolean"
                     }
@@ -1678,7 +1832,7 @@
           "Management API"
         ],
         "summary": "Delete an API key",
-        "description": "Delete a key; its origins cascade.",
+        "description": "Delete a key; its origins cascade. To stop a key working without losing its record, PATCH is_active:false instead.",
         "operationId": "deleteApiKey",
         "servers": [
           {
@@ -1700,7 +1854,21 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "object"
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        },
+                        "cascade": {
+                          "type": "object",
+                          "properties": {
+                            "origins": {
+                              "type": "integer",
+                              "description": "Origin rows removed with the key."
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -1818,7 +1986,7 @@
           "Management API"
         ],
         "summary": "Reveal an API key",
-        "description": "Re-read the stored plaintext. 409 PLAINTEXT_UNAVAILABLE for legacy keys — rotate instead.",
+        "description": "Re-read the stored plaintext of a key you already created. Returns ONLY { plaintext_key } — not the key's other fields; call GET on the key for those. Two distinct causes share a 409 PLAINTEXT_UNAVAILABLE, told apart by details.reason: `not_retained` (the key predates plaintext retention — nothing is stored) and `undecryptable` (a value IS stored but was encrypted under a different APP_KEY). Rotate in either case.",
         "operationId": "revealApiKey",
         "servers": [
           {
@@ -2189,7 +2357,7 @@
           "Management API"
         ],
         "summary": "Delete an origin",
-        "description": "Remove one origin.",
+        "description": "Remove one origin. Removing the last origin from a restricted key denies every request that sends an Origin header — unless a platform-wide global origin still covers it.",
         "operationId": "deleteOrigin",
         "servers": [
           {
@@ -2211,7 +2379,12 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "object"
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
                     }
                   }
                 }
@@ -2578,9 +2751,6 @@
           "403": {
             "$ref": "#/components/responses/ManagementError"
           },
-          "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
           "422": {
             "$ref": "#/components/responses/ManagementError"
           },
@@ -2803,9 +2973,6 @@
           "403": {
             "$ref": "#/components/responses/ManagementError"
           },
-          "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
           "422": {
             "$ref": "#/components/responses/ManagementError"
           },
@@ -2949,7 +3116,7 @@
           "Management API"
         ],
         "summary": "The vault field registry (schema discovery)",
-        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project — it describes the SHAPE of the vault, never its contents — so any valid token may read it.",
+        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project — it describes the SHAPE of the vault, never its contents — so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Currently 18 services and 87 fields. Read it before guessing a field name.",
         "operationId": "listVaultServices",
         "servers": [
           {
@@ -2979,18 +3146,6 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "403": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "409": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "422": {
             "$ref": "#/components/responses/ManagementError"
           },
           "429": {
@@ -3076,10 +3231,10 @@
                       }
                     },
                     "meta": {
-                      "type": "object"
+                      "$ref": "#/components/schemas/PaginationMeta"
                     },
                     "message": {
-                      "type": "string"
+                      "$ref": "#/components/schemas/PaginationMessage"
                     }
                   }
                 }
@@ -3090,15 +3245,6 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "403": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "409": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "422": {
             "$ref": "#/components/responses/ManagementError"
           },
           "429": {
@@ -3160,9 +3306,6 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "409": {
             "$ref": "#/components/responses/ManagementError"
           },
           "422": {
@@ -3238,9 +3381,6 @@
           "404": {
             "$ref": "#/components/responses/ManagementError"
           },
-          "409": {
-            "$ref": "#/components/responses/ManagementError"
-          },
           "422": {
             "$ref": "#/components/responses/ManagementError"
           },
@@ -3303,9 +3443,6 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/ManagementError"
-          },
-          "409": {
             "$ref": "#/components/responses/ManagementError"
           },
           "422": {
@@ -3381,9 +3518,6 @@
           "404": {
             "$ref": "#/components/responses/ManagementError"
           },
-          "409": {
-            "$ref": "#/components/responses/ManagementError"
-          },
           "422": {
             "$ref": "#/components/responses/ManagementError"
           },
@@ -3440,7 +3574,24 @@
                 "schema": {
                   "type": "string"
                 },
-                "description": "sha256 of the plaintext bytes."
+                "description": "sha256 of the plaintext bytes, so a caller can verify what it wrote to disk."
+              },
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "The file's stored mime type, or application/octet-stream when none was recorded."
+              },
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "attachment with the original filename — curl -OJ writes it under the right name."
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
               }
             },
             "content": {
@@ -4313,36 +4464,81 @@
       },
       "ManagementError": {
         "type": "object",
+        "description": "The Management plane's only error envelope. Note it differs from the v1 data plane, which answers with a bare {\"message\": \"...\"} and no code.",
         "properties": {
           "error": {
             "type": "object",
             "properties": {
               "code": {
                 "type": "string",
-                "example": "NOT_FOUND"
+                "description": "Machine-readable code. Branch on this, never on the message text.",
+                "example": "NOT_FOUND",
+                "enum": [
+                  "MISSING_ACCESS_TOKEN",
+                  "INVALID_ACCESS_TOKEN_FORMAT",
+                  "INVALID_ACCESS_TOKEN",
+                  "TOKEN_REVOKED",
+                  "TOKEN_EXPIRED",
+                  "TOKEN_PERMISSION_DENIED",
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "SLUG_ALREADY_EXISTS",
+                  "ORIGIN_ALREADY_EXISTS",
+                  "PLAINTEXT_UNAVAILABLE",
+                  "VALIDATION_FAILED"
+                ]
               },
               "message": {
                 "type": "string"
               },
               "details": {
-                "type": [
-                  "object",
-                  "null"
-                ],
-                "additionalProperties": true
+                "type": "object",
+                "description": "Present only on the codes that carry one; the key is ABSENT otherwise, never null. TOKEN_PERMISSION_DENIED carries `required_scope`; PLAINTEXT_UNAVAILABLE carries `reason` (\"undecryptable\" | \"not_retained\"); VALIDATION_FAILED carries per-field message arrays.",
+                "additionalProperties": true,
+                "properties": {
+                  "required_scope": {
+                    "type": "string",
+                    "description": "The token flag the caller is missing. CURRENT LIVE VALUES: the two Supabase gates answer the short forms `supabase_projects` and `supabase_tokens`, while the two vault gates already answer the column names `can_read_vault` and `can_reveal_vault`. Forward note: an undeployed change makes the Supabase pair report their column names too (`can_manage_supabase`, `can_read_supabase_tokens`) — so match on all six rather than on the two short forms alone.",
+                    "enum": [
+                      "supabase_projects",
+                      "supabase_tokens",
+                      "can_read_vault",
+                      "can_reveal_vault",
+                      "can_manage_supabase",
+                      "can_read_supabase_tokens"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "On PLAINTEXT_UNAVAILABLE: `undecryptable` means a value IS stored but was encrypted under a different APP_KEY (re-enter it); `not_retained` means nothing was ever stored (rotate instead). The remedy differs, which is why the two are distinguished.",
+                    "enum": [
+                      "undecryptable",
+                      "not_retained"
+                    ]
+                  }
+                }
               }
-            }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
           }
-        }
+        },
+        "required": [
+          "error"
+        ]
       },
       "ProjectPublic": {
         "type": "object",
+        "description": "A project on the Management plane. Credential VALUES are never part of this shape — those live behind the project vault's own scopes. Note `repo_url` / `repo_is_public` are flat here, while the vault views nest the same two as `repo: { url, is_public }`.",
         "properties": {
           "id": {
             "type": "integer"
           },
           "public_id": {
-            "type": "string"
+            "type": "string",
+            "description": "ULID. Accepted wherever {project} appears, alongside the numeric id and the slug."
           },
           "name": {
             "type": "string"
@@ -4363,6 +4559,52 @@
               "null"
             ]
           },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "app_identifier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reverse-DNS app id. IMMUTABLE once published to a store."
+          },
+          "primary_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "repo_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "repo_is_public": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Null means unknown."
+          },
+          "platforms": {
+            "type": "array",
+            "description": "Always an array; empty rather than null when unset.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tech_stack": {
+            "type": "array",
+            "description": "Always an array; empty rather than null when unset.",
+            "items": {
+              "type": "string"
+            }
+          },
           "created_at": {
             "type": [
               "string",
@@ -4370,7 +4612,70 @@
             ],
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "id",
+          "public_id",
+          "name",
+          "slug",
+          "status",
+          "platforms",
+          "tech_stack"
+        ]
+      },
+      "ProjectListItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProjectPublic"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "api_keys_count": {
+                "type": "integer",
+                "description": "Keys in this project, including inactive and rotated-away ones."
+              }
+            }
+          }
+        ],
+        "description": "A row from GET /projects — the project plus its key count."
+      },
+      "ProjectWithApiKeys": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProjectPublic"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "api_keys": {
+                "type": "array",
+                "description": "Abbreviated key list, newest first. Deliberately narrower than ApiKeySafe — for the full representation call the api-keys endpoints.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "key_prefix": {
+                      "type": "string"
+                    },
+                    "restricted": {
+                      "type": "boolean"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "description": "The response of GET /projects/{project} — the project plus an abbreviated api_keys list."
       },
       "ApiKeySafe": {
         "type": "object",
@@ -4597,6 +4902,7 @@
       },
       "AccessTokenIntrospection": {
         "type": "object",
+        "description": "The token's own identity and scope. Every field below is always present EXCEPT `projects`, which appears only when `all_projects` is false.",
         "properties": {
           "name": {
             "type": "string"
@@ -4645,10 +4951,8 @@
             "format": "date-time"
           },
           "projects": {
-            "type": [
-              "array",
-              "null"
-            ],
+            "type": "array",
+            "description": "The explicit project scope. ABSENT ENTIRELY when all_projects is true — not null, and not an empty array — because an all-projects token covers projects that do not exist yet, so no list could describe it. Test with `'projects' in data`, never `data.projects === null`.",
             "items": {
               "type": "object",
               "properties": {
@@ -4667,7 +4971,19 @@
               }
             }
           }
-        }
+        },
+        "required": [
+          "name",
+          "token_prefix",
+          "all_projects",
+          "can_manage_supabase",
+          "can_read_vault",
+          "can_reveal_vault",
+          "can_read_supabase_tokens",
+          "expires_at",
+          "last_used_at",
+          "created_at"
+        ]
       },
       "ApiKeyWithSecret": {
         "allOf": [
@@ -5320,7 +5636,32 @@
                   "object",
                   "null"
                 ],
-                "description": "Pointer to the account-wide Supabase vault; its credentials need the can_manage_supabase scope."
+                "description": "Pointer to the account-wide Supabase vault, never a copy of its credentials — reading those needs the can_manage_supabase scope. Null when this project has no linked Supabase record.",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "ref": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "The <ref> label of a <ref>.supabase.co URL; null for a self-hosted or custom-domain project."
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "credentials_via": {
+                    "type": "string",
+                    "description": "Path to the endpoint that returns them, e.g. /api/public/v1/supabase-projects/abcdefgh."
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
               },
               "services": {
                 "type": "object",
@@ -5355,7 +5696,7 @@
             "properties": {
               "env": {
                 "type": "object",
-                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values.",
+                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values, so a server secret cannot reach a browser bundle by mistake. EVERY KEY IS OPTIONAL: a block that would be empty is dropped rather than returned as \"\", so a project with nothing configured returns `env: {}`. Handle the missing key — piping an absent block into a file writes an empty file with no error.",
                 "properties": {
                   "vite": {
                     "type": "string"

@@ -4,14 +4,14 @@ title: Pagination
 description: Every FilesHub list endpoint is paginated the same way — 20 rows by default, 50 maximum — and every response states its page, its total, how much remains, and the exact call to make next.
 keywords: [fileshub pagination, per_page, page, meta, remaining_items, next_page, list endpoints, api paging]
 last_update:
-  date: 2026-07-31
+  date: 2026-08-04
   author: Ahsan Mahmood
 ---
 
 # Pagination
 
-**Every list endpoint on both API planes paginates identically.** There is no endpoint that returns an
-unbounded result set, and none with a different page-size ceiling.
+**Every paginated list on both API planes paginates identically** — same parameters, same ceiling, same
+`meta`. No endpoint returns an unbounded result set, and none has a different page-size ceiling.
 
 | | |
 |---|---|
@@ -20,13 +20,30 @@ unbounded result set, and none with a different page-size ceiling.
 | Parameters | `?page=` (1-based) and `?per_page=` |
 | Style | Offset — so a page number and a total are always available |
 
+## Three endpoints return a plain array
+
+A set that is **structurally bounded** — an operator types the rows by hand and there will never be many —
+is returned whole, with no `meta` and no `message`:
+
+| Endpoint | Why it is bounded |
+|---|---|
+| `GET /api/public/v1/projects/{project}/api-keys/{apiKey}/origins` | Origins are entered per key; a few dozen at most |
+| `GET /api/public/v1/global-origins` | Platform-wide rules an administrator maintains; a handful |
+| `GET /api/public/v1/vault/services` | The field registry — a fixed schema, currently 18 services |
+
+`POST /global-origins/check` likewise answers with a bare array of verdicts, one per candidate, capped at the
+50 candidates you may submit.
+
+Everything else — including `GET .../api-keys` itself, which grows without limit because rotated and deleted
+keys leave their rows behind — is paginated as below. **Check for `meta` rather than assuming either shape.**
+
 :::tip A larger `per_page` is clamped, never rejected
 Sending `per_page=1000` returns **50** rows with a `200`, and `message` tells you it was capped. Your
 existing call keeps working; it just gets fewer rows per round trip. You will never get a `422` for
 asking for too many.
 :::
 
-## Every list response carries `meta` and `message`
+## Every paginated response carries `meta` and `message`
 
 ```json
 {
@@ -50,6 +67,9 @@ asking for too many.
   "message": "Showing 1-20 of 137 (page 1 of 7). 117 more available - request page 2 to continue (?page=2&per_page=20)."
 }
 ```
+
+All **14** keys are always present. `from` and `to` are `null` on an empty page; `next_page` and `prev_page`
+are `null` at the ends.
 
 The v1 data plane adds `"success": true` alongside these; the Management plane does not. That is the only
 difference between the two.

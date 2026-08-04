@@ -1,10 +1,10 @@
 ---
 sidebar_position: 1
 title: Management API overview
-description: The FilesHub Public Management API lets a trusted server or AI coding agent create projects, mint and rotate per-project API keys, and configure origin restrictions using one account-wide access token.
-keywords: [fileshub management api, access token, fh_pat, create api key programmatically, rotate api key, manage origins, ai agent, claude code, automate api keys]
+description: The FilesHub Public Management API lets a trusted server or AI coding agent create projects, mint and rotate per-project API keys, configure origin restrictions, and read a project's stored credentials using one account-wide access token.
+keywords: [fileshub management api, access token, fh_pat, create api key programmatically, rotate api key, manage origins, project vault, ai agent, claude code, automate api keys]
 last_update:
-  date: 2026-07-18
+  date: 2026-08-04
   author: Ahsan Mahmood
 ---
 
@@ -42,14 +42,19 @@ a chosen set. A project the token does not cover is indistinguishable from one t
 both return **404**, never 403. Create a token and set its scope in the FilesHub admin under
 **Access Tokens**.
 
-A **separate** boolean, **`can_manage_supabase`** (off by default), gates the [Supabase project
-vault](./supabase-projects.md) — those resources are account-wide, so they sit on their own axis rather
-than the project scope. A token without it gets a `403`, not a `404`.
+**Four separate booleans, all off by default**, sit on their own axes rather than on the project scope. A
+token missing one gets a `403` naming it, not a `404`:
 
-**`can_read_supabase_tokens`** (also off by default) is a further axis again, and
-`can_manage_supabase` does **not** imply it: it gates a [Supabase account's personal access
-token](./supabase-accounts.md), which reaches every project that account owns rather than one project's
-credentials.
+| Flag | Gates |
+| --- | --- |
+| `can_read_vault` | The [project vault](./project-vault.md) — metadata and **which** credentials exist, never a value |
+| `can_reveal_vault` | The project vault's credential **values**, file bytes and `.env` blocks. Implies read |
+| `can_manage_supabase` | The [Supabase project vault](./supabase-projects.md) — account-wide, so the project scope cannot express it |
+| `can_read_supabase_tokens` | A [Supabase account's personal access token](./supabase-accounts.md) — the whole account, not one project |
+
+Only `can_reveal_vault` implies another. In particular `can_manage_supabase` does **not** imply
+`can_read_supabase_tokens`: one reaches one project's credentials, the other reaches the account that owns
+every project it has, including ones that do not exist yet.
 
 ## What you can do
 
@@ -66,7 +71,12 @@ credentials.
 - **Supabase accounts** — list, read, and **reveal** an account's personal access token (`sbp_…`) plus
   the `SUPABASE_ACCESS_TOKEN` line the Supabase CLI reads. Read-only, and gated by the separate
   `can_read_supabase_tokens` scope. See [Supabase account tokens](./supabase-accounts.md).
+- **Project vault** — read every third-party credential, config file and identifier a project needs
+  (Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, signing keys, the store consoles and more), with
+  ready-to-paste `.env` blocks, behind `can_read_vault` / `can_reveal_vault`. Read + reveal only — entering
+  credentials stays in the admin. **The endpoints are live but no project is populated yet**; see
+  [Project vault](./project-vault.md).
 
 See [Authentication](./authentication.md), the [Endpoint reference](./endpoints.md), the
-[Supabase project vault](./supabase-projects.md), [Supabase account tokens](./supabase-accounts.md),
-and the [Agent workflow](./agent-workflow.md).
+[Project vault](./project-vault.md), the [Supabase project vault](./supabase-projects.md),
+[Supabase account tokens](./supabase-accounts.md), and the [Agent workflow](./agent-workflow.md).

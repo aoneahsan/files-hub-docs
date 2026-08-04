@@ -45,6 +45,12 @@ the access token: **`can_manage_supabase`**, which is **off by default**.
   "details": { "required_scope": "supabase_projects" } } }
 ```
 
+:::note `required_scope` is `supabase_projects` today, `can_manage_supabase` in the next release
+That short label is what the live API returns as of 2026-08-04; a committed but undeployed change makes it
+report the token's column name instead. Match on **both** and neither release breaks you — see
+[`details.required_scope`](./endpoints.md#detailsrequired_scope--match-on-both-forms).
+:::
+
 `GET /token` reports the flag so you can check before calling:
 
 ```json

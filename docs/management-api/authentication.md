@@ -4,7 +4,7 @@ title: Management API authentication
 description: Authenticate the FilesHub Management API with an fh_pat_ access token via the Authorization Bearer header, and understand token scope, expiry, and revocation.
 keywords: [fileshub access token, fh_pat, bearer token, authorization header, X-Access-Token, token expiry, revoke token, management api auth]
 last_update:
-  date: 2026-07-18
+  date: 2026-08-04
   author: Ahsan Mahmood
 ---
 
@@ -52,8 +52,15 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
 }
 ```
 
-When the token is scoped to specific projects, `all_projects` is `false` and a `projects` array lists
-exactly what it may manage.
+When the token is scoped to specific projects, `all_projects` is `false` and a `projects` array lists exactly
+what it may manage — `id`, `public_id`, `name`, `slug` per row.
+
+:::tip `projects` is absent, not null, on an all-projects token
+Note the response above has no `projects` key at all. An all-projects token covers projects that do not
+exist yet, so no list could describe it, and the field is omitted rather than sent as `null` or `[]`. Test
+with `'projects' in data` (or `data.projects !== undefined`), never `data.projects === null`. Every other
+field on this page is always present.
+:::
 
 Four further booleans are **separate, off-by-default axes**, independent of the project scope:
 
@@ -70,7 +77,9 @@ credentials, the other reaches the account that owns every project.
 
 A token missing one of these gets **`403 TOKEN_PERMISSION_DENIED`** with `details.required_scope`, rather
 than the anti-enumeration `404` used for resources — the scope is a property of your own token, so an
-honest error is more useful than pretending the resource does not exist.
+honest error is more useful than pretending the resource does not exist. The exact strings that field
+returns are not uniform yet:
+[`details.required_scope`](./endpoints.md#detailsrequired_scope--match-on-both-forms).
 
 ## Auth errors
 

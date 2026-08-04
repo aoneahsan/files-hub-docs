@@ -4,7 +4,7 @@ title: Project vault
 description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, signing keys and more — and read them back over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
 keywords: [project credential vault, store api keys per project, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, secrets vault for developers, bootstrap project credentials cli]
 last_update:
-  date: 2026-07-31
+  date: 2026-08-04
   author: Ahsan Mahmood
 ---
 
@@ -23,6 +23,30 @@ filled by a person and read by a machine, and there is exactly one place a value
 
 Base URL `https://fileshub.zaions.com/api/public/v1`, same `Authorization: Bearer fh_pat_...` as the rest
 of the [Management API](./overview.md).
+
+:::danger The vault is live but currently EMPTY — and an empty answer is not an answer about the project
+
+Probed on **2026-08-04**: **0 of 54 registered projects have a single configured service.** The endpoints
+work exactly as documented below; the data has not been entered yet. Every reveal today returns the full
+18-service skeleton with every `has` flag `false`, `env: {}` and `undecryptable: []`.
+
+**An empty service means the value has NOT BEEN ENTERED. It never means the project does not use that
+service** — the response is byte-identical either way, so the two are indistinguishable from the API.
+Reading "no Firebase config in the vault" as "this project has no Firebase" is a fabrication built from a
+`false`.
+
+So, concretely:
+
+- Read presence from `has.*`, and treat every absence as **unknown**, not as absent.
+- Do not write an empty `.env` from an empty reveal. `jq -r '.data.env.vite'` on an unconfigured project
+  emits nothing and `> .env.local` truncates the file you already had — with no error anywhere.
+- A project's real credentials still live in the owner's own secret store until the vault is filled.
+- Filling it is **owner-only work in the admin**; credential writes never go through this API. A project
+  whose credentials are missing is a row in that project's `docs/MANUAL-TASKS.md`, not something to work
+  around quietly.
+
+Report what the vault returned, not what it was expected to contain.
+:::
 
 ## Two scopes, both off by default
 
@@ -81,9 +105,15 @@ curl -s https://fileshub.zaions.com/api/public/v1/vault/services \
 
 ### Services covered
 
+**18 services, 87 fields** as of 2026-08-04:
+
 `supabase` (linked — see below) · `firebase` · `google_cloud` · `sentry` · `onesignal` · `clarity` ·
 `amplitude` · `openai` · `smtp` · `cloudflare` · `capacitor` · `github` · `play_console` · `app_store` ·
 `chrome_web_store` · `fileshub` · `native_update` · **`general`** (freeform — your own key/value pairs).
+
+Read the count from the response rather than from this page — a service is added by editing config, so the
+registry grows without an API change. `supabase` and `general` report **zero fields**: the first links
+elsewhere, the second lets you name your own keys.
 
 :::tip `client_safe` is not decoration
 It decides whether a value appears in the generated `VITE_` / `NEXT_PUBLIC_` blocks. A field marked
@@ -165,6 +195,17 @@ curl -s -X POST \
 
 `POST /projects/{project}/vault/{service}/reveal` narrows it to one service.
 
+### Every `env` block is optional
+
+A block that would be empty is **dropped, not returned as `""`** — so the four keys above are what you get
+when all four have content, and a project with nothing configured returns **`env: {}`**. Read the key
+defensively (`.data.env.vite // empty`); piping an absent block into a file writes an empty file and reports
+no error.
+
+`vite` and `next` carry only fields the registry marks `client_safe`, and a `secret` field is forced
+non-client-safe — which is what makes "a server secret never reaches a browser bundle" structural rather
+than remembered. Use the block you are given; never hand-filter one.
+
 ### `undecryptable`
 
 Names any field that **holds** a value which could not be decrypted — stored under a previous `APP_KEY`.
@@ -214,17 +255,24 @@ BASE=https://fileshub.zaions.com/api/public/v1
 # 1. Confirm the token has what you need
 curl -s $BASE/token -H "Authorization: Bearer $FH_PAT" | jq '.data | {can_read_vault, can_reveal_vault}'
 
-# 2. Learn what this project holds, without reading a single secret
+# 2. Learn what this project holds, without reading a single secret.
+#    An empty list means nothing has been entered yet — stop here rather than
+#    writing empty files over good ones.
 curl -s $BASE/projects/acme-app/vault -H "Authorization: Bearer $FH_PAT" | jq '.data.configured_services'
 
-# 3. Write the client env file
-curl -s -X POST $BASE/projects/acme-app/vault/reveal -H "Authorization: Bearer $FH_PAT" \
-  | jq -r '.data.env.vite' > .env.local
+# 3. Write the client env file — only if there is actually a block to write
+block=$(curl -s -X POST $BASE/projects/acme-app/vault/reveal \
+  -H "Authorization: Bearer $FH_PAT" | jq -r '.data.env.vite // empty')
+[ -n "$block" ] && printf '%s\n' "$block" > .env.local || echo "no client env stored for this project"
 
-# 4. Fetch the Android config file to where it belongs
-curl -s $BASE/projects/acme-app/vault-files/firebase.google_services_json \
-  -H "Authorization: Bearer $FH_PAT" -o android/app/google-services.json
+# 4. Fetch the Android config file to where it belongs (404 if it was never uploaded)
+curl -sf $BASE/projects/acme-app/vault-files/firebase.google_services_json \
+  -H "Authorization: Bearer $FH_PAT" -o android/app/google-services.json \
+  || echo "no google-services.json in the vault for this project"
 ```
+
+Both guards matter for the same reason: an unconfigured vault answers `200` with nothing in it, so an
+unguarded pipeline overwrites working local config with emptiness and exits successfully.
 
 :::danger Server and CLI only
 An `fh_pat_` token is an account-wide secret and this plane sends **no CORS headers** — it is not callable

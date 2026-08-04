@@ -4,7 +4,7 @@ title: Agent workflow — auto-configure a project's API key
 description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates.
 keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, global origins check, fh_pat access token workflow, wire up api key from env]
 last_update:
-  date: 2026-07-30
+  date: 2026-08-04
   author: Ahsan Mahmood
 ---
 
@@ -155,13 +155,20 @@ curl -s $BASE/projects/my-app/vault-files/firebase.google_services_json \
   -H "Authorization: Bearer $FH_PAT" -o android/app/google-services.json
 ```
 
-Two things worth knowing before you call it:
+Three things worth knowing before you call it:
 
+- 🔴 **Nothing is stored in it yet.** As of 2026-08-04 no registered project has a configured service, so
+  every reveal returns the empty skeleton with `env: {}`. The commands above will succeed and write
+  **nothing** — `jq -r '.data.env.vite'` on an unconfigured project emits an empty string and `>` truncates
+  whatever `.env.local` already held. Guard on the value (`// empty`) and use `curl -sf` for files. And read
+  an empty service as *not entered yet*, never as *this project does not use that service*: the response is
+  identical either way. See [Project vault](./project-vault.md).
 - **The scopes are off by default.** `can_read_vault` and `can_reveal_vault` are separate booleans on the
-  token; without them you get `403 TOKEN_PERMISSION_DENIED` naming the one you need. Enable them in the
-  admin.
+  token; without them you get `403 TOKEN_PERMISSION_DENIED` naming the one you need. Only the owner can
+  enable them, in the admin — so treat a `403` as a question for them, not something to route around.
 - **The `vite` and `next` env blocks contain only values marked `client_safe`.** A server secret is not
-  omitted by luck — it is structurally unable to appear there, which is the point.
+  omitted by luck — it is structurally unable to appear there, which is the point. Use the block you are
+  given rather than filtering one yourself.
 
 ## Deploying to Supabase without an interactive login
 
