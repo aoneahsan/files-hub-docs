@@ -331,15 +331,26 @@ scopes — `can_read_vault` (metadata and presence flags), `can_reveal_vault` (t
 ## AI provider accounts
 
 `GET|POST /ai-accounts` · `GET|PATCH /ai-accounts/{account}` · `POST /ai-accounts/{account}/reveal` ·
-`GET|PUT /projects/{project}/ai-accounts`. Reads and the reveal need **`can_read_ai_accounts`**; creating,
-editing and **assigning** need `can_write_vault`. 🔴 `can_reveal_vault` does **not** grant an AI key — it is
+`GET|PUT /projects/{project}/ai-accounts` · `GET|PUT /ai-accounts/{account}/projects`. Reads and the reveal
+need **`can_read_ai_accounts`**; creating, editing and **assigning** need `can_write_vault`.
+🔴 **One account can serve every project.** `PATCH /ai-accounts/{account} {"all_projects": true}` is a
+standing rule that covers projects created later; `PUT /ai-accounts/{account}/projects {"all_existing": true}`
+is a snapshot of today's projects and does not. Sending `all_existing` and `project_ids` together is a 422. 🔴 `can_reveal_vault` does **not** grant an AI key — it is
 for reading one project's configuration, while an AI key authorises a whole provider account. Full guide:
 **[Project vault](./project-vault.md#ai-provider-accounts-are-linked-not-copied)**.
 
-:::warning These endpoints are live; the data is not
-As of 2026-08-04 **no registered project has any configured service**, so a reveal returns the empty
-skeleton. An empty service means *not entered*, never *not applicable*. The
-[Project vault](./project-vault.md) page explains what that does and does not let you conclude.
+:::warning These endpoints are live; the data is thin
+Probed 2026-08-19: **7 of 55 projects hold a stored credential**, so most reveals return the empty skeleton.
+An empty service means *not entered*, never *not applicable*.
+
+🔴 **Do not read `configured_services` as "someone entered data".** It includes the *derived* `fileshub`
+service, which is computed from the project's own API key — so almost every project lists it while holding
+nothing typed in at all. A sweep that skips projects with a non-empty `configured_services` skips every
+project. The [Project vault](./project-vault.md) page explains what that does and does not let you conclude.
+
+*(An earlier version of this box said "as of 2026-08-04 no registered project has any configured service".
+That count was measured through a read path fixed in `2026.08.19.1`; it was an artefact, not an
+observation.)*
 :::
 
 ### `GET /vault/services`

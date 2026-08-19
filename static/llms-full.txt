@@ -242,14 +242,23 @@ Endpoints:
   `derived` per service, so a caller learns this from schema discovery rather than from a 422.
 
 - AI provider accounts — `GET|POST /ai-accounts`, `GET|PATCH /ai-accounts/{account}`,
-  `POST /ai-accounts/{account}/reveal`, `GET|PUT /projects/{project}/ai-accounts`. Added in backend
+  `POST /ai-accounts/{account}/reveal`, `GET|PUT /projects/{project}/ai-accounts`, and
+  `GET|PUT /ai-accounts/{account}/projects` (backend `2026.08.22.1` — the account-centric direction, one
+  account to many projects, which is how a shared fleet key is actually managed). Added in backend
   `2026.08.21.1`. An OpenAI or Anthropic key authorises an ACCOUNT — it spends that account's balance and
   reaches every model on it — so it lives on an `ai_accounts` record that projects point at MANY-TO-MANY (an
   app routinely uses one provider for embeddings and another for chat), rather than being copied into each
   project's vault. Its own scope, `can_read_ai_accounts`, which `can_reveal_vault` deliberately does NOT
   imply: that scope reads one project's configuration, while an AI key is account-wide and bounded by
   nothing FilesHub knows about. ASSIGNING an account to a project needs only `can_write_vault`, because an
-  assignment is a pointer and those responses never contain a key. A reveal returns the key plus `env.node`
+  assignment is a pointer and those responses never contain a key. 🔴 TWO availability modes and they are
+  NOT the same feature: `all_projects: true` on the account is a STANDING rule covering every project
+  including ones created later, while `{"all_existing": true}` on `PUT /ai-accounts/{account}/projects` is a
+  SNAPSHOT of today's projects that covers no future project. A body carrying both is refused with 422
+  rather than resolved by precedence, because both readings are defensible. Each entry in a resolved set
+  reports `via: explicit | all_projects`, which is what tells a caller where to go to undo it. 🔴 NAME
+  COLLISION: `access_tokens.all_projects` means which projects the CALLER may reach — an AI account flagged
+  for every project never widens a scoped token. A reveal returns the key plus `env.node`
   carrying the variable the provider's SDK actually reads; there is no `vite`/`next` block and there never
   will be. Clearing a key is an explicit `clear_api_key: true` — a blank value is dropped, because Laravel's
   ConvertEmptyStringsToNull middleware makes "" and null indistinguishable to the controller. The `openai`

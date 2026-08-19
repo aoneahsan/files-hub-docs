@@ -463,7 +463,7 @@ uses an OpenAI account for embeddings *and* an Anthropic one for chat. The proje
 ```json
 { "ai_accounts": [
   { "id": 3, "provider": "anthropic", "display_name": "Anthropic — ai@example.com",
-    "purpose": "chat", "has_key": true,
+    "purpose": "chat", "has_key": true, "via": "explicit", "all_projects": false,
     "credentials_via": "/api/public/v1/ai-accounts/3/reveal",
     "note": "The key lives on the account-wide AI vault and needs the can_read_ai_accounts scope." } ] }
 ```
@@ -474,6 +474,7 @@ uses an OpenAI account for embeddings *and* an Anthropic one for chat. The proje
 |---|---|
 | `GET \| POST /ai-accounts`, `GET \| PATCH /ai-accounts/{account}`, `POST /ai-accounts/{account}/reveal` | **`can_read_ai_accounts`** for the reads and the reveal; `can_write_vault` to create or edit |
 | `GET \| PUT /projects/{project}/ai-accounts` — which accounts a project may use | **`can_write_vault`** |
+| `GET \| PUT /ai-accounts/{account}/projects` — which projects may use one account | **`can_write_vault`** |
 
 :::danger `can_reveal_vault` does NOT grant an AI key
 It is the most powerful grant over *project* credentials and it still answers `403` from every
@@ -512,6 +513,44 @@ dropped so that editing an unrelated field cannot wipe the credential, and it *c
 "absent keeps, null clears" the way the vault endpoints are: Laravel's `ConvertEmptyStringsToNull` middleware
 rewrites `""` to null before the controller sees it, so the two are indistinguishable and that rule would
 destroy the key on any empty string.
+
+### One account for every project
+
+The common case is not "assign this key to a project" — it is *this key **is** the fleet's key*. Two ways to
+say that, and they are **not the same thing**:
+
+| You want | Do this | Covers a project created tomorrow? |
+|---|---|---|
+| Every project, forever | `PATCH /ai-accounts/{account}` with `{"all_projects": true}` | **yes** |
+| Every project that exists right now | `PUT /ai-accounts/{account}/projects` with `{"all_existing": true}` | **no** |
+| Exactly these projects | `PUT /ai-accounts/{account}/projects` with `{"project_ids": [12, 19]}` | no |
+
+```bash
+# the fleet key — one standing rule, no pivot rows to maintain
+curl -X PATCH https://fileshub.zaions.com/api/public/v1/ai-accounts/1 \
+  -H "Authorization: Bearer $FH_PAT" -H 'Content-Type: application/json' \
+  -d '{"all_projects": true}'
+```
+
+Writing any of them needs **`can_write_vault`**, not `can_read_ai_accounts` — an assignment is a pointer and
+none of these responses contains a key.
+
+:::caution Sending both is a 422, on purpose
+`{"all_existing": true}` together with `{"project_ids": […]}` is refused rather than resolved by precedence.
+"all_existing wins" and "the explicit list wins" are equally defensible readings, which is exactly why you
+should not have to guess which one this implementation chose.
+:::
+
+`GET /ai-accounts/{account}/projects` answers with the resolved set, and each entry reports **how** it is
+reached — `via: "explicit"` for a pivot row somebody wrote, `via: "all_projects"` for the standing rule. That
+distinction is what tells you where to go to undo it: an `all_projects` entry is not detachable from the
+project, only from the account.
+
+:::note `all_projects` here is not `all_projects` on your token
+An access token also has an `all_projects` field, and it means the opposite direction: which projects *you*
+may reach. An account flagged for every project never widens a token's scope — a project-scoped token asking
+`GET /ai-accounts/{account}/projects` still sees only its own projects.
+:::
 
 ### `openai` is superseded, and deliberately still there
 

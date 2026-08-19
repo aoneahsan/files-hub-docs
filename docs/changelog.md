@@ -4,13 +4,22 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-08-21
+  date: 2026-08-22
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-08-22 — one AI account for every project
+
+- 🔴 **An AI account can now serve every project, including projects created later.** The owner keeps one or two provider accounts for a whole fleet, so the common case is not "assign this key to a project" but *this key **is** the fleet's key*. Set `all_projects` on the account and there are no pivot rows to maintain — and no 56th project quietly created without it.
+- **Two new routes, the account-centric direction:** `GET|PUT /ai-accounts/{account}/projects`. The existing pair assigns many accounts to one project; this assigns one account to many projects. Both need `can_write_vault`, and neither ever returns a key.
+- 🔴 **`{"all_existing": true}` and `all_projects` are different features, and the docs now say so in a table.** The first is a *snapshot* — every project that exists right now, future ones excluded. The second is a *standing rule*. Sending both in one body is a **422** rather than resolved by precedence: "all_existing wins" and "the explicit list wins" are equally defensible, so a caller should never have to guess which was implemented.
+- Each resolved entry reports `via: explicit | all_projects`, which is what tells you where to undo it — an `all_projects` entry is detachable from the account, never from the project.
+- 🔴 **A note on a name collision:** an access token *also* has an `all_projects` field, meaning which projects *you* may reach. An AI account flagged for every project never widens a token's scope.
+- Corrected a stale box on [Endpoints](management-api/endpoints): it claimed no project had any configured service, a figure measured through a read path fixed in `2026.08.19.1`. The honest count, probed 2026-08-19, is 7 of 55 — with a warning that `configured_services` now includes the *derived* `fileshub` service and so cannot be read as "someone entered data".
 
 ## 2026-08-21 — AI provider accounts
 

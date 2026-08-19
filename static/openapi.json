@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
     "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES — do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand — nothing generates it from the Laravel routes — so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token’s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) — live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
     "contact": {
@@ -4685,6 +4685,105 @@
           }
         }
       }
+    },
+    "/ai-accounts/{account}/projects": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Which projects may use this AI account",
+        "description": "The resolved set — explicit pivot rows plus, when the account is flagged all_projects, every project. Each entry reports how it is reached. Narrowed to the projects this token may reach: an account flagged for every project never widens a token scope. Needs can_read_vault (pointers only, no key).",
+        "operationId": "aiAccountProjectsIndex",
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account email, or `provider:email`. The unique key is the PAIR, because one mailbox routinely holds an OpenAI account and an Anthropic one."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountProjects"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Assign this AI account to many projects",
+        "description": "The account-centric direction: one account to many projects, which is how a shared fleet key is managed. Needs can_write_vault, not can_read_ai_accounts — an assignment is a pointer and this response never contains a key.",
+        "operationId": "aiAccountProjectsAssign",
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account email, or `provider:email`. The unique key is the PAIR, because one mailbox routinely holds an OpenAI account and an Anthropic one."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiAccountProjectsWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountProjects"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7313,6 +7412,17 @@
           "note": {
             "type": "string",
             "description": "Names the scope that endpoint requires."
+          },
+          "via": {
+            "type": "string",
+            "enum": [
+              "explicit",
+              "all_projects"
+            ],
+            "description": "How this project reaches the account. `explicit` is a pivot row somebody wrote; `all_projects` is the account-level standing rule, which can only be undone on the account."
+          },
+          "all_projects": {
+            "type": "boolean"
           }
         }
       },
@@ -7427,6 +7537,13 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "all_projects": {
+            "type": "boolean",
+            "description": "Standing rule: every project may use this account, including projects created later. The `projects` array below stays the EXPLICIT assignments only."
+          },
+          "projects_note": {
+            "type": "string"
           }
         }
       },
@@ -7526,6 +7643,10 @@
           "clear_api_key": {
             "type": "boolean",
             "description": "Update only. The unambiguous way to remove a stored key — a blank value cannot mean this, because ConvertEmptyStringsToNull makes an empty string and null identical to the controller."
+          },
+          "all_projects": {
+            "type": "boolean",
+            "description": "Set true to let every project use this account, now and in future. For a snapshot of today's projects instead, use PUT /ai-accounts/{account}/projects with all_existing."
           }
         }
       },
@@ -7570,6 +7691,68 @@
                 }
               }
             }
+          }
+        }
+      },
+      "AiAccountProjects": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "all_projects": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "public_id": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "via": {
+                  "type": "string",
+                  "enum": [
+                    "explicit",
+                    "all_projects"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "AiAccountProjectsWrite": {
+        "type": "object",
+        "description": "Send EITHER project_ids OR all_existing — never both. They mean different things and the precedence between them is deliberately undefined, so a body carrying both is refused with 422.",
+        "properties": {
+          "project_ids": {
+            "type": "array",
+            "maxItems": 500,
+            "items": {
+              "type": "integer"
+            },
+            "description": "Replace the explicit assignment set with exactly these projects. An empty array detaches all of them. An id the token cannot reach answers 404."
+          },
+          "all_existing": {
+            "type": "boolean",
+            "description": "A SNAPSHOT: attach every project that exists right now (and that this token may reach). A project created later is NOT covered — for that, set all_projects on the account itself."
           }
         }
       }
