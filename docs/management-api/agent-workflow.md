@@ -4,7 +4,7 @@ title: Agent workflow — auto-configure a project's API key
 description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates.
 keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, global origins check, fh_pat access token workflow, wire up api key from env]
 last_update:
-  date: 2026-08-04
+  date: 2026-08-19
   author: Ahsan Mahmood
 ---
 
@@ -145,8 +145,10 @@ curl -s $BASE/vault/services -H "Authorization: Bearer $FH_PAT" \
   | jq -r '.data.services[] | "\(.service): \(.fields | length) fields"'
 
 # Which services is THIS project configured for? (no secret leaves the vault)
+# Read `unregistered_services` too — a value stored under a service the registry
+# does not declare is real, readable, and named only there.
 curl -s $BASE/projects/my-app/vault -H "Authorization: Bearer $FH_PAT" \
-  | jq '.data.configured_services'
+  | jq '.data | {configured_services, unregistered_services}'
 
 # Write the env file and fetch the Android config
 curl -s -X POST $BASE/projects/my-app/vault/reveal -H "Authorization: Bearer $FH_PAT" \
@@ -155,14 +157,19 @@ curl -s $BASE/projects/my-app/vault-files/firebase.google_services_json \
   -H "Authorization: Bearer $FH_PAT" -o android/app/google-services.json
 ```
 
-Three things worth knowing before you call it:
+Four things worth knowing before you call it:
 
-- 🔴 **Nothing is stored in it yet.** As of 2026-08-04 no registered project has a configured service, so
-  every reveal returns the empty skeleton with `env: {}`. The commands above will succeed and write
-  **nothing** — `jq -r '.data.env.vite'` on an unconfigured project emits an empty string and `>` truncates
-  whatever `.env.local` already held. Guard on the value (`// empty`) and use `curl -sf` for files. And read
-  an empty service as *not entered yet*, never as *this project does not use that service*: the response is
-  identical either way. See [Project vault](./project-vault.md).
+- 🔴 **Almost nothing is stored in it yet.** As of 2026-08-19 one registered project of 54 has a configured
+  service, so nearly every reveal returns the empty skeleton with `env: {}`. The commands above will succeed
+  and write **nothing** — `jq -r '.data.env.vite'` on an unconfigured project emits an empty string and `>`
+  truncates whatever `.env.local` already held. Guard on the value (`// empty`) and use `curl -sf` for
+  files. And read an empty service as *not entered yet*, never as *this project does not use that service*:
+  the response is identical either way. See [Project vault](./project-vault.md).
+- 🔴 **On a deploy older than `2026.08.19.1`, an empty answer could also mean *stored and unreportable*.**
+  Every read path used to iterate the registry rather than the project's own rows, so a credential entered
+  under a service name outside the declared 18 was absent from `has`, `configured_services`, `values` and
+  `reveal` alike — clean `200`s over live credentials. Check `GET /api/version` before you report a vault as
+  empty, and on a current deploy read `unregistered_services` and each service's `registered` flag.
 - **The scopes are off by default.** `can_read_vault` and `can_reveal_vault` are separate booleans on the
   token; without them you get `403 TOKEN_PERMISSION_DENIED` naming the one you need. Only the owner can
   enable them, in the admin — so treat a `403` as a question for them, not something to route around.
@@ -184,7 +191,9 @@ supabase link --project-ref <ref>
 ```
 
 This needs **`can_read_supabase_tokens`**, which is its own switch — a token holding `can_manage_supabase`
-gets `403` here. That is deliberate: `can_manage_supabase` reads one project's credentials, while an
+gets `403` here. Since `2026.08.19.1` a project-scoped token additionally only reaches the accounts and
+Supabase projects linked from a FilesHub project it can manage (plus unlinked ones); record the link with
+`PATCH $BASE/projects/my-app -d '{"supabase_project_id": <id>}'` the first time you resolve it. That is deliberate: `can_manage_supabase` reads one project's credentials, while an
 account token can create and delete every project the account owns. Check both before you script anything:
 
 ```bash

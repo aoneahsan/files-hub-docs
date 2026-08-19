@@ -4,7 +4,7 @@ title: Project vault
 description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, signing keys and more — and read them back over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
 keywords: [project credential vault, store api keys per project, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, secrets vault for developers, bootstrap project credentials cli]
 last_update:
-  date: 2026-08-04
+  date: 2026-08-19
   author: Ahsan Mahmood
 ---
 
@@ -18,16 +18,24 @@ The **project vault** ends that. Enter everything once in the FilesHub admin —
 each console to find every value — and this part of the Management API reads it back on demand, including
 ready-to-paste `.env` blocks for Vite, Next, Node and Laravel.
 
-These endpoints are **read + reveal only**. Entering credentials stays in the admin by design: a vault is
-filled by a person and read by a machine, and there is exactly one place a value can be typed.
+These endpoints are **read + reveal only**, and that is a decision rather than a missing feature — it was
+put to the owner again on 2026-08-19 and kept. Entering credentials stays in the admin: a vault is filled by
+a person and read by a machine, there is exactly one place a value can be typed, and the form is where the
+per-field help lives that says which console page each value comes from. **No credential write endpoint
+exists or is planned.** An agent that discovers a credential records a task for the owner; it does not store
+it, and it should not file the absence as a bug.
+
+Project *metadata* is a different matter and **is** writable through `POST`/`PATCH /projects/{project}` —
+including `supabase_project_id`, which is worth writing back the first time you resolve which Supabase
+project an app belongs to.
 
 Base URL `https://fileshub.zaions.com/api/public/v1`, same `Authorization: Bearer fh_pat_...` as the rest
 of the [Management API](./overview.md).
 
-:::danger The vault is live but currently EMPTY — and an empty answer is not an answer about the project
+:::danger The vault is live but very nearly EMPTY — and an empty answer is not an answer about the project
 
-Probed on **2026-08-04**: **0 of 54 registered projects have a single configured service.** The endpoints
-work exactly as documented below; the data has not been entered yet. Every reveal today returns the full
+Probed on **2026-08-19**: **1 of 54 registered projects has a configured service.** The endpoints work
+exactly as documented below; the data has not been entered yet. Almost every reveal today returns the full
 18-service skeleton with every `has` flag `false`, `env: {}` and `undecryptable: []`.
 
 **An empty service means the value has NOT BEEN ENTERED. It never means the project does not use that
@@ -46,6 +54,41 @@ So, concretely:
   around quietly.
 
 Report what the vault returned, not what it was expected to contain.
+:::
+
+:::warning Before `2026.08.19.1`, "empty" could also mean "stored, and unreportable"
+
+This is worth stating plainly because it produced a confident wrong answer for two weeks.
+
+Until that release every read path iterated the **registry** — the 18 declared services and their 87
+declared fields — rather than the rows a project actually holds. A credential entered under a `service`
+string outside those 18 (the admin's standalone credential form took free text, so a label typed where a key
+belongs — `Google Cloud` for `google_cloud` — was accepted and stored) was therefore absent from `has`,
+from `configured_services`, from `values` **and from `reveal`**. Three clean `200`s over live, encrypted,
+correctly-stored credentials, with no error, no warning and nothing to notice.
+
+**Fixed at both ends in `2026.08.19.1`:**
+
+| Change | Effect |
+|---|---|
+| Presence is declared fields **∪ every row actually stored** | a credential under an undeclared key now appears in `has` |
+| Each service block carries **`registered: true \| false`** | a service the registry never declared still gets a block, marked as such |
+| The detail payload carries **`unregistered_services[]`** | orphans are named at the top level, not left to be inferred |
+| An unregistered service a project holds is addressable | `GET \| POST /projects/{project}/vault/{service}` resolves it; one the project does not hold is still `404` |
+| The admin's `Service` field is a validated picker | a new orphan cannot be created, and opening an existing one cannot silently rewrite it |
+
+Values stay fail-closed throughout: an **undeclared** field has no registry entry marking it safe, so it is
+treated as secret, withheld from every non-reveal view, and never enters an `env` block.
+
+**If you are reading a vault on an older deploy, state which marker you probed** (`GET /api/version`)
+before reporting a project as empty.
+:::
+
+:::info Empty `has` / `values` maps encode as `{}`
+
+They encoded as `[]` before `2026.08.19.1` — which is what an empty PHP array serialises to, and it appeared
+exactly when a project had nothing stored, i.e. the common case. A typed client reading `has.project_id`
+broke on it.
 :::
 
 ## Two scopes, both off by default

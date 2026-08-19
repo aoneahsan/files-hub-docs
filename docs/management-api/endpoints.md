@@ -4,7 +4,7 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
 last_update:
-  date: 2026-08-04
+  date: 2026-08-19
   author: Ahsan Mahmood
 ---
 
@@ -80,11 +80,33 @@ Update any of the project's own fields. Send only what you are changing; an omit
 `platforms`, `tech_stack` and `permissions` **replace** rather than merge. Unlike on create, `slug` does not
 accept `null` here — omit it to leave the slug alone. A duplicate slug is `409 SLUG_ALREADY_EXISTS`.
 
+Since `2026.08.19.1` this also accepts **`supabase_project_id`** — the registered Supabase project this app
+uses. Worth writing back the first time you resolve it, so the next session reads a stored fact instead of
+re-deriving one from a committed `.env` and a name match. Two conditions: the token needs
+`can_manage_supabase`, and the target must be a Supabase project it could already see — linking widens what
+the token may read, so the write is gated by the same rule as the read (`422` otherwise).
+
+Credential **values** are still not writable here, and no endpoint for that is planned — see
+[Project vault](./project-vault.md).
+
 ### `DELETE /projects/{project}`
-Delete a project. At the database level this **cascades** its API keys, origins, stored objects and audit
-logs; the response reports counts for the two worth knowing:
+
+:::danger This destroys the project's entire credential vault
+
+The cascade is wider than it looks: API keys, origins, stored objects and audit logs — **and** every stored
+credential, every stored config file, every project link and the whole reveal trail. Nothing here is
+recoverable, and the vault rows are the least recoverable part.
+
+Until `2026.08.19.1` the response named only `api_keys` and `stored_objects`, so the credentials went
+unmentioned, and this was the one write on the plane that left **no audit row at all**. Both are fixed: all
+six counts come back, and the call is recorded as `public_api.project.deleted` with those counts in its
+metadata — written *before* the delete, because the audit row's own `project_id` cascades too.
+:::
+
 ```json
-{ "data": { "deleted": true, "cascade": { "api_keys": 3, "stored_objects": 128 } } }
+{ "data": { "deleted": true, "cascade": {
+    "api_keys": 3, "stored_objects": 128,
+    "vault_credentials": 11, "vault_files": 2, "links": 4, "vault_reveals": 7 } } }
 ```
 
 ## API keys
@@ -98,6 +120,14 @@ List the project's keys, newest first (prefix, permissions, `restricted`, `is_ac
 **Paginated** — `per_page` (default 20, max 50) and `page`, with the usual `meta` and `message`. Rotating
 and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit: loop on
 `meta.has_more` rather than assuming one call returned them all.
+
+:::caution `remaining_items` past the last page
+
+Before `2026.08.19.1` a request for a page beyond the end answered `has_more: false` **and**
+`remaining_items: <the whole total>` in the same object — two keys contradicting each other, and a loop that
+decided whether to keep paging from `remaining_items` never terminated. It reports `0` now. Against an older
+deploy, trust `has_more` / `next_page`.
+:::
 
 ### `POST /projects/{project}/api-keys`
 Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_send_emails`,

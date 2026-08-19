@@ -30,14 +30,43 @@ of the [Management API](./overview.md).
 
 ## The `can_manage_supabase` scope
 
-Supabase projects are **account-wide** — they belong to no FilesHub project — so they are **not** gated by
-the token's project scope (`all_projects` / a project subset). They are gated by a **separate** boolean on
-the access token: **`can_manage_supabase`**, which is **off by default**.
+Supabase projects are **account-wide** — they belong to no FilesHub project of their own — so the primary
+gate is a **separate** boolean on the access token: **`can_manage_supabase`**, which is **off by default**.
 
 - Enable it per token in the FilesHub admin → **Access Tokens** → *Can Manage Supabase*.
 - A token without it gets **`403 TOKEN_PERMISSION_DENIED`** (not the anti-enumeration `404`), because the
   scope is a property of your own token — an honest error is more useful than pretending the resource does
   not exist:
+
+:::warning Project scope now applies here too — it did not before `2026.08.19.1`
+
+The scope boolean used to be the **only** lever. A token deliberately restricted to one FilesHub project
+still listed every Supabase project on the account and could reveal any of their database passwords and
+service keys, because `supabase_projects` had no relation to `projects` to scope by.
+
+Since `2026.08.19.1` the rule is **link and filter**:
+
+| Token | Sees |
+| --- | --- |
+| `all_projects: true` | every registered Supabase project — unchanged |
+| project-scoped | the Supabase projects **linked** from a FilesHub project it can manage, **plus every unlinked one** |
+
+An out-of-scope project answers **`404`**, like every other out-of-scope resource on this plane — not `403`,
+which would confirm it exists.
+
+**Unlinked projects stay visible on purpose.** Nothing was linked when this shipped, so filtering them out
+would have emptied the vault for every scoped token and read as an outage rather than a policy. The link is
+what closes the gap, and it is writable:
+
+```bash
+curl -X PATCH "$BASE/projects/my-app" \
+  -H "Authorization: Bearer $FH_PAT" -H 'Content-Type: application/json' \
+  -d '{"supabase_project_id": 8}'
+```
+
+That needs `can_manage_supabase`, and it refuses a target the token could not already see — linking widens
+what a token may read, so the write is gated by exactly the same rule as the read.
+:::
 
 ```json
 { "error": { "code": "TOKEN_PERMISSION_DENIED",
@@ -110,6 +139,19 @@ still reports `true` — see the note under [reveal](#post-supabase-projectssupa
 `account` is a **pointer, never a credential**: it says which account owns the project, whether that account
 has a personal access token stored, and which endpoint and scope would return it. It is `null` for a project
 not yet linked to an account. See [Supabase account tokens](./supabase-accounts.md).
+:::caution Act on `account.email`, never the top-level `account_email` alone
+
+`supabase_projects.account_email` is a legacy free-text column kept from before the account relation
+existed, and **the two have disagreed in production** — one project published one address at the top level
+and a different one inside `account`. Acting on the wrong one means fetching a personal access token for an
+account that does not own the project, which answers `403` on `supabase functions deploy` while every
+presence flag on the project reads `true`. That reads as a broken CLI, not as a wrong account.
+
+Since `2026.08.19.1` the top-level `account_email` is **derived from the relation**, so the two agree by
+construction, and `account.legacy_account_email_conflict: true` (with `account.legacy_account_email`) marks
+a row whose stale column still says otherwise.
+:::
+
 
 ## `GET /supabase-projects/{supabaseProject}`
 

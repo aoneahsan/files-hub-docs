@@ -32,6 +32,15 @@ is what does *not* grant it:
 > **`can_manage_supabase` does not imply `can_read_supabase_tokens`.** A token holding only
 > `can_manage_supabase` receives `403` from every endpoint on this page.
 
+:::warning Project scope narrows WHICH accounts you reach — it does not replace this switch
+
+Since `2026.08.19.1` a project-scoped token sees only the accounts that own a Supabase project it can see,
+plus accounts that own none; an out-of-scope account answers `404`. That is a **second** gate. It changes
+nothing about the first: `can_read_supabase_tokens` is still required for every endpoint on this page,
+because a personal access token reaches a whole supabase.com account — including projects that do not exist
+yet. An `all_projects` token is unaffected.
+:::
+
 The two scopes have different blast radii, so they are different switches:
 
 | Scope | Reaches |
