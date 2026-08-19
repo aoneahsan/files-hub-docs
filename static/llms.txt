@@ -106,6 +106,13 @@
   `POST /projects/{project}/vault` (bulk, atomic), `POST /projects/{project}/vault-move` (retire an
   orphaned service onto declared fields), `POST|DELETE /projects/{project}/vault-files/{service}.{key}`,
   `PUT /projects/{project}/links`. An absent key is left alone; an explicit `null` deletes that field.
+- AI provider accounts (since backend `2026.08.21.1`): `GET|POST /ai-accounts`,
+  `GET|PATCH /ai-accounts/{account}`, `POST /ai-accounts/{account}/reveal`,
+  `GET|PUT /projects/{project}/ai-accounts`. An OpenAI/Anthropic key authorises a whole ACCOUNT, so it lives
+  on one record that many projects point at, many-to-many. Reveal needs `can_read_ai_accounts`, which
+  `can_reveal_vault` does NOT imply; ASSIGNING an account needs only `can_write_vault` because an assignment
+  is a pointer and never returns a key. A reveal emits `env.node` with the provider's real variable name;
+  there is deliberately no client-bundled block. Clearing a key is `clear_api_key: true`, never a blank value.
 - Vault scopes, three, all off by default: `can_read_vault` for metadata and presence flags,
   `can_reveal_vault` for the values, file bytes and `.env` blocks, `can_write_vault` for changing them.
   Reveal and write both imply read; write does NOT imply reveal. The generated `vite`/`next` blocks contain

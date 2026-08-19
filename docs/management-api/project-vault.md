@@ -4,7 +4,7 @@ title: Project vault
 description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
 keywords: [project credential vault, store api keys per project, write credentials via api, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, can_write_vault, secrets vault for developers, bootstrap project credentials cli, seed project secrets programmatically]
 last_update:
-  date: 2026-08-20
+  date: 2026-08-21
   author: Ahsan Mahmood
 ---
 
@@ -166,10 +166,10 @@ curl -s https://fileshub.zaions.com/api/public/v1/vault/services \
 
 ### Services covered
 
-**20 services, 95 fields** as of 2026-08-20:
+**21 services, 95 fields** as of 2026-08-21:
 
 `supabase` (linked — see below) · `firebase` · `google_cloud` · `sentry` · `onesignal` · `clarity` ·
-`amplitude` · `openai` · `smtp` · `cloudflare` · `capacitor` · `github` · `play_console` · `app_store` ·
+`amplitude` · `ai` (linked — see below) · `openai` (superseded by `ai`) · `smtp` · `cloudflare` · `capacitor` · `github` · `play_console` · `app_store` ·
 `chrome_web_store` · `firefox_addons` · `edge_addons` · `fileshub` (derived — see below) · `native_update` ·
 **`general`** (freeform — your own key/value pairs).
 
@@ -184,8 +184,8 @@ Each service also reports two booleans that matter before you try to write to it
 | `writable` | Whether `PUT /projects/{project}/vault/{service}` accepts fields for it |
 | `derived` | The block is **computed** by FilesHub from records it already holds, not stored. Read-only |
 
-`supabase` is `writable: false` because it links elsewhere; `fileshub` is `writable: false` because it is
-`derived: true`. Everything else is writable.
+`supabase` and `ai` are `writable: false` because they link elsewhere; `fileshub` is `writable: false`
+because it is `derived: true`. Everything else is writable.
 
 :::tip `client_safe` is not decoration
 It decides whether a value appears in the generated `VITE_` / `NEXT_PUBLIC_` blocks. A field marked
@@ -448,6 +448,77 @@ right. To change what this block reports, change the underlying records —
 
 The block carries `derived: true` and, if a project somehow holds stored rows under `fileshub` from before
 this change, names them in `shadowed_stored_fields[]` rather than quietly overriding them.
+
+## AI provider accounts are linked, not copied
+
+The `ai` tab holds no fields of its own. An OpenAI or Anthropic key authorises an **account** — it spends
+that account's balance and reaches every model on it — and two or three accounts serve a whole fleet of
+projects. Copied into each project's vault that would be one secret in twenty rows, rotated in twenty places
+and agreeing in none, which is the duplication this vault exists to end. So it lives on its own record and
+projects point at it.
+
+🔴 **Many accounts per project, unlike the single Supabase link.** An app has one database, but routinely
+uses an OpenAI account for embeddings *and* an Anthropic one for chat. The project payload carries an array:
+
+```json
+{ "ai_accounts": [
+  { "id": 3, "provider": "anthropic", "display_name": "Anthropic — ai@example.com",
+    "purpose": "chat", "has_key": true,
+    "credentials_via": "/api/public/v1/ai-accounts/3/reveal",
+    "note": "The key lives on the account-wide AI vault and needs the can_read_ai_accounts scope." } ] }
+```
+
+### The scope split is the whole point
+
+| Call | Scope |
+|---|---|
+| `GET \| POST /ai-accounts`, `GET \| PATCH /ai-accounts/{account}`, `POST /ai-accounts/{account}/reveal` | **`can_read_ai_accounts`** for the reads and the reveal; `can_write_vault` to create or edit |
+| `GET \| PUT /projects/{project}/ai-accounts` — which accounts a project may use | **`can_write_vault`** |
+
+:::danger `can_reveal_vault` does NOT grant an AI key
+It is the most powerful grant over *project* credentials and it still answers `403` from every
+`/ai-accounts` endpoint. The two authorise different things: `can_reveal_vault` is given to a caller that
+should read one project's configuration, while an AI key is account-wide, spends a real balance, and is
+bounded by nothing this platform knows about.
+
+**Assigning** an account is different again and needs only `can_write_vault` — an assignment is a pointer
+and those responses never contain a key.
+:::
+
+`{account}` resolves by numeric id, by account email, or by `provider:email`. The unique key is the **pair**,
+because one mailbox routinely holds an OpenAI account and an Anthropic one.
+
+### Revealing a key
+
+```bash
+curl -X POST https://fileshub.zaions.com/api/public/v1/ai-accounts/3/reveal \
+  -H "Authorization: Bearer $FH_PAT"
+```
+
+Returns the key plus an `env.node` block carrying the variable the provider's SDK actually reads —
+`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` and so on. Guessing `ANTHROPIC_KEY` fails at runtime
+rather than at configuration time, which is why the block exists.
+
+🔴 **There is no `vite` or `next` block here, and there never will be.** An AI provider key in a browser
+bundle is someone else spending the account's balance. The project vault can offer client blocks because its
+registry marks individual fields client-safe; nothing on this record is.
+
+Every reveal is recorded with field **names** only and stamps `last_revealed_at`.
+
+### Clearing a key
+
+🔴 **Send `{"clear_api_key": true}` — a blank `api_key` will not do it.** A blank value is deliberately
+dropped so that editing an unrelated field cannot wipe the credential, and it *cannot* be expressed as
+"absent keeps, null clears" the way the vault endpoints are: Laravel's `ConvertEmptyStringsToNull` middleware
+rewrites `""` to null before the controller sees it, so the two are indistinguishable and that rule would
+destroy the key on any empty string.
+
+### `openai` is superseded, and deliberately still there
+
+The `openai` vault service still exists and still works. The `2026.08.21.1` data migration lifted stored
+`openai` credentials onto account records **additively** — the original rows were left in place, because
+deleting a credential is the owner's decision and not a migration's. Removing the service would have turned
+every one of those rows into an orphan, which is precisely the failure documented at the top of this page.
 
 ## Supabase is linked, not copied
 

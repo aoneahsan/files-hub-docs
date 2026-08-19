@@ -241,6 +241,21 @@ Endpoints:
   refuses writes; `supabase` is a link and refuses them too. `GET /vault/services` publishes `writable` and
   `derived` per service, so a caller learns this from schema discovery rather than from a 422.
 
+- AI provider accounts — `GET|POST /ai-accounts`, `GET|PATCH /ai-accounts/{account}`,
+  `POST /ai-accounts/{account}/reveal`, `GET|PUT /projects/{project}/ai-accounts`. Added in backend
+  `2026.08.21.1`. An OpenAI or Anthropic key authorises an ACCOUNT — it spends that account's balance and
+  reaches every model on it — so it lives on an `ai_accounts` record that projects point at MANY-TO-MANY (an
+  app routinely uses one provider for embeddings and another for chat), rather than being copied into each
+  project's vault. Its own scope, `can_read_ai_accounts`, which `can_reveal_vault` deliberately does NOT
+  imply: that scope reads one project's configuration, while an AI key is account-wide and bounded by
+  nothing FilesHub knows about. ASSIGNING an account to a project needs only `can_write_vault`, because an
+  assignment is a pointer and those responses never contain a key. A reveal returns the key plus `env.node`
+  carrying the variable the provider's SDK actually reads; there is no `vite`/`next` block and there never
+  will be. Clearing a key is an explicit `clear_api_key: true` — a blank value is dropped, because Laravel's
+  ConvertEmptyStringsToNull middleware makes "" and null indistinguishable to the controller. The `openai`
+  vault service stays declared and superseded: a data migration lifted stored values onto account records
+  additively, leaving the originals in place.
+
 Full reference: https://fileshub-docs.zaions.com/management-api/overview, the Supabase vault at
 https://fileshub-docs.zaions.com/management-api/supabase-projects, Supabase account tokens at
 https://fileshub-docs.zaions.com/management-api/supabase-accounts, the project vault at

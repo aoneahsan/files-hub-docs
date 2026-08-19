@@ -76,6 +76,10 @@ every project it has, including ones that do not exist yet.
   more), with ready-to-paste `.env` blocks, behind `can_read_vault` / `can_reveal_vault` /
   `can_write_vault`. Writing landed in `2026.08.20.1`; earlier pages describing the vault as read-only are
   stale. **Most projects are still unpopulated**; see [Project vault](./project-vault.md).
+- **AI provider accounts** — an OpenAI or Anthropic key authorises a whole account, so it lives on its own
+  record that many projects point at, behind **`can_read_ai_accounts`**. 🔴 `can_reveal_vault` does *not*
+  imply that scope; assigning an account to a project needs only `can_write_vault`, because an assignment is
+  a pointer. See [Project vault](./project-vault.md#ai-provider-accounts-are-linked-not-copied).
 
 See [Authentication](./authentication.md), the [Endpoint reference](./endpoints.md), the
 [Project vault](./project-vault.md), the [Supabase project vault](./supabase-projects.md),

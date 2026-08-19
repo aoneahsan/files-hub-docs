@@ -4,13 +4,23 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-08-20
+  date: 2026-08-21
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-08-21 — AI provider accounts
+
+- **An OpenAI or Anthropic key now lives on its own account record**, not in each project's vault. That key authorises an *account*: it spends its balance and reaches every model on it, and two or three accounts serve a whole fleet — so copying it per project meant one secret in twenty rows, rotated in twenty places, agreeing in none. Same argument that put a Supabase personal access token on its account. Documented in [AI provider accounts](management-api/project-vault#ai-provider-accounts-are-linked-not-copied).
+- 🔴 **A new scope, `can_read_ai_accounts`, and `can_reveal_vault` does NOT imply it.** The most powerful grant over *project* credentials still answers `403` from every `/ai-accounts` endpoint, deliberately: it is given to a caller that should read one project's configuration, not to hand out billing. **Assigning** an account to a project is different again and needs only `can_write_vault`, because an assignment is a pointer and never returns a key. `GET /token` now reports six booleans.
+- 🔴 **Many accounts per project**, unlike the single Supabase link — an app routinely uses OpenAI for embeddings and Anthropic for chat, and a single foreign key would make that inexpressible.
+- A reveal returns `env.node` carrying the variable the provider's SDK actually reads. 🔴 **There is no `vite` or `next` block and there never will be** — an AI key in a browser bundle is someone else spending the balance.
+- 🔴 **Clearing a key is `{"clear_api_key": true}`, not a blank value.** A blank `api_key` is dropped so editing an unrelated field cannot wipe the credential, and it could not be "absent keeps, null clears" like the vault endpoints: Laravel's `ConvertEmptyStringsToNull` middleware rewrites `""` to null before a controller sees it, so the two are indistinguishable and that rule would have destroyed the key on any empty string.
+- **`openai` stays a declared vault service, marked superseded.** A data migration lifted stored values onto account records *additively* — the originals were left in place, because deleting a credential is an owner decision. Removing the service would have orphaned every one of them.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.5.0**.
 
 ## 2026-08-20 — The project vault became writable
 

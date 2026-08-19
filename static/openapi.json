@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
     "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES — do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand — nothing generates it from the Laravel routes — so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token’s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) — live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
     "contact": {
@@ -4214,6 +4214,477 @@
           }
         }
       }
+    },
+    "/ai-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List AI provider accounts",
+        "description": "Requires `can_read_ai_accounts` (default false). 🔴 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account — it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
+        "operationId": "listAiAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated account summaries — presence flags, never a key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountSummary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Register an AI provider account",
+        "description": "Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
+        "operationId": "createAiAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiAccountWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created account, without its key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountSummary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/ai-accounts/{account}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "One AI provider account",
+        "description": "Requires `can_read_ai_accounts` (default false). 🔴 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account — it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
+        "operationId": "showAiAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account email, or `provider:email`. The unique key is the PAIR, because one mailbox routinely holds an OpenAI account and an Anthropic one."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The account, without its key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountSummary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Update an AI provider account",
+        "description": "Partial. 🔴 A BLANK `api_key` is dropped so that editing an unrelated field cannot wipe the credential — and it cannot be expressed as \"null clears\" the way the vault endpoints are, because Laravel's ConvertEmptyStringsToNull middleware rewrites \"\" to null before the controller sees it. Send `clear_api_key: true` to remove a key. Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
+        "operationId": "updateAiAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account email, or `provider:email`. The unique key is the PAIR, because one mailbox routinely holds an OpenAI account and an Anthropic one."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiAccountWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated account, without its key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountSummary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/ai-accounts/{account}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal an AI provider key",
+        "description": "Returns the key plus an `env.node` block carrying the variable the provider's SDK actually reads. 🔴 There is no `vite` or `next` block and there never will be — an AI key in a browser bundle is someone else spending the account's balance. Always recorded, with field NAMES only. Requires `can_read_ai_accounts` (default false). 🔴 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account — it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
+        "operationId": "revealAiAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account email, or `provider:email`. The unique key is the PAIR, because one mailbox routinely holds an OpenAI account and an Anthropic one."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The account plus its key and env block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AiAccountReveal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/ai-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "The AI accounts a project may use",
+        "description": "POINTERS only — each entry names the endpoint and the scope that WOULD return the key, and never the key itself. That is why this needs only the ordinary vault read scope.",
+        "operationId": "listProjectAiAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The project's assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectAiAccounts"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Replace a project's AI account assignments",
+        "description": "A full replace: an empty array unassigns everything. 🔴 Gated by `can_write_vault`, not the far stronger `can_read_ai_accounts`, because an assignment is a pointer and this response contains no key. Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
+        "operationId": "assignProjectAiAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectAiAccountsWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The project's assignments after the write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectAiAccounts"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6322,6 +6793,13 @@
                   "null"
                 ],
                 "format": "date-time"
+              },
+              "ai_accounts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AiAccountAssignment"
+                },
+                "description": "AI accounts assigned to this project, as POINTERS — never keys. Added 2026.08.21.1."
               }
             }
           }
@@ -6780,6 +7258,320 @@
           }
         ],
         "description": "Every write answers with the SAME payload GET /projects/{project}/vault returns — so a caller confirms what landed without a second call and without needing can_reveal_vault — plus the changes block."
+      },
+      "AiAccountAssignment": {
+        "type": "object",
+        "description": "A POINTER to an AI account — never a credential.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "provider_label": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "account_email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "organization_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "base_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "purpose": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What this project uses the account FOR — chat, embeddings, transcription."
+          },
+          "has_key": {
+            "type": "boolean"
+          },
+          "credentials_via": {
+            "type": "string",
+            "description": "The endpoint that would return the key."
+          },
+          "note": {
+            "type": "string",
+            "description": "Names the scope that endpoint requires."
+          }
+        }
+      },
+      "AiAccountSummary": {
+        "type": "object",
+        "description": "An AI account without its key.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "google",
+              "groq",
+              "mistral",
+              "openrouter",
+              "other"
+            ]
+          },
+          "provider_label": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "account_email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "organization_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "base_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "console": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The provider's own key page — derived, not stored."
+          },
+          "has": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Which secret fields hold a value. Tested without decrypting."
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "public_id": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "purpose": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "last_revealed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AiAccountReveal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AiAccountSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "api_key": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "undecryptable": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Names the field when a value is stored but could not be decrypted (rotated APP_KEY) — distinguishing that from 'not set', which an indistinguishable null would not."
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Only ever a `node` block. 🔴 There is deliberately no vite/next block: an AI key must never reach a browser bundle."
+              }
+            }
+          }
+        ]
+      },
+      "AiAccountWrite": {
+        "type": "object",
+        "required": [
+          "provider"
+        ],
+        "description": "Create or update. On update every key is optional; a BLANK api_key is dropped rather than stored.",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "google",
+              "groq",
+              "mistral",
+              "openrouter",
+              "other"
+            ]
+          },
+          "account_email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "api_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Blank is IGNORED, so editing another field cannot wipe the credential. Use clear_api_key to remove it."
+          },
+          "organization_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "base_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "clear_api_key": {
+            "type": "boolean",
+            "description": "Update only. The unambiguous way to remove a stored key — a blank value cannot mean this, because ConvertEmptyStringsToNull makes an empty string and null identical to the controller."
+          }
+        }
+      },
+      "ProjectAiAccounts": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiAccountAssignment"
+            }
+          }
+        }
+      },
+      "ProjectAiAccountsWrite": {
+        "type": "object",
+        "required": [
+          "accounts"
+        ],
+        "description": "A full replace. An empty array unassigns every account.",
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "purpose": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 255
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
