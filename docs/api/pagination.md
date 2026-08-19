@@ -29,7 +29,7 @@ is returned whole, with no `meta` and no `message`:
 |---|---|
 | `GET /api/public/v1/projects/{project}/api-keys/{apiKey}/origins` | Origins are entered per key; a few dozen at most |
 | `GET /api/public/v1/global-origins` | Platform-wide rules an administrator maintains; a handful |
-| `GET /api/public/v1/vault/services` | The field registry — a fixed schema, currently 18 services |
+| `GET /api/public/v1/vault/services` | The field registry — a fixed schema, currently 20 services |
 
 `POST /global-origins/check` likewise answers with a bare array of verdicts, one per candidate, capped at the
 50 candidates you may submit.

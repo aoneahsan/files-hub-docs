@@ -98,12 +98,19 @@
   `can_read_supabase_tokens`; `can_manage_supabase` does NOT grant it, because a PAT reaches every
   project the account owns rather than one project's credentials. A project payload carries only an
   `account` POINTER (`credentials_via` + `requires_scope`), never the token.
-- Project vault: `GET /vault/services`, `GET /vault/projects`, `GET /projects/{project}/vault`,
+- Project vault (read): `GET /vault/services`, `GET /vault/projects`, `GET /projects/{project}/vault`,
   `POST /projects/{project}/vault/reveal`, `GET /projects/{project}/vault-files/{service}.{key}` — every
   third-party credential, config file and identifier a project needs (Firebase, OAuth, Sentry, OneSignal,
-  signing keys, `google-services.json`). Two off-by-default scopes: `can_read_vault` for metadata and
-  presence flags, `can_reveal_vault` for the values, file bytes and `.env` blocks. The generated
-  `vite`/`next` blocks contain only fields marked client-safe.
+  Cloudflare, the store consoles, signing keys, `google-services.json`). 20 services, 95 fields.
+- Project vault (write, since backend `2026.08.20.1`): `PUT|DELETE /projects/{project}/vault/{service}`,
+  `POST /projects/{project}/vault` (bulk, atomic), `POST /projects/{project}/vault-move` (retire an
+  orphaned service onto declared fields), `POST|DELETE /projects/{project}/vault-files/{service}.{key}`,
+  `PUT /projects/{project}/links`. An absent key is left alone; an explicit `null` deletes that field.
+- Vault scopes, three, all off by default: `can_read_vault` for metadata and presence flags,
+  `can_reveal_vault` for the values, file bytes and `.env` blocks, `can_write_vault` for changing them.
+  Reveal and write both imply read; write does NOT imply reveal. The generated `vite`/`next` blocks contain
+  only fields marked client-safe, and for a registry-declared field the registry — never the caller —
+  decides whether a value is secret.
 
 ## Documentation pages
 

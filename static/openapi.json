@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.3.2",
+    "version": "1.4.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
     "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES — do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand — nothing generates it from the Laravel routes — so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token’s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) — live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
     "contact": {
@@ -3330,6 +3330,81 @@
             "$ref": "#/components/responses/ManagementError"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Write many services at once (atomic)",
+        "description": "Many services, and optionally the whole link list, in ONE transaction — the call a seeding run uses. Every service and field is validated BEFORE the transaction opens, so an invalid entry anywhere means nothing at all is written. `links` is a full replace when present and untouched when absent. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "bulkWriteProjectVault",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultBulkWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
       }
     },
     "/projects/{project}/vault/{service}": {
@@ -3394,6 +3469,174 @@
             "$ref": "#/components/responses/ManagementError"
           },
           "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Upsert one service's values",
+        "description": "Partial upsert. An **absent** key leaves that field untouched; an explicit **null** deletes its row. For a registry-declared field the registry decides whether the value is secret — a caller-supplied `secrets` flag is honoured only on the freeform `general` service, where it defaults to true. A `file`-typed field is refused here (422 VAULT_FIELD_IS_A_FILE); use the vault-files endpoint. Linked (`supabase`) and derived (`fileshub`) services refuse writes entirely. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "updateProjectVaultService",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Registry service key, e.g. `firebase`. A name the registry does not declare is refused on create (422 UNKNOWN_VAULT_SERVICE); an existing orphaned service is still accepted for DELETE."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultServiceWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Clear one service entirely",
+        "description": "Deletes every credential and file row stored under the service. Requires `{\"confirm\": true}` in the body — this is the only call that destroys credentials without naming them individually. An orphaned service the registry never declared IS accepted here, which is how one gets cleaned up. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "destroyProjectVaultService",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Registry service key, e.g. `firebase`. A name the registry does not declare is refused on create (422 UNKNOWN_VAULT_SERVICE); an existing orphaned service is still accepted for DELETE."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultDeleteConfirmation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
             "$ref": "#/components/responses/ManagementError"
           },
           "422": {
@@ -3614,6 +3857,339 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Store a config file",
+        "description": "Accepts either a multipart `file` part or a JSON `{filename, content_base64}` body. The size cap (FILESHUB_VAULT_MAX_FILE_KB, default 1024 KB) applies to the DECODED bytes in both cases, and base64 is decoded strictly — a corrupted payload is refused rather than stored as something that fails later. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "storeProjectVaultFile",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "`service.key`, e.g. `firebase.google_services_json` — the same identifier the reveal payload hands back."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultFileWrite"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "mime_type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Overrides the detected content type."
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Delete a stored config file",
+        "description": "Removes one stored file. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "destroyProjectVaultFile",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          },
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "`service.key`, e.g. `firebase.google_services_json` — the same identifier the reveal payload hands back."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/vault-move": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Retire an orphaned service onto declared fields",
+        "description": "Moves every row from one service to another, renaming keys as it goes. `from` MAY be a service the registry never declared — that is the purpose; `to` may not. The move is validated whole before anything is written, so an undeclared destination field means nothing moves. A key with no entry in `keys` is carried over unchanged and validated like any other. A source row that cannot be decrypted answers 409 PLAINTEXT_UNAVAILABLE rather than moving a null over a good value.\\n\\nThe path is `vault-move`, not `vault/move`, because a literal beside the parameterised `vault/{service}` would be an ambiguous path template — and keeping the free-text source service in the body avoids URL-encoding a name that may contain spaces. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "moveProjectVaultService",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultServiceMove"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/links": {
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Replace a project's link list",
+        "description": "A full replace rather than a merge: a link has no stable identifier a caller could address, so a shorter list is a deliberate removal. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "operationId": "replaceProjectLinks",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectLinksWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The full vault detail payload plus a `changes` block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectVaultWriteResult"
+                    }
+                  }
                 }
               }
             }
@@ -5458,6 +6034,14 @@
             "items": {
               "$ref": "#/components/schemas/VaultFieldDefinition"
             }
+          },
+          "derived": {
+            "type": "boolean",
+            "description": "The service's block is computed by FilesHub, not stored. Added 2026.08.20.1."
+          },
+          "writable": {
+            "type": "boolean",
+            "description": "Whether PUT /projects/{project}/vault/{service} accepts fields for it — false for linked and derived services. Added 2026.08.20.1."
           }
         }
       },
@@ -5498,6 +6082,21 @@
               ]
             },
             "description": "Non-secret values only, unless this came from a reveal. An UNDECLARED field has no registry entry marking it safe, so it is treated as secret and withheld here. Empty encodes as {}."
+          },
+          "derived": {
+            "type": "boolean",
+            "description": "True when the block is COMPUTED by FilesHub from records it already holds rather than stored. Only `fileshub` today. A derived service refuses writes. Added 2026.08.20.1."
+          },
+          "writable": {
+            "type": "boolean",
+            "description": "False for a linked service (`supabase`) or a derived one (`fileshub`). Added 2026.08.20.1."
+          },
+          "shadowed_stored_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Present on a derived service only: stored rows that exist under it from before it became derived. Named rather than silently overridden. Added 2026.08.20.1."
           }
         }
       },
@@ -5919,6 +6518,268 @@
           }
         ],
         "description": "Everything, the personal access token included. Recorded on every call."
+      },
+      "VaultServiceWrite": {
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "description": "Partial upsert for one service. 3.1 note: a null in `values` is MEANINGFUL — it deletes that field's row — which is why the value type is a nullable string rather than a plain one.",
+        "properties": {
+          "values": {
+            "type": "object",
+            "description": "Field key -> value. An absent key is left alone; an explicit null DELETES that field's row.",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 20000
+            },
+            "example": {
+              "dsn": "https://abc@o1.ingest.sentry.io/2",
+              "org_slug": "zaions",
+              "auth_token": null
+            }
+          },
+          "secrets": {
+            "type": "object",
+            "description": "Field key -> whether to treat the value as secret. Honoured ONLY on the freeform `general` service; for a registry-declared field the registry decides and this is ignored, because the non-reveal views filter on exactly that flag. Absent defaults to true (fail closed).",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "VaultBulkWrite": {
+        "type": "object",
+        "required": [
+          "services"
+        ],
+        "description": "Many services in one transaction. Validated in full before any write.",
+        "properties": {
+          "services": {
+            "type": "object",
+            "description": "Service key -> its values map, same semantics as VaultServiceWrite.values.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 20000
+              }
+            },
+            "example": {
+              "firebase": {
+                "project_id": "my-app",
+                "web_api_key": "AIza..."
+              },
+              "github": {
+                "owner": "aoneahsan",
+                "repo": "my-app"
+              }
+            }
+          },
+          "secrets": {
+            "type": "object",
+            "description": "Service key -> (field key -> secret). Freeform rows only.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "boolean"
+              }
+            }
+          },
+          "links": {
+            "type": "array",
+            "description": "When present, REPLACES the whole link list. When absent, the list is untouched; an empty array clears it.",
+            "items": {
+              "$ref": "#/components/schemas/ProjectLinkWrite"
+            }
+          }
+        }
+      },
+      "VaultDeleteConfirmation": {
+        "type": "object",
+        "required": [
+          "confirm"
+        ],
+        "properties": {
+          "confirm": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Must be true. Clearing a whole service deletes every credential and file under it, so the acknowledgement is explicit — a caller meaning to clear ONE field should use PUT with a null value instead."
+          }
+        }
+      },
+      "VaultServiceMove": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "The source service. MAY be a name the registry never declared — that is the purpose of this endpoint.",
+            "example": "google cloud firebase"
+          },
+          "to": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "The destination service. Must be registry-declared, or the move would merely relocate the orphan.",
+            "example": "google_cloud"
+          },
+          "keys": {
+            "type": "object",
+            "description": "Source key -> destination key. A key with no entry is carried over unchanged and validated against the destination like any other, so a partial map fails loudly rather than leaving rows behind.",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "example": {
+              "my-app-client-id": "oauth_web_client_id",
+              "my-app-client-secret": "oauth_web_client_secret"
+            }
+          }
+        }
+      },
+      "VaultFileWrite": {
+        "type": "object",
+        "required": [
+          "filename",
+          "content_base64"
+        ],
+        "description": "The JSON form of a config-file upload. The multipart form (a `file` part) is equivalent.",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "google-services.json"
+          },
+          "content_base64": {
+            "type": "string",
+            "description": "Base64 of the RAW file bytes — no data: URI prefix. Decoded strictly and size-checked AFTER decoding, so a corrupted payload is refused rather than stored as something that fails at use time."
+          },
+          "mime_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          }
+        }
+      },
+      "ProjectLinkWrite": {
+        "type": "object",
+        "required": [
+          "type",
+          "url"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "website",
+              "web_app",
+              "repo",
+              "docs",
+              "play_store",
+              "app_store",
+              "chrome_web_store",
+              "npm",
+              "api",
+              "admin",
+              "other"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000
+          },
+          "sort_order": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9999
+          }
+        }
+      },
+      "ProjectLinksWrite": {
+        "type": "object",
+        "required": [
+          "links"
+        ],
+        "properties": {
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectLinkWrite"
+            }
+          }
+        }
+      },
+      "VaultChanges": {
+        "type": "object",
+        "description": "What the write moved, as FIELD NAMES (`service.key`) only — never a value. The same names are what the audit log records.",
+        "properties": {
+          "created": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updated": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleted": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProjectVaultWriteResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProjectVaultDetail"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "changes": {
+                "$ref": "#/components/schemas/VaultChanges"
+              }
+            }
+          }
+        ],
+        "description": "Every write answers with the SAME payload GET /projects/{project}/vault returns — so a caller confirms what landed without a second call and without needing can_reveal_vault — plus the changes block."
       }
     }
   }

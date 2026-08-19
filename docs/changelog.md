@@ -4,13 +4,23 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-07-31
+  date: 2026-08-20
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-08-20 — The project vault became writable
+
+- 🔴 **The vault now accepts writes, reversing a decision that was reaffirmed as recently as 2026-08-19.** If you find a page, a note or a tool description still saying *"no credential write endpoint exists or is planned"*, it is stale — that sentence was true until backend `2026.08.20.1`. What changed is scale, not principle: around sixty projects times ninety-odd declared fields is not a workload a form can carry, and most of those values already sit in a local checkout, a git remote, or a console a CLI can read. The admin keeps its per-field help text and stays the better place to type a single value by hand.
+- **Seven routes**, documented in [Writing to the vault](management-api/project-vault#writing-to-the-vault): a partial per-service upsert, an atomic bulk write, a service clear (which requires an explicit `confirm`), an orphan move, config-file store and delete, and a link-list replace. Each answers with the *same* payload `GET /projects/{project}/vault` returns — so you confirm what landed without a second call and without needing `can_reveal_vault` — plus a `changes` block naming created, updated and deleted **field names**, never a value.
+- **A new opt-in scope, `can_write_vault`**, off by default like the rest. It **implies** `can_read_vault` (a writer must be able to see which fields are already set) and deliberately does **not** imply `can_reveal_vault` — a seeding agent should be able to fill a project in without being handed back every secret you already hold. [Authentication](management-api/authentication) and the [endpoint reference](management-api/endpoints) now list five capability booleans.
+- **What the write plane refuses, and why.** A free-text service name is rejected on create — that is the entry-side half of the ISSUE-09 story, where a credential stored under an undeclared service name was invisible in three clean `200`s for two weeks. An *existing* orphan stays deletable and movable, because the write side must be able to clean up whatever the read side can see; `POST /projects/{project}/vault-move` exists for exactly that and validates the whole move before writing any of it. And for a registry-declared field **the registry decides whether a value is secret** — a caller-supplied flag counts only on the freeform `general` service, where it defaults to secret.
+- 🔴 **`fileshub` is now a *derived* service.** Its four fields — project slug, API base, `fh_live_` key and that key's origins — are computed from records FilesHub already holds, and writes to it are refused. Same reasoning that makes `supabase` a link rather than a copy: a stored second version of a credential the database already owns is two values that can drift with nothing to say which is right. `GET /vault/services` now publishes `writable` and `derived` per service so you learn this from schema discovery instead of from a `422`.
+- **Two new services in the registry: `firefox_addons` and `edge_addons`** — Mozilla AMO (extension id, listing slug, JWT issuer and secret) and Microsoft Partner Center (product id, client id and secret, tenant token URL). The registry is now **20 services, 95 fields**.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.4.0**: 2 new paths, 7 new methods on existing paths, and 9 new schemas. `VaultServicePayload` and `VaultServiceDefinition` gained `derived` and `writable`. Verified 0 errors, and 0 new warnings against the previous spec.
 
 ## 2026-08-01 — Supabase account tokens
 

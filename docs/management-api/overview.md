@@ -71,11 +71,11 @@ every project it has, including ones that do not exist yet.
 - **Supabase accounts** — list, read, and **reveal** an account's personal access token (`sbp_…`) plus
   the `SUPABASE_ACCESS_TOKEN` line the Supabase CLI reads. Read-only, and gated by the separate
   `can_read_supabase_tokens` scope. See [Supabase account tokens](./supabase-accounts.md).
-- **Project vault** — read every third-party credential, config file and identifier a project needs
-  (Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, signing keys, the store consoles and more), with
-  ready-to-paste `.env` blocks, behind `can_read_vault` / `can_reveal_vault`. Read + reveal only — entering
-  credentials stays in the admin. **The endpoints are live but no project is populated yet**; see
-  [Project vault](./project-vault.md).
+- **Project vault** — read, reveal **and write** every third-party credential, config file and identifier a
+  project needs (Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, signing keys, the store consoles and
+  more), with ready-to-paste `.env` blocks, behind `can_read_vault` / `can_reveal_vault` /
+  `can_write_vault`. Writing landed in `2026.08.20.1`; earlier pages describing the vault as read-only are
+  stale. **Most projects are still unpopulated**; see [Project vault](./project-vault.md).
 
 See [Authentication](./authentication.md), the [Endpoint reference](./endpoints.md), the
 [Project vault](./project-vault.md), the [Supabase project vault](./supabase-projects.md),

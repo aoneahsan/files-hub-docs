@@ -23,9 +23,9 @@ not generated**, so where it and the running API disagree the API is right — p
 ## Token
 
 ### `GET /token`
-Introspect the current token — name, `token_prefix`, expiry, last use, and the four capability booleans
-(`can_manage_supabase`, `can_read_vault`, `can_reveal_vault`, `can_read_supabase_tokens`), **all off by
-default**. The intended first call: it turns a later `403` into something you predicted.
+Introspect the current token — name, `token_prefix`, expiry, last use, and the five capability booleans
+(`can_manage_supabase`, `can_read_vault`, `can_reveal_vault`, `can_write_vault`,
+`can_read_supabase_tokens`), **all off by default**. The intended first call: it turns a later `403` into something you predicted.
 
 `projects[]` appears **only when `all_projects` is `false`**. On an all-projects token the key is absent
 entirely — not `null`, not `[]` — because such a token also covers projects that do not exist yet, so no
@@ -323,8 +323,9 @@ account token reaches every project that account owns.
 
 ## Project vault
 
-Every third-party credential, config file and identifier a project needs. Gated by **two** opt-in token
-scopes — `can_read_vault` (metadata and presence flags) and `can_reveal_vault` (the values). Full guide:
+Every third-party credential, config file and identifier a project needs. Gated by **three** opt-in token
+scopes — `can_read_vault` (metadata and presence flags), `can_reveal_vault` (the values) and, since
+`2026.08.20.1`, `can_write_vault` (creating, changing and deleting them). Full guide:
 **[Project vault](./project-vault.md)**.
 
 :::warning These endpoints are live; the data is not

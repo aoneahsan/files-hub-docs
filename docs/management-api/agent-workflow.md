@@ -138,7 +138,7 @@ BASE=https://fileshub.zaions.com/api/public/v1
 
 # What can this token do?
 curl -s $BASE/token -H "Authorization: Bearer $FH_PAT" \
-  | jq '.data | {can_read_vault, can_reveal_vault}'
+  | jq '.data | {can_read_vault, can_reveal_vault, can_write_vault}'
 
 # What does the vault even hold? (schema, not contents — any valid token)
 curl -s $BASE/vault/services -H "Authorization: Bearer $FH_PAT" \
@@ -170,9 +170,14 @@ Four things worth knowing before you call it:
   under a service name outside the declared 18 was absent from `has`, `configured_services`, `values` and
   `reveal` alike — clean `200`s over live credentials. Check `GET /api/version` before you report a vault as
   empty, and on a current deploy read `unregistered_services` and each service's `registered` flag.
-- **The scopes are off by default.** `can_read_vault` and `can_reveal_vault` are separate booleans on the
-  token; without them you get `403 TOKEN_PERMISSION_DENIED` naming the one you need. Only the owner can
-  enable them, in the admin — so treat a `403` as a question for them, not something to route around.
+- **The scopes are off by default.** `can_read_vault`, `can_reveal_vault` and `can_write_vault` are separate
+  booleans on the token; without them you get `403 TOKEN_PERMISSION_DENIED` naming the one you need. Only the
+  owner can enable them, in the admin — so treat a `403` as a question for them, not something to route
+  around.
+- 🔴 **The vault is writable since `2026.08.20.1`, and a missing credential is no longer only a task for the
+  owner.** With `can_write_vault` you can seed a project from a checkout, a git remote or a console CLI —
+  see [Writing to the vault](./project-vault.md#writing-to-the-vault). Note that write **implies read but
+  not reveal**, so a seeding token need not be able to read back secrets it is not adding.
 - **The `vite` and `next` env blocks contain only values marked `client_safe`.** A server secret is not
   omitted by luck — it is structurally unable to appear there, which is the point. Use the block you are
   given rather than filtering one yourself.

@@ -1,10 +1,10 @@
 ---
 sidebar_position: 6
 title: Project vault
-description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, signing keys and more — and read them back over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
-keywords: [project credential vault, store api keys per project, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, secrets vault for developers, bootstrap project credentials cli]
+description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
+keywords: [project credential vault, store api keys per project, write credentials via api, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, can_write_vault, secrets vault for developers, bootstrap project credentials cli, seed project secrets programmatically]
 last_update:
-  date: 2026-08-19
+  date: 2026-08-20
   author: Ahsan Mahmood
 ---
 
@@ -18,16 +18,19 @@ The **project vault** ends that. Enter everything once in the FilesHub admin —
 each console to find every value — and this part of the Management API reads it back on demand, including
 ready-to-paste `.env` blocks for Vite, Next, Node and Laravel.
 
-These endpoints are **read + reveal only**, and that is a decision rather than a missing feature — it was
-put to the owner again on 2026-08-19 and kept. Entering credentials stays in the admin: a vault is filled by
-a person and read by a machine, there is exactly one place a value can be typed, and the form is where the
-per-field help lives that says which console page each value comes from. **No credential write endpoint
-exists or is planned.** An agent that discovers a credential records a task for the owner; it does not store
-it, and it should not file the absence as a bug.
+Since **`2026.08.20.1`** these endpoints **read, reveal and write**. Writing used to be admin-only, and that
+was a deliberate decision, reaffirmed as recently as 2026-08-19 — so if you find a page, a skill or a note
+still saying *"no credential write endpoint exists or is planned"*, it is stale. What changed is scale, not
+principle: around sixty projects times ninety-odd declared fields is not a workload a form can carry, and
+most of those values already exist in a local checkout, a git remote, or a console a CLI can read.
 
-Project *metadata* is a different matter and **is** writable through `POST`/`PATCH /projects/{project}` —
-including `supabase_project_id`, which is worth writing back the first time you resolve which Supabase
-project an app belongs to.
+The admin keeps its per-field help text and stays the better place to type a single value by hand. This API
+is for filling a project in from what a machine already knows. See
+[Writing to the vault](#writing-to-the-vault).
+
+Project *metadata* remains writable through `POST`/`PATCH /projects/{project}` — including
+`supabase_project_id`, which is worth writing back the first time you resolve which Supabase project an app
+belongs to.
 
 Base URL `https://fileshub.zaions.com/api/public/v1`, same `Authorization: Bearer fh_pat_...` as the rest
 of the [Management API](./overview.md).
@@ -54,10 +57,10 @@ So, concretely:
 - Read presence from `has.*`, and treat every absence as **unknown**, not as absent.
 - Do not write an empty `.env` from an empty reveal. `jq -r '.data.env.vite'` on an unconfigured project
   emits nothing and `> .env.local` truncates the file you already had — with no error anywhere.
-- A project's real credentials still live in the owner's own secret store until the vault is filled.
-- Filling it is **owner-only work in the admin**; credential writes never go through this API. A project
-  whose credentials are missing is a row in that project's `docs/MANUAL-TASKS.md`, not something to work
-  around quietly.
+- A project's real credentials may still live in the owner's own secret store until the vault is filled.
+- 🔴 **Filling it is no longer owner-only.** Since `2026.08.20.1` a token holding `can_write_vault` can seed
+  a project from whatever you can already read — a checkout, a git remote, a console CLI. That is the
+  intended way to close the gap; see [Writing to the vault](#writing-to-the-vault).
 
 Report what the vault returned, not what it was expected to contain.
 :::
@@ -97,17 +100,20 @@ exactly when a project had nothing stored, i.e. the common case. A typed client 
 broke on it.
 :::
 
-## Two scopes, both off by default
+## Three scopes, all off by default
 
-The vault is gated by **two** booleans on the access token, because they authorise genuinely different
+The vault is gated by **three** booleans on the access token, because they authorise genuinely different
 things:
 
 | Scope | Grants |
 |---|---|
 | **`can_read_vault`** | Project metadata, links, and **which** credentials exist — presence flags only, never a value. Enough for a CI job to confirm a project is configured without handing it a single secret. |
-| **`can_reveal_vault`** | The credential **values**, the config-file bytes, and the generated `.env` blocks. The most powerful grant in the product. |
+| **`can_reveal_vault`** | The credential **values**, the config-file bytes, and the generated `.env` blocks. The most powerful *read* grant in the product. |
+| **`can_write_vault`** | Creating, changing and deleting credentials, config files and project links. |
 
-Reveal implies read. Enable them per token in the admin → **Access Tokens**. A token without the scope
+Reveal and write both **imply read** — a caller that may see or change the values would otherwise be refused
+the cheaper metadata call, which reads as a bug. Write deliberately does **not** imply reveal: a seeding
+agent should be able to fill a project in without being handed back every secret you already hold. Enable them per token in the admin → **Access Tokens**. A token without the scope
 gets **`403 TOKEN_PERMISSION_DENIED`** — not the anti-enumeration `404` — because a scope is a property of
 your own token, so there is nothing to enumerate and an honest error is more useful:
 
@@ -119,11 +125,17 @@ your own token, so there is nothing to enumerate and an honest error is more use
 
 An out-of-scope or unknown **project** is still `404 NOT_FOUND`, as everywhere on this plane.
 
-`GET /token` reports both flags, so check before calling:
+`GET /token` reports all three, so check before calling:
 
 ```json
-{ "data": { "name": "...", "all_projects": true, "can_read_vault": true, "can_reveal_vault": false } }
+{ "data": { "name": "...", "all_projects": true,
+            "can_read_vault": true, "can_reveal_vault": false, "can_write_vault": false } }
 ```
+
+:::caution `can_write_vault` is off on every existing token
+The migration that added it defaults it to `false`, so no token gained anything when it ran. Until it is
+enabled in the admin, every write answers `403` with `details.required_scope: "can_write_vault"`.
+:::
 
 ## `GET /vault/services` — schema discovery
 
@@ -154,15 +166,26 @@ curl -s https://fileshub.zaions.com/api/public/v1/vault/services \
 
 ### Services covered
 
-**18 services, 87 fields** as of 2026-08-04:
+**20 services, 95 fields** as of 2026-08-20:
 
 `supabase` (linked — see below) · `firebase` · `google_cloud` · `sentry` · `onesignal` · `clarity` ·
 `amplitude` · `openai` · `smtp` · `cloudflare` · `capacitor` · `github` · `play_console` · `app_store` ·
-`chrome_web_store` · `fileshub` · `native_update` · **`general`** (freeform — your own key/value pairs).
+`chrome_web_store` · `firefox_addons` · `edge_addons` · `fileshub` (derived — see below) · `native_update` ·
+**`general`** (freeform — your own key/value pairs).
 
 Read the count from the response rather than from this page — a service is added by editing config, so the
 registry grows without an API change. `supabase` and `general` report **zero fields**: the first links
 elsewhere, the second lets you name your own keys.
+
+Each service also reports two booleans that matter before you try to write to it:
+
+| Key | Means |
+|---|---|
+| `writable` | Whether `PUT /projects/{project}/vault/{service}` accepts fields for it |
+| `derived` | The block is **computed** by FilesHub from records it already holds, not stored. Read-only |
+
+`supabase` is `writable: false` because it links elsewhere; `fileshub` is `writable: false` because it is
+`derived: true`. Everything else is writable.
 
 :::tip `client_safe` is not decoration
 It decides whether a value appears in the generated `VITE_` / `NEXT_PUBLIC_` blocks. A field marked
@@ -295,6 +318,136 @@ curl -s -OJ \
 
 A file that is stored but undecryptable returns `409 PLAINTEXT_UNAVAILABLE` with
 `details.reason: "undecryptable"` — a different answer from missing, because the remedy differs.
+
+## Writing to the vault
+
+Seven routes, all behind **`can_write_vault`**. Every one of them answers with the **same payload
+`GET /projects/{project}/vault` returns** — so you confirm what actually landed without a second call, and
+without needing `can_reveal_vault` — plus a `changes` block naming what moved:
+
+```json
+{ "data": { "...the full detail payload...":  "...",
+            "changes": { "created": ["sentry.dsn"], "updated": [], "deleted": ["sentry.org_slug"] } } }
+```
+
+### `PUT /projects/{project}/vault/{service}` — upsert one service
+
+Partial, and the two ways of "not sending a value" mean different things:
+
+- an **absent** key leaves that field exactly as it was;
+- an explicit **`null`** deletes that field's row.
+
+```bash
+curl -X PUT https://fileshub.zaions.com/api/public/v1/projects/my-app/vault/sentry \
+  -H "Authorization: Bearer $FH_PAT" -H 'Content-Type: application/json' \
+  -d '{"values": {"dsn": "https://abc@o1.ingest.sentry.io/2", "org_slug": "zaions", "auth_token": null}}'
+```
+
+For the freeform `general` service you name your own keys, and you may pass a `secrets` map alongside:
+
+```json
+{ "values":  { "algolia_app_id": "PUBLIC123", "algolia_admin_key": "..." },
+  "secrets": { "algolia_app_id": false } }
+```
+
+:::danger `secrets` is honoured on freeform rows ONLY
+For a field the registry declares, **the registry decides** whether it is secret and a caller-supplied flag
+is ignored. That is not a courtesy — the non-reveal views filter on exactly that flag, so a caller able to
+mark `sentry.auth_token` as public would publish a live credential in an ordinary `200` that needs no reveal
+scope at all. On a freeform row the flag is the only signal there is, so its **absence defaults to `true`**.
+:::
+
+### `POST /projects/{project}/vault` — bulk, atomic
+
+The call a seeding run actually uses: many services, and optionally the whole link list, in one transaction.
+If any part is invalid, **nothing** is written.
+
+```json
+{ "services": { "firebase": { "project_id": "my-app", "web_api_key": "AIza..." },
+                "github":   { "owner": "aoneahsan", "repo": "my-app" } },
+  "links":    [ { "type": "repo", "url": "https://github.com/aoneahsan/my-app" } ] }
+```
+
+`links` is a **full replace** when present and untouched when absent — a link has no stable id you could
+address, so `[]` means you deliberately cleared the list.
+
+### `DELETE /projects/{project}/vault/{service}` — clear a service
+
+Requires `{"confirm": true}`. It is the only call here that destroys credentials without naming them one by
+one, so the shape stops you if you meant to clear a single field (`{"values": {"api_key": null}}`).
+
+### `POST /projects/{project}/vault-move` — retire an orphan
+
+Moves every row from one service onto another, renaming keys as it goes. `from` may be a service the
+registry has never heard of — that is the whole point; `to` may not, or you would just relocate the orphan.
+
+```json
+{ "from": "google cloud firebase",
+  "to":   "google_cloud",
+  "keys": { "my-app-client-id": "oauth_web_client_id",
+            "my-app-client-secret": "oauth_web_client_secret" } }
+```
+
+The move is validated **whole before anything is written**: if any destination key is undeclared the call
+answers `422` and nothing moves. A half-moved credential set is worse than a refused one, because the next
+reader sees two partial services and cannot tell which is authoritative. A key with no mapping is carried
+over unchanged and validated like any other, so a partial `keys` map fails loudly instead of quietly
+leaving rows behind.
+
+### `POST | DELETE /projects/{project}/vault-files/{service}.{key}`
+
+Two input forms, because the two callers differ. Multipart is what `curl` and a human reach for:
+
+```bash
+curl -X POST .../projects/my-app/vault-files/firebase.google_services_json \
+  -H "Authorization: Bearer $FH_PAT" -F file=@google-services.json
+```
+
+JSON is what an agent already holding the bytes reaches for, with no temp file:
+
+```json
+{ "filename": "google-services.json", "content_base64": "eyJwcm9qZWN0X2luZm8iOnsuLi59fQ==" }
+```
+
+The size cap applies to the **decoded** bytes in both cases, and base64 is decoded strictly — a truncated or
+corrupted payload is refused rather than stored as *something* that fails at signing time months later.
+
+### `PUT /projects/{project}/links`
+
+Replaces the link list. `type` must be one of the known kinds (`website`, `web_app`, `repo`, `docs`,
+`play_store`, `app_store`, `chrome_web_store`, `npm`, `api`, `admin`, `other`).
+
+### What the write plane refuses
+
+Each of these exists because of something that already went wrong:
+
+| Refused | Why |
+|---|---|
+| A **free-text service name** on create — `422 UNKNOWN_VAULT_SERVICE` | This is the entry-side half of the ISSUE-09 story above. An **existing** orphan stays deletable and movable: the write side must be able to clean up whatever the read side can see |
+| An **undeclared field** on a declared service — `422 UNKNOWN_VAULT_FIELD` | Name your own keys on `general` instead |
+| A **file field** on the value endpoint (`422 VAULT_FIELD_IS_A_FILE`), or a value field on the file endpoint (`422 VAULT_FIELD_IS_NOT_A_FILE`) | Both are keyed `(service, key)` in different tables, so the wrong one silently shadows the right one |
+| Any write to a **linked** or **derived** service — `422 VAULT_SERVICE_NOT_WRITABLE` with `details.reason` | `GET /vault/services` publishes `writable` and `derived`, so you can know before you try |
+
+Every write is recorded in the project's audit log with **field names only** — never a value. An audit trail
+that logged credentials would be a second copy of the vault with none of its protections.
+
+## `fileshub` is derived, not stored
+
+The `fileshub` service describes this platform *as consumed by* your project — its FilesHub project slug,
+API base, `fh_live_` key and that key's allowed origins. Since `2026.08.20.1` those four values are
+**computed** from records FilesHub already holds, and writes to the service are refused:
+
+```json
+{ "error": { "code": "VAULT_SERVICE_NOT_WRITABLE", "details": { "reason": "derived" } } }
+```
+
+The reasoning is the same one that makes `supabase` a link rather than a copy: storing a second version of a
+credential the database already owns gives you two values that can drift, with nothing to say which is
+right. To change what this block reports, change the underlying records —
+[`POST /projects/{project}/api-keys`](./endpoints.md) and the origins endpoints.
+
+The block carries `derived: true` and, if a project somehow holds stored rows under `fileshub` from before
+this change, names them in `shadowed_stored_fields[]` rather than quietly overriding them.
 
 ## Supabase is linked, not copied
 

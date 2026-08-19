@@ -224,9 +224,22 @@ Endpoints:
   `/vault/{service}/reveal`, `GET /projects/{project}/vault-files/{service}.{key}`. Every third-party
   credential, config file and identifier a project needs — Firebase, OAuth clients, Sentry, OneSignal,
   signing fingerprints, `google-services.json` — so a fresh machine is provisioned without opening a
-  console. Two scopes: `can_read_vault` (metadata and presence flags, never a value) and
-  `can_reveal_vault` (values, file bytes, `.env` blocks; implies read). The generated `vite` and `next`
+  console. Three scopes: `can_read_vault` (metadata and presence flags, never a value),
+  `can_reveal_vault` (values, file bytes, `.env` blocks) and `can_write_vault` (creating, changing and
+  deleting them). Reveal and write both imply read; write does NOT imply reveal, so a seeding agent can fill
+  a project in without being handed back every secret already stored. The generated `vite` and `next`
   blocks contain only fields marked client-safe, so a server secret cannot appear in one.
+- Project vault WRITES — `PUT|DELETE /projects/{project}/vault/{service}`, `POST /projects/{project}/vault`
+  (many services in one atomic call), `POST /projects/{project}/vault-move` (retire a service whose name the
+  registry never declared onto declared fields), `POST|DELETE /projects/{project}/vault-files/{service}.{key}`
+  (multipart or base64), `PUT /projects/{project}/links`. Added in backend `2026.08.20.1`; the vault was
+  read-only before that and older documents say so. An absent key is left alone, an explicit `null` deletes
+  that field's row, and every response returns the full read payload plus a `changes` block naming created,
+  updated and deleted FIELD NAMES — never a value. For a field the registry declares, the registry decides
+  whether it is secret; a caller-supplied flag counts only on the freeform `general` service and defaults to
+  secret. `fileshub` is a DERIVED service computed from the project's own slug, API key and origins, and
+  refuses writes; `supabase` is a link and refuses them too. `GET /vault/services` publishes `writable` and
+  `derived` per service, so a caller learns this from schema discovery rather than from a 422.
 
 Full reference: https://fileshub-docs.zaions.com/management-api/overview, the Supabase vault at
 https://fileshub-docs.zaions.com/management-api/supabase-projects, Supabase account tokens at
