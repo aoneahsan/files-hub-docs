@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FilesHub API",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
-    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups \u2014 all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES \u2014 do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand \u2014 nothing generates it from the Laravel routes \u2014 so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token\u2019s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) \u2014 live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
+    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES — do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand — nothing generates it from the Laravel routes — so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token’s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) — live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
     "contact": {
       "name": "Ahsan Mahmood",
       "url": "https://aoneahsan.com",
@@ -1279,7 +1279,7 @@
                     "type": "string",
                     "maxLength": 255,
                     "pattern": "^[a-z0-9\\-]+$",
-                    "description": "Lowercase letters, digits and hyphens only. Unlike on create, a null is not accepted here \u2014 omit the key to leave the slug alone. A duplicate is a 409 SLUG_ALREADY_EXISTS."
+                    "description": "Lowercase letters, digits and hyphens only. Unlike on create, a null is not accepted here — omit the key to leave the slug alone. A duplicate is a 409 SLUG_ALREADY_EXISTS."
                   },
                   "status": {
                     "type": "string",
@@ -1308,7 +1308,7 @@
                       "null"
                     ],
                     "maxLength": 255,
-                    "description": "Reverse-DNS app id. IMMUTABLE once published to a store \u2014 do not change it on a shipped app."
+                    "description": "Reverse-DNS app id. IMMUTABLE once published to a store — do not change it on a shipped app."
                   },
                   "primary_url": {
                     "type": [
@@ -1335,7 +1335,7 @@
                       "array",
                       "null"
                     ],
-                    "description": "Replaces the whole list \u2014 this is not a merge.",
+                    "description": "Replaces the whole list — this is not a merge.",
                     "items": {
                       "type": "string",
                       "maxLength": 64
@@ -1346,7 +1346,7 @@
                       "array",
                       "null"
                     ],
-                    "description": "Replaces the whole list \u2014 this is not a merge.",
+                    "description": "Replaces the whole list — this is not a merge.",
                     "items": {
                       "type": "string",
                       "maxLength": 64
@@ -1363,7 +1363,7 @@
           "Management API"
         ],
         "summary": "Delete a project",
-        "description": "Delete a project. \ud83d\udd34 IRREVERSIBLE, and it destroys the project's ENTIRE CREDENTIAL VAULT: at the database level it cascades api keys, origins, stored objects and audit logs AND project_credentials, project_files, project_links and project_vault_reveals. Since 2026.08.19.1 the response reports all six counts and the call is audited as public_api.project.deleted with those counts in its metadata; before that release `cascade` named only api_keys and stored_objects, so the credentials went unmentioned, and the call left no audit row at all.",
+        "description": "Delete a project. 🔴 IRREVERSIBLE, and it destroys the project's ENTIRE CREDENTIAL VAULT: at the database level it cascades api keys, origins, stored objects and audit logs AND project_credentials, project_files, project_links and project_vault_reveals. Since 2026.08.19.1 the response reports all six counts and the call is audited as public_api.project.deleted with those counts in its metadata; before that release `cascade` named only api_keys and stored_objects, so the credentials went unmentioned, and the call left no audit row at all.",
         "operationId": "deleteProject",
         "servers": [
           {
@@ -1402,11 +1402,11 @@
                             },
                             "vault_credentials": {
                               "type": "integer",
-                              "description": "Rows in project_credentials \u2014 the project's stored credentials."
+                              "description": "Rows in project_credentials — the project's stored credentials."
                             },
                             "vault_files": {
                               "type": "integer",
-                              "description": "Rows in project_files \u2014 google-services.json, keystores, service-account JSON."
+                              "description": "Rows in project_files — google-services.json, keystores, service-account JSON."
                             },
                             "links": {
                               "type": "integer"
@@ -1453,7 +1453,7 @@
           "Management API"
         ],
         "summary": "List API keys",
-        "description": "List a project's API keys, newest first (safe representation \u2014 no secrets). PAGINATED: rotating and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit. Loop on meta.has_more rather than assuming one call returned them all.",
+        "description": "List a project's API keys, newest first (safe representation — no secrets). PAGINATED: rotating and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit. Loop on meta.has_more rather than assuming one call returned them all.",
         "operationId": "listApiKeys",
         "servers": [
           {
@@ -1634,7 +1634,7 @@
                       "object",
                       "null"
                     ],
-                    "description": "Per-service utility permissions. An access token has no such map \u2014 this is an API-key-only field.",
+                    "description": "Per-service utility permissions. An access token has no such map — this is an API-key-only field.",
                     "additionalProperties": {
                       "type": "boolean"
                     }
@@ -1828,7 +1828,7 @@
                       "object",
                       "null"
                     ],
-                    "description": "Replaces the whole map \u2014 this is not a merge.",
+                    "description": "Replaces the whole map — this is not a merge.",
                     "additionalProperties": {
                       "type": "boolean"
                     }
@@ -2001,7 +2001,7 @@
           "Management API"
         ],
         "summary": "Reveal an API key",
-        "description": "Re-read the stored plaintext of a key you already created. Returns ONLY { plaintext_key } \u2014 not the key's other fields; call GET on the key for those. Two distinct causes share a 409 PLAINTEXT_UNAVAILABLE, told apart by details.reason: `not_retained` (the key predates plaintext retention \u2014 nothing is stored) and `undecryptable` (a value IS stored but was encrypted under a different APP_KEY). Rotate in either case.",
+        "description": "Re-read the stored plaintext of a key you already created. Returns ONLY { plaintext_key } — not the key's other fields; call GET on the key for those. Two distinct causes share a 409 PLAINTEXT_UNAVAILABLE, told apart by details.reason: `not_retained` (the key predates plaintext retention — nothing is stored) and `undecryptable` (a value IS stored but was encrypted under a different APP_KEY). Rotate in either case.",
         "operationId": "revealApiKey",
         "servers": [
           {
@@ -2150,7 +2150,7 @@
           "Management API"
         ],
         "summary": "Add an origin",
-        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here \u2014 read them with GET /global-origins and test candidates with POST /global-origins/check before adding, so you do not create a duplicate the key never needed.",
+        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here — read them with GET /global-origins and test candidates with POST /global-origins/check before adding, so you do not create a duplicate the key never needed.",
         "operationId": "createOrigin",
         "servers": [
           {
@@ -2372,7 +2372,7 @@
           "Management API"
         ],
         "summary": "Delete an origin",
-        "description": "Remove one origin. Removing the last origin from a restricted key denies every request that sends an Origin header \u2014 unless a platform-wide global origin still covers it.",
+        "description": "Remove one origin. Removing the last origin from a restricted key denies every request that sends an Origin header — unless a platform-wide global origin still covers it.",
         "operationId": "deleteOrigin",
         "servers": [
           {
@@ -2686,7 +2686,7 @@
           "Management API"
         ],
         "summary": "List registered Supabase projects",
-        "description": "Safe summaries (no secret values). Gated by the token's `can_manage_supabase` scope. \ud83d\udd34 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
+        "description": "Safe summaries (no secret values). Gated by the token's `can_manage_supabase` scope. 🔴 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
         "operationId": "listSupabaseProjects",
         "servers": [
           {
@@ -2781,7 +2781,7 @@
           "Management API"
         ],
         "summary": "Read one Supabase project (no secret values)",
-        "description": "Summary plus derived endpoints and non-secret config. `{supabaseProject}` is the numeric id or the project ref. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
+        "description": "Summary plus derived endpoints and non-secret config. `{supabaseProject}` is the numeric id or the project ref. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
         "operationId": "showSupabaseProject",
         "servers": [
           {
@@ -2845,7 +2845,7 @@
           "Management API"
         ],
         "summary": "Reveal a Supabase project's secrets + env blocks",
-        "description": "Detail plus every stored secret plus ready-to-paste React/Node/Laravel .env blocks. Recorded on every call. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
+        "description": "Detail plus every stored secret plus ready-to-paste React/Node/Laravel .env blocks. Recorded on every call. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
         "operationId": "revealSupabaseProject",
         "servers": [
           {
@@ -2909,7 +2909,7 @@
           "Management API"
         ],
         "summary": "List registered Supabase accounts",
-        "description": "Safe summaries \u2014 never the personal access token, only whether one is stored. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it \u2014 a personal access token reaches every project the account owns. \ud83d\udd34 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
+        "description": "Safe summaries — never the personal access token, only whether one is stored. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns. 🔴 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
         "operationId": "listSupabaseAccounts",
         "servers": [
           {
@@ -3003,7 +3003,7 @@
           "Management API"
         ],
         "summary": "Show one Supabase account",
-        "description": "The account, its dashboard pages and the projects under it. No token value. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it \u2014 a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
+        "description": "The account, its dashboard pages and the projects under it. No token value. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
         "operationId": "showSupabaseAccount",
         "servers": [
           {
@@ -3067,7 +3067,7 @@
           "Management API"
         ],
         "summary": "Reveal a Supabase account's personal access token",
-        "description": "Returns the sbp_... token plus the SUPABASE_ACCESS_TOKEN env line the Supabase CLI reads. Every call is recorded (token name, IP, user-agent and field NAMES \u2014 never a value). Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it \u2014 a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
+        "description": "Returns the sbp_... token plus the SUPABASE_ACCESS_TOKEN env line the Supabase CLI reads. Every call is recorded (token name, IP, user-agent and field NAMES — never a value). Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
         "operationId": "revealSupabaseAccount",
         "servers": [
           {
@@ -3131,7 +3131,7 @@
           "Management API"
         ],
         "summary": "The vault field registry (schema discovery)",
-        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project \u2014 it describes the SHAPE of the vault, never its contents \u2014 so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Currently 18 services and 87 fields. Read it before guessing a field name.",
+        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project — it describes the SHAPE of the vault, never its contents — so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Currently 18 services and 87 fields. Read it before guessing a field name.",
         "operationId": "listVaultServices",
         "servers": [
           {
@@ -3411,7 +3411,7 @@
           "Management API"
         ],
         "summary": "Reveal every credential, plus .env blocks",
-        "description": "Every stored credential value, the file inventory, ready-to-paste .env blocks for vite/next/node/laravel, and `undecryptable[]`. Requires `can_reveal_vault`. Recorded against the project \u2014 field NAMES only, never values. The vite and next blocks contain ONLY values the registry marks `client_safe`, so a server secret cannot reach a browser bundle.",
+        "description": "Every stored credential value, the file inventory, ready-to-paste .env blocks for vite/next/node/laravel, and `undecryptable[]`. Requires `can_reveal_vault`. Recorded against the project — field NAMES only, never values. The vite and next blocks contain ONLY values the registry marks `client_safe`, so a server secret cannot reach a browser bundle.",
         "operationId": "revealProjectVault",
         "servers": [
           {
@@ -3548,7 +3548,7 @@
           "Management API"
         ],
         "summary": "Download a stored config file",
-        "description": "The real bytes of a stored file \u2014 google-services.json, a plist, a service-account JSON, an Android keystore \u2014 with its original filename and an `X-Checksum-Sha256` header. Requires `can_reveal_vault`. A file that is stored but cannot be decrypted returns 409 PLAINTEXT_UNAVAILABLE with `details.reason: \"undecryptable\"`, which is a different answer from missing.",
+        "description": "The real bytes of a stored file — google-services.json, a plist, a service-account JSON, an Android keystore — with its original filename and an `X-Checksum-Sha256` header. Requires `can_reveal_vault`. A file that is stored but cannot be decrypted returns 409 PLAINTEXT_UNAVAILABLE with `details.reason: \"undecryptable\"`, which is a different answer from missing.",
         "operationId": "downloadProjectVaultFile",
         "servers": [
           {
@@ -3578,7 +3578,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "`service.key`, e.g. `firebase.google_services_json` \u2014 the identifier a reveal returns in each file's `download`."
+            "description": "`service.key`, e.g. `firebase.google_services_json` — the identifier a reveal returns in each file's `download`."
           }
         ],
         "responses": {
@@ -3601,7 +3601,7 @@
                 "schema": {
                   "type": "string"
                 },
-                "description": "attachment with the original filename \u2014 curl -OJ writes it under the right name."
+                "description": "attachment with the original filename — curl -OJ writes it under the right name."
               },
               "Content-Length": {
                 "schema": {
@@ -3652,7 +3652,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "fh_pat_",
-        "description": "User-level access token (prefix fh_pat_) for the Public Management API. Send as \"Authorization: Bearer fh_pat_...\". Server / CLI only \u2014 never a browser. The \"X-Access-Token\" header is accepted as a fallback."
+        "description": "User-level access token (prefix fh_pat_) for the Public Management API. Send as \"Authorization: Bearer fh_pat_...\". Server / CLI only — never a browser. The \"X-Access-Token\" header is accepted as a fallback."
       }
     },
     "parameters": {
@@ -3852,7 +3852,7 @@
           },
           "mime_type": {
             "type": "string",
-            "description": "Server-detected MIME type, sniffed from the file's contents. Any Content-Type declared on the uploaded multipart part is ignored, and this is also the type the object is served with. Treat as authoritative \u2014 there is no field to override it."
+            "description": "Server-detected MIME type, sniffed from the file's contents. Any Content-Type declared on the uploaded multipart part is ignored, and this is also the type the object is served with. Treat as authoritative — there is no field to override it."
           },
           "size_bytes": {
             "type": "integer"
@@ -4513,7 +4513,7 @@
                 "properties": {
                   "required_scope": {
                     "type": "string",
-                    "description": "The token flag the caller is missing \u2014 the access token's own column name, so the 403 names the switch to enable in Nova: `can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`. Live since `2026.08.04.1` (deployed 2026-08-04). Releases before it answered two shorter forms on the Supabase gates (`supabase_projects`, `supabase_tokens`) that matched no column; the enum keeps all six so a client works against either release.",
+                    "description": "The token flag the caller is missing — the access token's own column name, so the 403 names the switch to enable in Nova: `can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`. Live since `2026.08.04.1` (deployed 2026-08-04). Releases before it answered two shorter forms on the Supabase gates (`supabase_projects`, `supabase_tokens`) that matched no column; the enum keeps all six so a client works against either release.",
                     "enum": [
                       "supabase_projects",
                       "supabase_tokens",
@@ -4546,7 +4546,7 @@
       },
       "ProjectPublic": {
         "type": "object",
-        "description": "A project on the Management plane. Credential VALUES are never part of this shape \u2014 those live behind the project vault's own scopes. Note `repo_url` / `repo_is_public` are flat here, while the vault views nest the same two as `repo: { url, is_public }`.",
+        "description": "A project on the Management plane. Credential VALUES are never part of this shape — those live behind the project vault's own scopes. Note `repo_url` / `repo_is_public` are flat here, while the vault views nest the same two as `repo: { url, is_public }`.",
         "properties": {
           "id": {
             "type": "integer"
@@ -4625,7 +4625,7 @@
               "integer",
               "null"
             ],
-            "description": "The registered Supabase project this app uses, or null. Readable without any vault scope \u2014 it is a pointer, not a credential. WRITABLE on POST /projects and PATCH /projects/{project} since 2026.08.19.1, which needs can_manage_supabase and refuses a target the token could not already see (linking widens what the token may read). Record it once instead of re-deriving it every session."
+            "description": "The registered Supabase project this app uses, or null. Readable without any vault scope — it is a pointer, not a credential. WRITABLE on POST /projects and PATCH /projects/{project} since 2026.08.19.1, which needs can_manage_supabase and refuses a target the token could not already see (linking widens what the token may read). Record it once instead of re-deriving it every session."
           },
           "created_at": {
             "type": [
@@ -4660,7 +4660,7 @@
             }
           }
         ],
-        "description": "A row from GET /projects \u2014 the project plus its key count."
+        "description": "A row from GET /projects — the project plus its key count."
       },
       "ProjectWithApiKeys": {
         "allOf": [
@@ -4672,7 +4672,7 @@
             "properties": {
               "api_keys": {
                 "type": "array",
-                "description": "Abbreviated key list, newest first. Deliberately narrower than ApiKeySafe \u2014 for the full representation call the api-keys endpoints.",
+                "description": "Abbreviated key list, newest first. Deliberately narrower than ApiKeySafe — for the full representation call the api-keys endpoints.",
                 "items": {
                   "type": "object",
                   "properties": {
@@ -4697,7 +4697,7 @@
             }
           }
         ],
-        "description": "The response of GET /projects/{project} \u2014 the project plus an abbreviated api_keys list."
+        "description": "The response of GET /projects/{project} — the project plus an abbreviated api_keys list."
       },
       "ApiKeySafe": {
         "type": "object",
@@ -4883,7 +4883,7 @@
               "string",
               "null"
             ],
-            "description": "The canonical form the candidate was matched on \u2014 the exact origin a browser sends, and the exact string POST .../origins would store. Null for android/ios, and for a domain that violates origin policy."
+            "description": "The canonical form the candidate was matched on — the exact origin a browser sends, and the exact string POST .../origins would store. Null for android/ios, and for a domain that violates origin policy."
           },
           "covered": {
             "type": "boolean",
@@ -4974,7 +4974,7 @@
           },
           "projects": {
             "type": "array",
-            "description": "The explicit project scope. ABSENT ENTIRELY when all_projects is true \u2014 not null, and not an empty array \u2014 because an all-projects token covers projects that do not exist yet, so no list could describe it. Test with `'projects' in data`, never `data.projects === null`.",
+            "description": "The explicit project scope. ABSENT ENTIRELY when all_projects is true — not null, and not an empty array — because an all-projects token covers projects that do not exist yet, so no list could describe it. Test with `'projects' in data`, never `data.projects === null`.",
             "items": {
               "type": "object",
               "properties": {
@@ -5061,14 +5061,14 @@
               "string",
               "null"
             ],
-            "description": "The account email to ACT on. Derived from the `account` relation since 2026.08.19.1 \u2014 supabase_projects.account_email is a legacy free-text column and the two have disagreed in production, which sends a personal access token lookup to an account that does not own the project (403 on functions deploy while every presence flag reads true)."
+            "description": "The account email to ACT on. Derived from the `account` relation since 2026.08.19.1 — supabase_projects.account_email is a legacy free-text column and the two have disagreed in production, which sends a personal access token lookup to an account that does not own the project (403 on functions deploy while every presence flag reads true)."
           },
           "account": {
             "type": [
               "object",
               "null"
             ],
-            "description": "Pointer to the Supabase account that owns this project \u2014 never its credential. null when the project is not linked to an account.",
+            "description": "Pointer to the Supabase account that owns this project — never its credential. null when the project is not linked to an account.",
             "properties": {
               "id": {
                 "type": "integer"
@@ -5480,14 +5480,14 @@
           },
           "registered": {
             "type": "boolean",
-            "description": "False when the registry does not declare this service but the project stores rows under it. Those rows are real and readable, but they carry no field help, no env_key and no client_safe flag, so nothing derived from the registry (the env blocks, client-safe filtering) can include them. Added 2026.08.19.1 \u2014 before that such a service had no entry here at all."
+            "description": "False when the registry does not declare this service but the project stores rows under it. Those rows are real and readable, but they carry no field help, no env_key and no client_safe flag, so nothing derived from the registry (the env blocks, client-safe filtering) can include them. Added 2026.08.19.1 — before that such a service had no entry here at all."
           },
           "has": {
             "type": "object",
             "additionalProperties": {
               "type": "boolean"
             },
-            "description": "Which fields hold a value. Tested without decrypting, so a value stored under a rotated APP_KEY still reports true. Since 2026.08.19.1 this is the union of the registry's DECLARED fields and every field actually stored \u2014 a credential under an undeclared key used to be absent entirely. An empty map encodes as {} (it encoded as [] before that release)."
+            "description": "Which fields hold a value. Tested without decrypting, so a value stored under a rotated APP_KEY still reports true. Since 2026.08.19.1 this is the union of the registry's DECLARED fields and every field actually stored — a credential under an undeclared key used to be absent entirely. An empty map encodes as {} (it encoded as [] before that release)."
           },
           "values": {
             "type": "object",
@@ -5614,6 +5614,13 @@
               "type": "string"
             }
           },
+          "unregistered_services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Services this project stores rows under that the registry does not declare — almost always a label typed where a key belongs (\"Google Cloud\" for \"google_cloud\"). Named at the top level so a reader never has to diff against GET /vault/services to notice. Each also appears in `services` with registered:false, and is addressable at GET|POST /projects/{project}/vault/{service}. Added to the project detail in 2026.08.19.1 and to EVERY /vault/projects list row in 2026.08.19.2 — the list is the surface a fleet sweep reads, and on 2026-08-19 six of the seven non-empty projects were orphans under a single free-text string."
+          },
           "created_at": {
             "type": [
               "string",
@@ -5671,7 +5678,7 @@
                   "object",
                   "null"
                 ],
-                "description": "Pointer to the account-wide Supabase vault, never a copy of its credentials \u2014 reading those needs the can_manage_supabase scope. Null when this project has no linked Supabase record.",
+                "description": "Pointer to the account-wide Supabase vault, never a copy of its credentials — reading those needs the can_manage_supabase scope. Null when this project has no linked Supabase record.",
                 "properties": {
                   "id": {
                     "type": "integer"
@@ -5716,13 +5723,6 @@
                   "null"
                 ],
                 "format": "date-time"
-              },
-              "unregistered_services": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Services this project stores rows under that the registry does not declare \u2014 almost always a label typed where a key belongs (\"Google Cloud\" for \"google_cloud\"). Named at the top level so a reader never has to diff `services` against GET /vault/services to notice. Each also appears in `services` with registered:false, and is addressable at GET|POST /projects/{project}/vault/{service}. Added 2026.08.19.1."
               }
             }
           }
@@ -5738,7 +5738,7 @@
             "properties": {
               "env": {
                 "type": "object",
-                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values, so a server secret cannot reach a browser bundle by mistake. EVERY KEY IS OPTIONAL: a block that would be empty is dropped rather than returned as \"\", so a project with nothing configured returns `env: {}`. Handle the missing key \u2014 piping an absent block into a file writes an empty file with no error.",
+                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values, so a server secret cannot reach a browser bundle by mistake. EVERY KEY IS OPTIONAL: a block that would be empty is dropped rather than returned as \"\", so a project with nothing configured returns `env: {}`. Handle the missing key — piping an absent block into a file writes an empty file with no error.",
                 "properties": {
                   "vite": {
                     "type": "string"
@@ -5759,7 +5759,7 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "`service.field` names that HOLD a value which could not be decrypted \u2014 stored under a previous APP_KEY. Reported honestly so you can tell 'not set' from 'set but unreadable'. Re-enter those in the dashboard."
+                "description": "`service.field` names that HOLD a value which could not be decrypted — stored under a previous APP_KEY. Reported honestly so you can tell 'not set' from 'set but unreadable'. Re-enter those in the dashboard."
               }
             }
           }
@@ -5767,7 +5767,7 @@
       },
       "SupabaseAccountSummary": {
         "type": "object",
-        "description": "Safe view of a Supabase account \u2014 never the personal access token, only whether one is stored.",
+        "description": "Safe view of a Supabase account — never the personal access token, only whether one is stored.",
         "properties": {
           "id": {
             "type": "integer"
@@ -5875,7 +5875,7 @@
                     },
                     "credentials_via": {
                       "type": "string",
-                      "description": "That project's own vault endpoint \u2014 a different scope (can_manage_supabase)."
+                      "description": "That project's own vault endpoint — a different scope (can_manage_supabase)."
                     }
                   }
                 }
@@ -5911,7 +5911,7 @@
                 "properties": {
                   "cli": {
                     "type": "string",
-                    "description": "SUPABASE_ACCESS_TOKEN=... \u2014 the variable the Supabase CLI reads."
+                    "description": "SUPABASE_ACCESS_TOKEN=... — the variable the Supabase CLI reads."
                   }
                 }
               }

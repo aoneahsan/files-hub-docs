@@ -34,9 +34,15 @@ of the [Management API](./overview.md).
 
 :::danger The vault is live but very nearly EMPTY — and an empty answer is not an answer about the project
 
-Probed on **2026-08-19**: **1 of 54 registered projects has a configured service.** The endpoints work
-exactly as documented below; the data has not been entered yet. Almost every reveal today returns the full
-18-service skeleton with every `has` flag `false`, `env: {}` and `undecryptable: []`.
+Probed on **2026-08-19**, with the ISSUE-09 read-path fix live: **7 of 54 registered projects hold a
+credential.** The endpoints work exactly as documented below; for the other 47 the data has not been entered
+yet, and those reveals return the full 18-service skeleton with every `has` flag `false`, `env: {}` and
+`undecryptable: []`.
+
+🔴 **The `1 of 54` figure this page carried a day earlier was wrong, and the reason is worth keeping.** It
+was measured *through the broken reader* — so it could not see the very rows the bug was hiding. Six more
+projects appeared the moment the fix went live. A live probe beats a stale document, but a live probe
+through a broken instrument proves nothing: **re-measure after you fix the reader.**
 
 **An empty service means the value has NOT BEEN ENTERED. It never means the project does not use that
 service** — the response is byte-identical either way, so the two are indistinguishable from the API.
@@ -73,7 +79,7 @@ correctly-stored credentials, with no error, no warning and nothing to notice.
 |---|---|
 | Presence is declared fields **∪ every row actually stored** | a credential under an undeclared key now appears in `has` |
 | Each service block carries **`registered: true \| false`** | a service the registry never declared still gets a block, marked as such |
-| The detail payload carries **`unregistered_services[]`** | orphans are named at the top level, not left to be inferred |
+| **Every** payload carries **`unregistered_services[]`** | orphans are named at the top level of the project detail *and* of every `GET /vault/projects` list row, not left to be inferred |
 | An unregistered service a project holds is addressable | `GET \| POST /projects/{project}/vault/{service}` resolves it; one the project does not hold is still `404` |
 | The admin's `Service` field is a validated picker | a new orphan cannot be created, and opening an existing one cannot silently rewrite it |
 
@@ -168,6 +174,27 @@ It decides whether a value appears in the generated `VITE_` / `NEXT_PUBLIC_` blo
 Projects your token can see, each with vault metadata and which services are configured. Query: `q`
 (matches name / slug / app identifier), `status`, `per_page` (default 20, max 50), `page`. Paginated
 `{ "data": [...], "meta": {...}, "message": "..." }`.
+
+:::warning Read `unregistered_services` on every row, not just `configured_services`
+This is the endpoint a fleet-wide sweep reads, so it is the one where an orphan does the most damage.
+Until **`2026.08.19.2`** a row reported an unregistered service inside `configured_services` with nothing
+marking it as one — so a sweep concluded those projects were configured for a service that does not exist,
+and the only way to tell was to diff every row against `GET /vault/services`.
+
+Both fields now ship on each list row, from the same source as the detail payload, so the two cannot
+disagree:
+
+```json
+{
+  "slug": "acme-app",
+  "configured_services": ["firebase", "google cloud firebase"],
+  "unregistered_services": ["google cloud firebase"]
+}
+```
+
+`"google cloud firebase"` there is a real example, not a hypothetical: on 2026-08-19, **six of the seven**
+projects in this account that held any credential stored it under exactly that free-text string.
+:::
 
 ## `GET /projects/{project}/vault`
 
