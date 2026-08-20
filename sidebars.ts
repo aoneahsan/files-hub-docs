@@ -54,6 +54,12 @@ const sidebars: SidebarsConfig = {
             'api/version-health',
           ],
         },
+        {
+          type: 'category',
+          label: 'Bot protection',
+          collapsed: true,
+          items: ['api/turnstile'],
+        },
         'api/pagination',
         'api/errors-and-limits',
         'api/utilities-index',

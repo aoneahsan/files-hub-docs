@@ -65,6 +65,15 @@ Every utility takes `X-API-Key`. Write operations (`POST`) need the `write` perm
 | Mock API | `/mock-api/*` | Serve mock API responses. |
 | Duplicate | `/duplicate` | Duplicate-detection helper. |
 
+## Project-credentialed services
+
+Unlike everything above, these read a credential stored in **your project's vault** rather than working from
+the request alone.
+
+| Group | Endpoints | Notes |
+|---|---|---|
+| Turnstile | `/turnstile/verify` | Verifies a Cloudflare Turnstile token with your stored secret key, so the secret never reaches your frontend — [full page](turnstile). |
+
 ## Stateful platform services
 
 URL shortening, QR codes, pastes, the encryption vault, PDF/image processing, webhooks, scheduled tasks, uptime monitors, push notifications, OTP, analytics, and more are covered on [Platform services](../platform-services).

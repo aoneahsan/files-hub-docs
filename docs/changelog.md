@@ -4,13 +4,22 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-08-22
+  date: 2026-08-24
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-08-24 — Cloudflare Turnstile, and the Supabase release the site had missed
+
+- 🔴 **New page: [Verify a Turnstile token](api/turnstile).** `POST /api/v1/turnstile/verify` checks a Cloudflare Turnstile token using the secret key stored in your project's vault, so the secret never has to reach your frontend. A static or Firebase-hosted app with no backend of its own can now use Turnstile without standing up a worker for one form.
+- 🔴 **The page leads with the thing integrations get wrong: a failed challenge is `200`, not `4xx`.** A visitor failing a captcha is a normal outcome. Were it an error status, an integration would have to tell "FilesHub is broken" from "the visitor failed" by parsing a message — and one that skipped that step would treat an outage as a bot and reject every real person. Branch on `success` for the verdict, on the status code for whether the verdict means anything. The two `409`s stay distinct because *store a secret* and *re-enter it* are different fixes.
+- **New vault service `turnstile`**, taking the registry to **22 services / 101 fields**. Deliberately separate from `cloudflare`: a project uses Turnstile without owning any Cloudflare account config, and merging them would make `configured_services` report an account that does not exist.
+- **Action checking is documented** — without it, a token minted on your signup form is a perfectly valid token on your login form. A mismatch returns `fileshub-action-mismatch`; the prefix marks it as ours so a future Cloudflare code can never silently collide.
+- 🔴 **[Supabase projects](management-api/supabase-projects) was a release behind and is now current.** It documented `keepalive` without `enabled`, and neither `endpoints.jwks` nor `config.jwt` — all three shipped in backend `2026.08.23.1`. Added: the two-switch explanation (`is_active` retires a registration, `keepalive.enabled` decides whether FilesHub may **write** to that database — a client project is `active: true, keepalive.enabled: false`), the `?keepalive=` filter, and the JWT signing-key fields with the reason `endpoints.jwks` is derived rather than stored.
+- 🔴 **A `keepalive.last_status` that never moves is not a broken project when `enabled` is `false`** — it is one deliberately left alone, and a skip writes no run row at all. That sentence is in the docs now because the payload alone reads like a failure.
 
 ## 2026-08-22 — one AI account for every project
 

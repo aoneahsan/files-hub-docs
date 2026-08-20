@@ -166,12 +166,19 @@ curl -s https://fileshub.zaions.com/api/public/v1/vault/services \
 
 ### Services covered
 
-**21 services, 95 fields** as of 2026-08-21:
+**22 services, 101 fields** as of 2026-08-24:
 
 `supabase` (linked — see below) · `firebase` · `google_cloud` · `sentry` · `onesignal` · `clarity` ·
-`amplitude` · `ai` (linked — see below) · `openai` (superseded by `ai`) · `smtp` · `cloudflare` · `capacitor` · `github` · `play_console` · `app_store` ·
+`amplitude` · `ai` (linked — see below) · `openai` (superseded by `ai`) · `smtp` · `cloudflare` ·
+**`turnstile`** · `capacitor` · `github` · `play_console` · `app_store` ·
 `chrome_web_store` · `firefox_addons` · `edge_addons` · `fileshub` (derived — see below) · `native_update` ·
 **`general`** (freeform — your own key/value pairs).
+
+:red_circle: **`turnstile` is separate from `cloudflare` on purpose.** A project uses Cloudflare Turnstile
+without owning any Cloudflare account configuration — no API token, no zone, no R2 — so merging them would
+make `configured_services` report a Cloudflare account that does not exist. Its `secret_key` also powers
+[`POST /api/v1/turnstile/verify`](../api/turnstile), which is the one vault credential FilesHub spends on
+your behalf.
 
 Read the count from the response rather than from this page — a service is added by editing config, so the
 registry grows without an API change. `supabase` and `general` report **zero fields**: the first links
