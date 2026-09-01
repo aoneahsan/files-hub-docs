@@ -4,13 +4,25 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-08-24
+  date: 2026-09-01
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-09-01 — developer accounts, debug keystores, and the two releases this site had missed
+
+- 🔴 **New page: [Developer accounts](management-api/developer-accounts).** The tokens that publish under your name — npm, Hugging Face, Docker Hub, PyPI, crates.io, the extension stores, Vercel, Netlify, Sentry — on one account-level record, because a publish token authorises an **account**, not a project. One npm token publishes every package you own; copying it into each project's vault is not storing one credential, it is storing fifty copies and rotating means finding all fifty. Backend `2026.09.01.1`.
+- 🔴 **The reveal hands back a `.npmrc` line, not a string.** `config_files` carries the literal dotfile content, so CI writes what it was given. A job that re-derives `//registry.npmjs.org/:_authToken=` gets the prefix subtly wrong once and then cannot publish — while the error blames authentication. There is no `vite` or `next` block and there never will be: every field on a developer account authenticates a publish, so a browser bundle is exactly where none of it belongs.
+- **21 providers ship declared, and the page tells you not to trust that number** — `GET /developer-accounts/providers` returns the live list, because adding a provider is a config entry that needs no release note.
+- 🔴 **New page: [Debug keystores](management-api/debug-keystores)** — shipped in backend `2026.08.31.2` and undocumented here until now. A debug keystore is generated per **machine**, not per app, so it is stored once and every project's vault payload carries it as a derived block. The page leads with why you care: Google Sign-In, App Links and Firebase each fail in a way that never mentions signing, and all three are a fingerprint nobody wrote down.
+- 🔴 **No new scope for debug keystores, and the page says why.** A new scope defaults to `false` on every token that already exists, so minting one 403s every caller until each is edited. That cost is worth paying for a credential and not for a **fingerprint**, which ships publicly in `assetlinks.json` and authorises nothing alone. Developer accounts made the opposite call, for the opposite reason.
+- 🔴 **[Authentication](management-api/authentication) listed five scopes; there are eight.** `can_write_vault` shipped in `2026.08.20.1` and appeared **nowhere** on that page — not in the table, not in the `GET /token` sample. `can_read_ai_accounts` and `can_read_developer_accounts` were missing too. All three are now documented, and the sample payload shows the full set.
+- 🔴 **And a sentence on that page was wrong, not merely incomplete:** *"Only `can_reveal_vault` implies another"*. `can_write_vault` also implies `can_read_vault` — a caller populating a vault must be able to see which fields are already set. Corrected, with the three non-implications spelled out, because a scope that looks like it should imply another is exactly where a caller guesses.
+- **OpenAPI: 44 → 54 paths.** All ten developer-account and debug-keystore operations, linting at **0 errors / 2 accepted warnings** — the documented baseline.
+- `llms.txt` and `llms-full.txt` carry both subsystems, so an agent reading the machine-readable mirror gets the scope rules and the `config_files` contract without loading a page.
 
 ## 2026-08-24 — Cloudflare Turnstile, and the Supabase release the site had missed
 

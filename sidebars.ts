@@ -77,6 +77,8 @@ const sidebars: SidebarsConfig = {
         'management-api/supabase-projects',
         'management-api/supabase-accounts',
         'management-api/project-vault',
+        'management-api/developer-accounts',
+        'management-api/debug-keystores',
         'management-api/agent-workflow',
       ],
     },

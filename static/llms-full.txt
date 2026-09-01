@@ -291,3 +291,50 @@ tasks. Each takes the same `X-API-Key`; write utilities need `write` plus the gr
 
 Built and maintained by Ahsan Mahmood — https://aoneahsan.com ·
 https://github.com/aoneahsan · https://www.npmjs.com/~aoneahsan
+
+## Management API — developer accounts (backend 2026.09.01.1)
+
+The account-wide PUBLISHING credentials: npm, Hugging Face, GitHub, Docker Hub, PyPI, crates.io, RubyGems,
+Packagist, NuGet, Maven Central, Homebrew, Chrome Web Store, VS Code Marketplace, Firefox AMO, Edge Add-ons,
+JetBrains Marketplace, Cloudflare, Vercel, Netlify, Expo, Sentry. 21 providers; `GET /developer-accounts/providers`
+returns the live list.
+
+A publish token authorises an ACCOUNT, not a project — one npm token publishes every package the owner has —
+so it lives on one record and projects point at it, rather than being copied into every project vault.
+
+Scope: `can_read_developer_accounts` (default false) for list, show and reveal. Neither `can_reveal_vault`
+nor `can_read_ai_accounts` implies it. Assignment needs only `can_write_vault`, because an assignment is a
+pointer whose response carries no value.
+
+Endpoints: GET /developer-accounts/providers · GET|POST /developer-accounts ·
+GET|PATCH /developer-accounts/{account} · POST /developer-accounts/{account}/reveal ·
+GET|PUT /developer-accounts/{account}/projects · GET|PUT /projects/{project}/developer-accounts.
+`{account}` = numeric id, the identifier, or `provider:identifier`.
+
+A reveal returns the values, `env.node`, and `config_files` — the literal dotfile content, e.g.
+`{".npmrc": "//registry.npmjs.org/:_authToken=..."}`. Write what you are given rather than re-deriving the
+format. There is no `vite` or `next` block: every field here authenticates a publish, so none of it belongs
+in a browser bundle. `env` and `config_files` are maps and are `{}` when empty; `undecryptable` is a list and
+is `[]`.
+
+A blank credential value means LEAVE ALONE. Removing one needs `clear_credentials: ["token"]`.
+`all_projects` on the account is a standing rule covering future projects; `{"all_existing": true}` on the
+projects endpoint is a snapshot of today. Both in one body is a 422.
+
+## Management API — debug keystores (backend 2026.08.31.2)
+
+Every build machine's Android debug signing key, stored once and keyed by machine id, because a debug
+keystore is generated per MACHINE and signs every app built on it. Mirrored onto each project's vault payload
+as a derived `debug_keystores` block.
+
+No new scope: reads use `can_read_vault`, the file download and passwords use `can_reveal_vault`, writes use
+`can_write_vault`. The SHA-1/SHA-256 fingerprints are non-secret and come back on an ordinary read — they
+ship in `assetlinks.json` and authorise nothing alone.
+
+Endpoints: GET|POST /debug-keystores · GET|PATCH|DELETE /debug-keystores/{machine} ·
+GET|POST /debug-keystores/{machine}/file · POST /debug-keystores/{machine}/reveal.
+There is deliberately no projects/{project}/debug-keystores pair.
+
+Three Android fingerprints are three different keys: Play App Signing (`play_console.app_signing_*`), the
+upload keystore (`capacitor.upload_*`), and the per-machine debug key here. Mixing them up is the usual cause
+of a Google Sign-In or App Links failure that reads as an app bug.

@@ -4,7 +4,7 @@
     "title": "FilesHub API",
     "version": "1.6.0",
     "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
-    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups — all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES — do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand — nothing generates it from the Laravel routes — so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token’s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) — live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
+    "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups \u2014 all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES \u2014 do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: it is written by hand \u2014 nothing generates it from the Laravel routes \u2014 so where it and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token\u2019s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) \u2014 live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
     "contact": {
       "name": "Ahsan Mahmood",
       "url": "https://aoneahsan.com",
@@ -1279,7 +1279,7 @@
                     "type": "string",
                     "maxLength": 255,
                     "pattern": "^[a-z0-9\\-]+$",
-                    "description": "Lowercase letters, digits and hyphens only. Unlike on create, a null is not accepted here — omit the key to leave the slug alone. A duplicate is a 409 SLUG_ALREADY_EXISTS."
+                    "description": "Lowercase letters, digits and hyphens only. Unlike on create, a null is not accepted here \u2014 omit the key to leave the slug alone. A duplicate is a 409 SLUG_ALREADY_EXISTS."
                   },
                   "status": {
                     "type": "string",
@@ -1308,7 +1308,7 @@
                       "null"
                     ],
                     "maxLength": 255,
-                    "description": "Reverse-DNS app id. IMMUTABLE once published to a store — do not change it on a shipped app."
+                    "description": "Reverse-DNS app id. IMMUTABLE once published to a store \u2014 do not change it on a shipped app."
                   },
                   "primary_url": {
                     "type": [
@@ -1335,7 +1335,7 @@
                       "array",
                       "null"
                     ],
-                    "description": "Replaces the whole list — this is not a merge.",
+                    "description": "Replaces the whole list \u2014 this is not a merge.",
                     "items": {
                       "type": "string",
                       "maxLength": 64
@@ -1346,7 +1346,7 @@
                       "array",
                       "null"
                     ],
-                    "description": "Replaces the whole list — this is not a merge.",
+                    "description": "Replaces the whole list \u2014 this is not a merge.",
                     "items": {
                       "type": "string",
                       "maxLength": 64
@@ -1363,7 +1363,7 @@
           "Management API"
         ],
         "summary": "Delete a project",
-        "description": "Delete a project. 🔴 IRREVERSIBLE, and it destroys the project's ENTIRE CREDENTIAL VAULT: at the database level it cascades api keys, origins, stored objects and audit logs AND project_credentials, project_files, project_links and project_vault_reveals. Since 2026.08.19.1 the response reports all six counts and the call is audited as public_api.project.deleted with those counts in its metadata; before that release `cascade` named only api_keys and stored_objects, so the credentials went unmentioned, and the call left no audit row at all.",
+        "description": "Delete a project. \ud83d\udd34 IRREVERSIBLE, and it destroys the project's ENTIRE CREDENTIAL VAULT: at the database level it cascades api keys, origins, stored objects and audit logs AND project_credentials, project_files, project_links and project_vault_reveals. Since 2026.08.19.1 the response reports all six counts and the call is audited as public_api.project.deleted with those counts in its metadata; before that release `cascade` named only api_keys and stored_objects, so the credentials went unmentioned, and the call left no audit row at all.",
         "operationId": "deleteProject",
         "servers": [
           {
@@ -1402,11 +1402,11 @@
                             },
                             "vault_credentials": {
                               "type": "integer",
-                              "description": "Rows in project_credentials — the project's stored credentials."
+                              "description": "Rows in project_credentials \u2014 the project's stored credentials."
                             },
                             "vault_files": {
                               "type": "integer",
-                              "description": "Rows in project_files — google-services.json, keystores, service-account JSON."
+                              "description": "Rows in project_files \u2014 google-services.json, keystores, service-account JSON."
                             },
                             "links": {
                               "type": "integer"
@@ -1453,7 +1453,7 @@
           "Management API"
         ],
         "summary": "List API keys",
-        "description": "List a project's API keys, newest first (safe representation — no secrets). PAGINATED: rotating and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit. Loop on meta.has_more rather than assuming one call returned them all.",
+        "description": "List a project's API keys, newest first (safe representation \u2014 no secrets). PAGINATED: rotating and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit. Loop on meta.has_more rather than assuming one call returned them all.",
         "operationId": "listApiKeys",
         "servers": [
           {
@@ -1634,7 +1634,7 @@
                       "object",
                       "null"
                     ],
-                    "description": "Per-service utility permissions. An access token has no such map — this is an API-key-only field.",
+                    "description": "Per-service utility permissions. An access token has no such map \u2014 this is an API-key-only field.",
                     "additionalProperties": {
                       "type": "boolean"
                     }
@@ -1828,7 +1828,7 @@
                       "object",
                       "null"
                     ],
-                    "description": "Replaces the whole map — this is not a merge.",
+                    "description": "Replaces the whole map \u2014 this is not a merge.",
                     "additionalProperties": {
                       "type": "boolean"
                     }
@@ -2001,7 +2001,7 @@
           "Management API"
         ],
         "summary": "Reveal an API key",
-        "description": "Re-read the stored plaintext of a key you already created. Returns ONLY { plaintext_key } — not the key's other fields; call GET on the key for those. Two distinct causes share a 409 PLAINTEXT_UNAVAILABLE, told apart by details.reason: `not_retained` (the key predates plaintext retention — nothing is stored) and `undecryptable` (a value IS stored but was encrypted under a different APP_KEY). Rotate in either case.",
+        "description": "Re-read the stored plaintext of a key you already created. Returns ONLY { plaintext_key } \u2014 not the key's other fields; call GET on the key for those. Two distinct causes share a 409 PLAINTEXT_UNAVAILABLE, told apart by details.reason: `not_retained` (the key predates plaintext retention \u2014 nothing is stored) and `undecryptable` (a value IS stored but was encrypted under a different APP_KEY). Rotate in either case.",
         "operationId": "revealApiKey",
         "servers": [
           {
@@ -2150,7 +2150,7 @@
           "Management API"
         ],
         "summary": "Add an origin",
-        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here — read them with GET /global-origins and test candidates with POST /global-origins/check before adding, so you do not create a duplicate the key never needed.",
+        "description": "Add an allowed origin. Domains are validated against the scheme+port policy and stored canonically (example.com -> https://example.com). Browser extensions use type=domain with an extension scheme, where the host is the extension id: chrome-extension://<id> (also moz-extension://, safari-web-extension://), no port and no wildcard. Origins configured platform-wide by an administrator (global origins) also apply to every restricted key and are not listed here \u2014 read them with GET /global-origins and test candidates with POST /global-origins/check before adding, so you do not create a duplicate the key never needed.",
         "operationId": "createOrigin",
         "servers": [
           {
@@ -2372,7 +2372,7 @@
           "Management API"
         ],
         "summary": "Delete an origin",
-        "description": "Remove one origin. Removing the last origin from a restricted key denies every request that sends an Origin header — unless a platform-wide global origin still covers it.",
+        "description": "Remove one origin. Removing the last origin from a restricted key denies every request that sends an Origin header \u2014 unless a platform-wide global origin still covers it.",
         "operationId": "deleteOrigin",
         "servers": [
           {
@@ -2686,7 +2686,7 @@
           "Management API"
         ],
         "summary": "List registered Supabase projects",
-        "description": "Safe summaries (no secret values). Gated by the token's `can_manage_supabase` scope. 🔴 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
+        "description": "Safe summaries (no secret values). Gated by the token's `can_manage_supabase` scope. \ud83d\udd34 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
         "operationId": "listSupabaseProjects",
         "servers": [
           {
@@ -2781,7 +2781,7 @@
           "Management API"
         ],
         "summary": "Read one Supabase project (no secret values)",
-        "description": "Summary plus derived endpoints and non-secret config. `{supabaseProject}` is the numeric id or the project ref. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
+        "description": "Summary plus derived endpoints and non-secret config. `{supabaseProject}` is the numeric id or the project ref. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
         "operationId": "showSupabaseProject",
         "servers": [
           {
@@ -2845,7 +2845,7 @@
           "Management API"
         ],
         "summary": "Reveal a Supabase project's secrets + env blocks",
-        "description": "Detail plus every stored secret plus ready-to-paste React/Node/Laravel .env blocks. Recorded on every call. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
+        "description": "Detail plus every stored secret plus ready-to-paste React/Node/Laravel .env blocks. Recorded on every call. Gated by `can_manage_supabase`. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
         "operationId": "revealSupabaseProject",
         "servers": [
           {
@@ -2909,7 +2909,7 @@
           "Management API"
         ],
         "summary": "List registered Supabase accounts",
-        "description": "Safe summaries — never the personal access token, only whether one is stored. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns. 🔴 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
+        "description": "Safe summaries \u2014 never the personal access token, only whether one is stored. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it \u2014 a personal access token reaches every project the account owns. \ud83d\udd34 Scoped since 2026.08.19.1: an all_projects token sees everything, a project-scoped token sees only what is linked from a FilesHub project it can manage plus every UNLINKED row, and an out-of-scope row answers 404. Before that release project scope was ignored entirely here.",
         "operationId": "listSupabaseAccounts",
         "servers": [
           {
@@ -3003,7 +3003,7 @@
           "Management API"
         ],
         "summary": "Show one Supabase account",
-        "description": "The account, its dashboard pages and the projects under it. No token value. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
+        "description": "The account, its dashboard pages and the projects under it. No token value. Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it \u2014 a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
         "operationId": "showSupabaseAccount",
         "servers": [
           {
@@ -3067,7 +3067,7 @@
           "Management API"
         ],
         "summary": "Reveal a Supabase account's personal access token",
-        "description": "Returns the sbp_... token plus the SUPABASE_ACCESS_TOKEN env line the Supabase CLI reads. Every call is recorded (token name, IP, user-agent and field NAMES — never a value). Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it — a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 — see the list endpoint for the scoping rule.",
+        "description": "Returns the sbp_... token plus the SUPABASE_ACCESS_TOKEN env line the Supabase CLI reads. Every call is recorded (token name, IP, user-agent and field NAMES \u2014 never a value). Gated by the token's `can_read_supabase_tokens` scope. `can_manage_supabase` does NOT grant it \u2014 a personal access token reaches every project the account owns. Out-of-scope answers 404 since 2026.08.19.1 \u2014 see the list endpoint for the scoping rule.",
         "operationId": "revealSupabaseAccount",
         "servers": [
           {
@@ -3131,7 +3131,7 @@
           "Management API"
         ],
         "summary": "The vault field registry (schema discovery)",
-        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project — it describes the SHAPE of the vault, never its contents — so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Currently 18 services and 87 fields. Read it before guessing a field name.",
+        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project \u2014 it describes the SHAPE of the vault, never its contents \u2014 so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Currently 18 services and 87 fields. Read it before guessing a field name.",
         "operationId": "listVaultServices",
         "servers": [
           {
@@ -3336,7 +3336,7 @@
           "Management API"
         ],
         "summary": "Write many services at once (atomic)",
-        "description": "Many services, and optionally the whole link list, in ONE transaction — the call a seeding run uses. Every service and field is validated BEFORE the transaction opens, so an invalid entry anywhere means nothing at all is written. `links` is a full replace when present and untouched when absent. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "Many services, and optionally the whole link list, in ONE transaction \u2014 the call a seeding run uses. Every service and field is validated BEFORE the transaction opens, so an invalid entry anywhere means nothing at all is written. `links` is a full replace when present and untouched when absent. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "bulkWriteProjectVault",
         "servers": [
           {
@@ -3484,7 +3484,7 @@
           "Management API"
         ],
         "summary": "Upsert one service's values",
-        "description": "Partial upsert. An **absent** key leaves that field untouched; an explicit **null** deletes its row. For a registry-declared field the registry decides whether the value is secret — a caller-supplied `secrets` flag is honoured only on the freeform `general` service, where it defaults to true. A `file`-typed field is refused here (422 VAULT_FIELD_IS_A_FILE); use the vault-files endpoint. Linked (`supabase`) and derived (`fileshub`) services refuse writes entirely. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "Partial upsert. An **absent** key leaves that field untouched; an explicit **null** deletes its row. For a registry-declared field the registry decides whether the value is secret \u2014 a caller-supplied `secrets` flag is honoured only on the freeform `general` service, where it defaults to true. A `file`-typed field is refused here (422 VAULT_FIELD_IS_A_FILE); use the vault-files endpoint. Linked (`supabase`) and derived (`fileshub`) services refuse writes entirely. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "updateProjectVaultService",
         "servers": [
           {
@@ -3568,7 +3568,7 @@
           "Management API"
         ],
         "summary": "Clear one service entirely",
-        "description": "Deletes every credential and file row stored under the service. Requires `{\"confirm\": true}` in the body — this is the only call that destroys credentials without naming them individually. An orphaned service the registry never declared IS accepted here, which is how one gets cleaned up. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "Deletes every credential and file row stored under the service. Requires `{\"confirm\": true}` in the body \u2014 this is the only call that destroys credentials without naming them individually. An orphaned service the registry never declared IS accepted here, which is how one gets cleaned up. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "destroyProjectVaultService",
         "servers": [
           {
@@ -3654,7 +3654,7 @@
           "Management API"
         ],
         "summary": "Reveal every credential, plus .env blocks",
-        "description": "Every stored credential value, the file inventory, ready-to-paste .env blocks for vite/next/node/laravel, and `undecryptable[]`. Requires `can_reveal_vault`. Recorded against the project — field NAMES only, never values. The vite and next blocks contain ONLY values the registry marks `client_safe`, so a server secret cannot reach a browser bundle.",
+        "description": "Every stored credential value, the file inventory, ready-to-paste .env blocks for vite/next/node/laravel, and `undecryptable[]`. Requires `can_reveal_vault`. Recorded against the project \u2014 field NAMES only, never values. The vite and next blocks contain ONLY values the registry marks `client_safe`, so a server secret cannot reach a browser bundle.",
         "operationId": "revealProjectVault",
         "servers": [
           {
@@ -3791,7 +3791,7 @@
           "Management API"
         ],
         "summary": "Download a stored config file",
-        "description": "The real bytes of a stored file — google-services.json, a plist, a service-account JSON, an Android keystore — with its original filename and an `X-Checksum-Sha256` header. Requires `can_reveal_vault`. A file that is stored but cannot be decrypted returns 409 PLAINTEXT_UNAVAILABLE with `details.reason: \"undecryptable\"`, which is a different answer from missing.",
+        "description": "The real bytes of a stored file \u2014 google-services.json, a plist, a service-account JSON, an Android keystore \u2014 with its original filename and an `X-Checksum-Sha256` header. Requires `can_reveal_vault`. A file that is stored but cannot be decrypted returns 409 PLAINTEXT_UNAVAILABLE with `details.reason: \"undecryptable\"`, which is a different answer from missing.",
         "operationId": "downloadProjectVaultFile",
         "servers": [
           {
@@ -3821,7 +3821,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "`service.key`, e.g. `firebase.google_services_json` — the identifier a reveal returns in each file's `download`."
+            "description": "`service.key`, e.g. `firebase.google_services_json` \u2014 the identifier a reveal returns in each file's `download`."
           }
         ],
         "responses": {
@@ -3844,7 +3844,7 @@
                 "schema": {
                   "type": "string"
                 },
-                "description": "attachment with the original filename — curl -OJ writes it under the right name."
+                "description": "attachment with the original filename \u2014 curl -OJ writes it under the right name."
               },
               "Content-Length": {
                 "schema": {
@@ -3886,7 +3886,7 @@
           "Management API"
         ],
         "summary": "Store a config file",
-        "description": "Accepts either a multipart `file` part or a JSON `{filename, content_base64}` body. The size cap (FILESHUB_VAULT_MAX_FILE_KB, default 1024 KB) applies to the DECODED bytes in both cases, and base64 is decoded strictly — a corrupted payload is refused rather than stored as something that fails later. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "Accepts either a multipart `file` part or a JSON `{filename, content_base64}` body. The size cap (FILESHUB_VAULT_MAX_FILE_KB, default 1024 KB) applies to the DECODED bytes in both cases, and base64 is decoded strictly \u2014 a corrupted payload is refused rather than stored as something that fails later. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "storeProjectVaultFile",
         "servers": [
           {
@@ -3916,7 +3916,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "`service.key`, e.g. `firebase.google_services_json` — the same identifier the reveal payload hands back."
+            "description": "`service.key`, e.g. `firebase.google_services_json` \u2014 the same identifier the reveal payload hands back."
           }
         ],
         "requestBody": {
@@ -3991,7 +3991,7 @@
           "Management API"
         ],
         "summary": "Delete a stored config file",
-        "description": "Removes one stored file. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "Removes one stored file. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "destroyProjectVaultFile",
         "servers": [
           {
@@ -4021,7 +4021,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "`service.key`, e.g. `firebase.google_services_json` — the same identifier the reveal payload hands back."
+            "description": "`service.key`, e.g. `firebase.google_services_json` \u2014 the same identifier the reveal payload hands back."
           }
         ],
         "responses": {
@@ -4067,7 +4067,7 @@
           "Management API"
         ],
         "summary": "Retire an orphaned service onto declared fields",
-        "description": "Moves every row from one service to another, renaming keys as it goes. `from` MAY be a service the registry never declared — that is the purpose; `to` may not. The move is validated whole before anything is written, so an undeclared destination field means nothing moves. A key with no entry in `keys` is carried over unchanged and validated like any other. A source row that cannot be decrypted answers 409 PLAINTEXT_UNAVAILABLE rather than moving a null over a good value.\\n\\nThe path is `vault-move`, not `vault/move`, because a literal beside the parameterised `vault/{service}` would be an ambiguous path template — and keeping the free-text source service in the body avoids URL-encoding a name that may contain spaces. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "Moves every row from one service to another, renaming keys as it goes. `from` MAY be a service the registry never declared \u2014 that is the purpose; `to` may not. The move is validated whole before anything is written, so an undeclared destination field means nothing moves. A key with no entry in `keys` is carried over unchanged and validated like any other. A source row that cannot be decrypted answers 409 PLAINTEXT_UNAVAILABLE rather than moving a null over a good value.\\n\\nThe path is `vault-move`, not `vault/move`, because a literal beside the parameterised `vault/{service}` would be an ambiguous path template \u2014 and keeping the free-text source service in the body avoids URL-encoding a name that may contain spaces. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "moveProjectVaultService",
         "servers": [
           {
@@ -4144,7 +4144,7 @@
           "Management API"
         ],
         "summary": "Replace a project's link list",
-        "description": "A full replace rather than a merge: a link has no stable identifier a caller could address, so a shorter list is a deliberate removal. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 — the vault was read-only before that.",
+        "description": "A full replace rather than a merge: a link has no stable identifier a caller could address, so a shorter list is a deliberate removal. Requires `can_write_vault` (default false; it implies `can_read_vault` but NOT `can_reveal_vault`). A missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`; an out-of-scope project is 404. Added in backend 2026.08.20.1 \u2014 the vault was read-only before that.",
         "operationId": "replaceProjectLinks",
         "servers": [
           {
@@ -4221,7 +4221,7 @@
           "Management API"
         ],
         "summary": "List AI provider accounts",
-        "description": "Requires `can_read_ai_accounts` (default false). 🔴 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account — it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
+        "description": "Requires `can_read_ai_accounts` (default false). \ud83d\udd34 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account \u2014 it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
         "operationId": "listAiAccounts",
         "servers": [
           {
@@ -4236,7 +4236,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Paginated account summaries — presence flags, never a key",
+            "description": "Paginated account summaries \u2014 presence flags, never a key",
             "content": {
               "application/json": {
                 "schema": {
@@ -4341,7 +4341,7 @@
           "Management API"
         ],
         "summary": "One AI provider account",
-        "description": "Requires `can_read_ai_accounts` (default false). 🔴 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account — it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
+        "description": "Requires `can_read_ai_accounts` (default false). \ud83d\udd34 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account \u2014 it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
         "operationId": "showAiAccount",
         "servers": [
           {
@@ -4406,7 +4406,7 @@
           "Management API"
         ],
         "summary": "Update an AI provider account",
-        "description": "Partial. 🔴 A BLANK `api_key` is dropped so that editing an unrelated field cannot wipe the credential — and it cannot be expressed as \"null clears\" the way the vault endpoints are, because Laravel's ConvertEmptyStringsToNull middleware rewrites \"\" to null before the controller sees it. Send `clear_api_key: true` to remove a key. Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
+        "description": "Partial. \ud83d\udd34 A BLANK `api_key` is dropped so that editing an unrelated field cannot wipe the credential \u2014 and it cannot be expressed as \"null clears\" the way the vault endpoints are, because Laravel's ConvertEmptyStringsToNull middleware rewrites \"\" to null before the controller sees it. Send `clear_api_key: true` to remove a key. Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
         "operationId": "updateAiAccount",
         "servers": [
           {
@@ -4483,7 +4483,7 @@
           "Management API"
         ],
         "summary": "Reveal an AI provider key",
-        "description": "Returns the key plus an `env.node` block carrying the variable the provider's SDK actually reads. 🔴 There is no `vite` or `next` block and there never will be — an AI key in a browser bundle is someone else spending the account's balance. Always recorded, with field NAMES only. Requires `can_read_ai_accounts` (default false). 🔴 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account — it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
+        "description": "Returns the key plus an `env.node` block carrying the variable the provider's SDK actually reads. \ud83d\udd34 There is no `vite` or `next` block and there never will be \u2014 an AI key in a browser bundle is someone else spending the account's balance. Always recorded, with field NAMES only. Requires `can_read_ai_accounts` (default false). \ud83d\udd34 `can_reveal_vault` does NOT imply it: that scope is granted to read one PROJECT's configuration, while an AI key authorises a whole provider account \u2014 it spends that account's balance and reaches every model on it. Added in backend 2026.08.21.1.",
         "operationId": "revealAiAccount",
         "servers": [
           {
@@ -4550,7 +4550,7 @@
           "Management API"
         ],
         "summary": "The AI accounts a project may use",
-        "description": "POINTERS only — each entry names the endpoint and the scope that WOULD return the key, and never the key itself. That is why this needs only the ordinary vault read scope.",
+        "description": "POINTERS only \u2014 each entry names the endpoint and the scope that WOULD return the key, and never the key itself. That is why this needs only the ordinary vault read scope.",
         "operationId": "listProjectAiAccounts",
         "servers": [
           {
@@ -4615,7 +4615,7 @@
           "Management API"
         ],
         "summary": "Replace a project's AI account assignments",
-        "description": "A full replace: an empty array unassigns everything. 🔴 Gated by `can_write_vault`, not the far stronger `can_read_ai_accounts`, because an assignment is a pointer and this response contains no key. Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
+        "description": "A full replace: an empty array unassigns everything. \ud83d\udd34 Gated by `can_write_vault`, not the far stronger `can_read_ai_accounts`, because an assignment is a pointer and this response contains no key. Requires `can_write_vault`. Creating and assigning ride on the weaker scope because these responses never contain a key. Added in backend 2026.08.21.1.",
         "operationId": "assignProjectAiAccounts",
         "servers": [
           {
@@ -4692,7 +4692,7 @@
           "Management API"
         ],
         "summary": "Which projects may use this AI account",
-        "description": "The resolved set — explicit pivot rows plus, when the account is flagged all_projects, every project. Each entry reports how it is reached. Narrowed to the projects this token may reach: an account flagged for every project never widens a token scope. Needs can_read_vault (pointers only, no key).",
+        "description": "The resolved set \u2014 explicit pivot rows plus, when the account is flagged all_projects, every project. Each entry reports how it is reached. Narrowed to the projects this token may reach: an account flagged for every project never widens a token scope. Needs can_read_vault (pointers only, no key).",
         "operationId": "aiAccountProjectsIndex",
         "parameters": [
           {
@@ -4734,7 +4734,7 @@
           "Management API"
         ],
         "summary": "Assign this AI account to many projects",
-        "description": "The account-centric direction: one account to many projects, which is how a shared fleet key is managed. Needs can_write_vault, not can_read_ai_accounts — an assignment is a pointer and this response never contains a key.",
+        "description": "The account-centric direction: one account to many projects, which is how a shared fleet key is managed. Needs can_write_vault, not can_read_ai_accounts \u2014 an assignment is a pointer and this response never contains a key.",
         "operationId": "aiAccountProjectsAssign",
         "parameters": [
           {
@@ -4784,6 +4784,853 @@
           }
         }
       }
+    },
+    "/developer-accounts/providers": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List the developer-account provider registry",
+        "description": "Every declared provider, its fields, which of them are secret and the env var each maps to. Describes the SCHEMA, never a record, so any valid token may read it. 21 providers ship declared; adding one is a config entry in the app and needs no release, so call this rather than trusting a written list. Added in backend 2026.09.01.1.",
+        "operationId": "listDeveloperAccountProviders",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          }
+        }
+      }
+    },
+    "/developer-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List developer accounts",
+        "description": "Account-wide publishing credentials \u2014 npm, Hugging Face, Docker Hub, PyPI, the extension stores, hosting providers. Filters: `q`, `provider`, `active`. Paginated, default 20, max 50. Requires `can_read_developer_accounts` (default false). \ud83d\udd34 Neither `can_reveal_vault` nor `can_read_ai_accounts` implies it \u2014 those are granted to read one project's configuration and to spend an AI balance, and neither is a reason to publish a package under the owner's name. Added in backend 2026.09.01.1.",
+        "operationId": "listDeveloperAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Create a developer account",
+        "description": "`provider` is required and must be one the registry declares; a free-text provider is a 422 listing the known set. The natural key is (`provider`, `account_identifier`), lowercased on save so casing cannot create two records holding two copies of one credential. Requires `can_write_vault`. An assignment is a POINTER and these responses never contain a credential value, which is why the weaker scope suffices.",
+        "operationId": "createDeveloperAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "provider"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "example": "npm"
+                  },
+                  "account_identifier": {
+                    "type": "string",
+                    "example": "aoneahsan"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "all_projects": {
+                    "type": "boolean",
+                    "description": "A STANDING RULE: serves every project, including projects created later."
+                  },
+                  "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "key => value, validated against the provider's declared fields."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "409": {
+            "description": "Nothing stored to reveal, or a duplicate record"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/developer-accounts/{account}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Get a developer account",
+        "description": "Presence flags (`has`) and metadata \u2014 never a value. Requires `can_read_developer_accounts` (default false). \ud83d\udd34 Neither `can_reveal_vault` nor `can_read_ai_accounts` implies it \u2014 those are granted to read one project's configuration and to spend an AI balance, and neither is a reason to publish a package under the owner's name. Added in backend 2026.09.01.1.",
+        "operationId": "getDeveloperAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account identifier, or `provider:identifier`. The unique key is the PAIR \u2014 one identifier can hold accounts on several providers."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Update a developer account",
+        "description": "\ud83d\udd34 A blank credential value means LEAVE ALONE, never delete \u2014 `ConvertEmptyStringsToNull` makes `\"\"` and null indistinguishable, so a \"null clears\" rule would wipe a publish token on any empty form field. Removing one needs `clear_credentials: [\"token\"]`. `provider` is not updatable: it decides which credential keys are legal. Answers with the whole record plus `changes` (field names only). Requires `can_write_vault`. An assignment is a POINTER and these responses never contain a credential value, which is why the weaker scope suffices.",
+        "operationId": "updateDeveloperAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account identifier, or `provider:identifier`. The unique key is the PAIR \u2014 one identifier can hold accounts on several providers."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "account_identifier": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "all_projects": {
+                    "type": "boolean"
+                  },
+                  "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "clear_credentials": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/developer-accounts/{account}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal a developer account's credentials",
+        "description": "Returns the values, an `env.node` block, and \ud83d\udd34 **`config_files`** \u2014 the literal dotfile content, e.g. `{\".npmrc\": \"//registry.npmjs.org/:_authToken=\u2026\"}`. Write what you are given: a job that re-derives that prefix gets it subtly wrong once and then cannot publish, while the error blames authentication. \ud83d\udd34 There is no `vite` or `next` block and there never will be \u2014 every field here authenticates a publish, so a browser bundle is exactly where none of it belongs. Always recorded, with field NAMES only. `409` when nothing is stored yet. Requires `can_read_developer_accounts` (default false). \ud83d\udd34 Neither `can_reveal_vault` nor `can_read_ai_accounts` implies it \u2014 those are granted to read one project's configuration and to spend an AI balance, and neither is a reason to publish a package under the owner's name. Added in backend 2026.09.01.1.",
+        "operationId": "revealDeveloperAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account identifier, or `provider:identifier`. The unique key is the PAIR \u2014 one identifier can hold accounts on several providers."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "409": {
+            "description": "Nothing stored to reveal, or a duplicate record"
+          }
+        }
+      }
+    },
+    "/developer-accounts/{account}/projects": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Projects this account serves",
+        "description": "Resolved through the account's reach AND the token's scope, in that order \u2014 an account flagged `all_projects` never widens what a project-scoped token can see. Each entry reports `via: explicit | all_projects`.",
+        "operationId": "getDeveloperAccountProjects",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account identifier, or `provider:identifier`. The unique key is the PAIR \u2014 one identifier can hold accounts on several providers."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Assign this account to projects",
+        "description": "Two modes, deliberately distinct. `{\"project_ids\": [...]}` replaces the explicit set (`[]` detaches all). `{\"all_existing\": true}` is a SNAPSHOT of every project that exists now \u2014 a project created tomorrow is NOT covered. \ud83d\udd34 Both in one body is a **422**, not a resolved precedence: \"the snapshot wins\" and \"the explicit list wins\" are equally defensible, so a caller should never have to guess which was built. For a standing rule covering future projects, PATCH the account with `all_projects: true` instead. Requires `can_write_vault`. An assignment is a POINTER and these responses never contain a credential value, which is why the weaker scope suffices.",
+        "operationId": "assignDeveloperAccountProjects",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, the account identifier, or `provider:identifier`. The unique key is the PAIR \u2014 one identifier can hold accounts on several providers."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "project_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "all_existing": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/projects/{project}/developer-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Developer accounts serving a project",
+        "description": "Pointer view \u2014 which accounts this project may publish with and how to fetch them. Carries no credential value, so it rides on the ordinary vault read scope rather than `can_read_developer_accounts`.",
+        "operationId": "getProjectDeveloperAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID `public_id`, or slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Set a project's developer accounts",
+        "description": "Replaces the explicit set. `[]` detaches everything. Requires `can_write_vault`. An assignment is a POINTER and these responses never contain a credential value, which is why the weaker scope suffices.",
+        "operationId": "assignProjectDeveloperAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID `public_id`, or slug."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accounts"
+                ],
+                "properties": {
+                  "accounts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "purpose": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/debug-keystores": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List debug keystores",
+        "description": "Every build machine's Android debug signing key. A debug keystore is generated per MACHINE, not per app, so it is stored once and read by every project. Filters: `q`, `active`. \ud83d\udd34 The SHA-1/SHA-256 fingerprints are non-secret and come back on this ordinary read \u2014 filling an `assetlinks.json` or an OAuth client must not require the strongest grant you hold. Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "listDebugKeystores",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Register a machine's debug keystore",
+        "description": "`machine_id` is the key. Android's defaults are alias `androiddebugkey`, password `android`. Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "createDebugKeystore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/debug-keystores/{machine}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Get a machine's debug keystore",
+        "description": "Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "getDebugKeystore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "machine",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The machine id, e.g. `linux-ahsan`. A debug keystore is per MACHINE, not per project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Update a machine's debug keystore",
+        "description": "Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "updateDebugKeystore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "machine",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The machine id, e.g. `linux-ahsan`. A debug keystore is per MACHINE, not per project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Delete a machine's debug keystore",
+        "description": "\ud83d\udd34 A rebuilt machine generates a NEW debug key, and every fingerprint registered for the old one silently stops matching. Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "deleteDebugKeystore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "machine",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The machine id, e.g. `linux-ahsan`. A debug keystore is per MACHINE, not per project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      }
+    },
+    "/debug-keystores/{machine}/file": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Download the debug.keystore file",
+        "description": "Raw bytes plus `X-Checksum-Sha256`. Requires `can_reveal_vault`. Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "downloadDebugKeystoreFile",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "machine",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The machine id, e.g. `linux-ahsan`. A debug keystore is per MACHINE, not per project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Upload the debug.keystore file",
+        "description": "Multipart `file`, or `{filename, content_base64}`. Backing up the file is what makes a reimaged machine recoverable rather than a morning of re-registering fingerprints. Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "uploadDebugKeystoreFile",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "machine",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The machine id, e.g. `linux-ahsan`. A debug keystore is per MACHINE, not per project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/debug-keystores/{machine}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal a debug keystore's passwords",
+        "description": "\ud83d\udd34 Read presence from `has`, never from `file` alone \u2014 a stored file whose password is missing is an unopenable blob, and `has.keystore_file: true` on its own makes it read as finished. Requires `can_reveal_vault`. Reads use `can_read_vault`; the file download and the passwords use `can_reveal_vault`; writes use `can_write_vault`. \ud83d\udd34 No new scope was minted, deliberately: a fingerprint ships publicly in `assetlinks.json` and authorises nothing alone, so it is not worth 403-ing every existing token. Added in backend 2026.08.31.2.",
+        "operationId": "revealDebugKeystore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "machine",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The machine id, e.g. `linux-ahsan`. A debug keystore is per MACHINE, not per project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "409": {
+            "description": "Nothing stored to reveal, or a duplicate record"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4798,7 +5645,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "fh_pat_",
-        "description": "User-level access token (prefix fh_pat_) for the Public Management API. Send as \"Authorization: Bearer fh_pat_...\". Server / CLI only — never a browser. The \"X-Access-Token\" header is accepted as a fallback."
+        "description": "User-level access token (prefix fh_pat_) for the Public Management API. Send as \"Authorization: Bearer fh_pat_...\". Server / CLI only \u2014 never a browser. The \"X-Access-Token\" header is accepted as a fallback."
       }
     },
     "parameters": {
@@ -4998,7 +5845,7 @@
           },
           "mime_type": {
             "type": "string",
-            "description": "Server-detected MIME type, sniffed from the file's contents. Any Content-Type declared on the uploaded multipart part is ignored, and this is also the type the object is served with. Treat as authoritative — there is no field to override it."
+            "description": "Server-detected MIME type, sniffed from the file's contents. Any Content-Type declared on the uploaded multipart part is ignored, and this is also the type the object is served with. Treat as authoritative \u2014 there is no field to override it."
           },
           "size_bytes": {
             "type": "integer"
@@ -5659,7 +6506,7 @@
                 "properties": {
                   "required_scope": {
                     "type": "string",
-                    "description": "The token flag the caller is missing — the access token's own column name, so the 403 names the switch to enable in Nova: `can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`. Live since `2026.08.04.1` (deployed 2026-08-04). Releases before it answered two shorter forms on the Supabase gates (`supabase_projects`, `supabase_tokens`) that matched no column; the enum keeps all six so a client works against either release.",
+                    "description": "The token flag the caller is missing \u2014 the access token's own column name, so the 403 names the switch to enable in Nova: `can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`. Live since `2026.08.04.1` (deployed 2026-08-04). Releases before it answered two shorter forms on the Supabase gates (`supabase_projects`, `supabase_tokens`) that matched no column; the enum keeps all six so a client works against either release.",
                     "enum": [
                       "supabase_projects",
                       "supabase_tokens",
@@ -5692,7 +6539,7 @@
       },
       "ProjectPublic": {
         "type": "object",
-        "description": "A project on the Management plane. Credential VALUES are never part of this shape — those live behind the project vault's own scopes. Note `repo_url` / `repo_is_public` are flat here, while the vault views nest the same two as `repo: { url, is_public }`.",
+        "description": "A project on the Management plane. Credential VALUES are never part of this shape \u2014 those live behind the project vault's own scopes. Note `repo_url` / `repo_is_public` are flat here, while the vault views nest the same two as `repo: { url, is_public }`.",
         "properties": {
           "id": {
             "type": "integer"
@@ -5771,7 +6618,7 @@
               "integer",
               "null"
             ],
-            "description": "The registered Supabase project this app uses, or null. Readable without any vault scope — it is a pointer, not a credential. WRITABLE on POST /projects and PATCH /projects/{project} since 2026.08.19.1, which needs can_manage_supabase and refuses a target the token could not already see (linking widens what the token may read). Record it once instead of re-deriving it every session."
+            "description": "The registered Supabase project this app uses, or null. Readable without any vault scope \u2014 it is a pointer, not a credential. WRITABLE on POST /projects and PATCH /projects/{project} since 2026.08.19.1, which needs can_manage_supabase and refuses a target the token could not already see (linking widens what the token may read). Record it once instead of re-deriving it every session."
           },
           "created_at": {
             "type": [
@@ -5806,7 +6653,7 @@
             }
           }
         ],
-        "description": "A row from GET /projects — the project plus its key count."
+        "description": "A row from GET /projects \u2014 the project plus its key count."
       },
       "ProjectWithApiKeys": {
         "allOf": [
@@ -5818,7 +6665,7 @@
             "properties": {
               "api_keys": {
                 "type": "array",
-                "description": "Abbreviated key list, newest first. Deliberately narrower than ApiKeySafe — for the full representation call the api-keys endpoints.",
+                "description": "Abbreviated key list, newest first. Deliberately narrower than ApiKeySafe \u2014 for the full representation call the api-keys endpoints.",
                 "items": {
                   "type": "object",
                   "properties": {
@@ -5843,7 +6690,7 @@
             }
           }
         ],
-        "description": "The response of GET /projects/{project} — the project plus an abbreviated api_keys list."
+        "description": "The response of GET /projects/{project} \u2014 the project plus an abbreviated api_keys list."
       },
       "ApiKeySafe": {
         "type": "object",
@@ -6029,7 +6876,7 @@
               "string",
               "null"
             ],
-            "description": "The canonical form the candidate was matched on — the exact origin a browser sends, and the exact string POST .../origins would store. Null for android/ios, and for a domain that violates origin policy."
+            "description": "The canonical form the candidate was matched on \u2014 the exact origin a browser sends, and the exact string POST .../origins would store. Null for android/ios, and for a domain that violates origin policy."
           },
           "covered": {
             "type": "boolean",
@@ -6120,7 +6967,7 @@
           },
           "projects": {
             "type": "array",
-            "description": "The explicit project scope. ABSENT ENTIRELY when all_projects is true — not null, and not an empty array — because an all-projects token covers projects that do not exist yet, so no list could describe it. Test with `'projects' in data`, never `data.projects === null`.",
+            "description": "The explicit project scope. ABSENT ENTIRELY when all_projects is true \u2014 not null, and not an empty array \u2014 because an all-projects token covers projects that do not exist yet, so no list could describe it. Test with `'projects' in data`, never `data.projects === null`.",
             "items": {
               "type": "object",
               "properties": {
@@ -6207,14 +7054,14 @@
               "string",
               "null"
             ],
-            "description": "The account email to ACT on. Derived from the `account` relation since 2026.08.19.1 — supabase_projects.account_email is a legacy free-text column and the two have disagreed in production, which sends a personal access token lookup to an account that does not own the project (403 on functions deploy while every presence flag reads true)."
+            "description": "The account email to ACT on. Derived from the `account` relation since 2026.08.19.1 \u2014 supabase_projects.account_email is a legacy free-text column and the two have disagreed in production, which sends a personal access token lookup to an account that does not own the project (403 on functions deploy while every presence flag reads true)."
           },
           "account": {
             "type": [
               "object",
               "null"
             ],
-            "description": "Pointer to the Supabase account that owns this project — never its credential. null when the project is not linked to an account.",
+            "description": "Pointer to the Supabase account that owns this project \u2014 never its credential. null when the project is not linked to an account.",
             "properties": {
               "id": {
                 "type": "integer"
@@ -6611,7 +7458,7 @@
           },
           "writable": {
             "type": "boolean",
-            "description": "Whether PUT /projects/{project}/vault/{service} accepts fields for it — false for linked and derived services. Added 2026.08.20.1."
+            "description": "Whether PUT /projects/{project}/vault/{service} accepts fields for it \u2014 false for linked and derived services. Added 2026.08.20.1."
           }
         }
       },
@@ -6634,14 +7481,14 @@
           },
           "registered": {
             "type": "boolean",
-            "description": "False when the registry does not declare this service but the project stores rows under it. Those rows are real and readable, but they carry no field help, no env_key and no client_safe flag, so nothing derived from the registry (the env blocks, client-safe filtering) can include them. Added 2026.08.19.1 — before that such a service had no entry here at all."
+            "description": "False when the registry does not declare this service but the project stores rows under it. Those rows are real and readable, but they carry no field help, no env_key and no client_safe flag, so nothing derived from the registry (the env blocks, client-safe filtering) can include them. Added 2026.08.19.1 \u2014 before that such a service had no entry here at all."
           },
           "has": {
             "type": "object",
             "additionalProperties": {
               "type": "boolean"
             },
-            "description": "Which fields hold a value. Tested without decrypting, so a value stored under a rotated APP_KEY still reports true. Since 2026.08.19.1 this is the union of the registry's DECLARED fields and every field actually stored — a credential under an undeclared key used to be absent entirely. An empty map encodes as {} (it encoded as [] before that release)."
+            "description": "Which fields hold a value. Tested without decrypting, so a value stored under a rotated APP_KEY still reports true. Since 2026.08.19.1 this is the union of the registry's DECLARED fields and every field actually stored \u2014 a credential under an undeclared key used to be absent entirely. An empty map encodes as {} (it encoded as [] before that release)."
           },
           "values": {
             "type": "object",
@@ -6788,7 +7635,7 @@
             "items": {
               "type": "string"
             },
-            "description": "Services this project stores rows under that the registry does not declare — almost always a label typed where a key belongs (\"Google Cloud\" for \"google_cloud\"). Named at the top level so a reader never has to diff against GET /vault/services to notice. Each also appears in `services` with registered:false, and is addressable at GET|POST /projects/{project}/vault/{service}. Added to the project detail in 2026.08.19.1 and to EVERY /vault/projects list row in 2026.08.19.2 — the list is the surface a fleet sweep reads, and on 2026-08-19 six of the seven non-empty projects were orphans under a single free-text string."
+            "description": "Services this project stores rows under that the registry does not declare \u2014 almost always a label typed where a key belongs (\"Google Cloud\" for \"google_cloud\"). Named at the top level so a reader never has to diff against GET /vault/services to notice. Each also appears in `services` with registered:false, and is addressable at GET|POST /projects/{project}/vault/{service}. Added to the project detail in 2026.08.19.1 and to EVERY /vault/projects list row in 2026.08.19.2 \u2014 the list is the surface a fleet sweep reads, and on 2026-08-19 six of the seven non-empty projects were orphans under a single free-text string."
           },
           "created_at": {
             "type": [
@@ -6847,7 +7694,7 @@
                   "object",
                   "null"
                 ],
-                "description": "Pointer to the account-wide Supabase vault, never a copy of its credentials — reading those needs the can_manage_supabase scope. Null when this project has no linked Supabase record.",
+                "description": "Pointer to the account-wide Supabase vault, never a copy of its credentials \u2014 reading those needs the can_manage_supabase scope. Null when this project has no linked Supabase record.",
                 "properties": {
                   "id": {
                     "type": "integer"
@@ -6898,7 +7745,7 @@
                 "items": {
                   "$ref": "#/components/schemas/AiAccountAssignment"
                 },
-                "description": "AI accounts assigned to this project, as POINTERS — never keys. Added 2026.08.21.1."
+                "description": "AI accounts assigned to this project, as POINTERS \u2014 never keys. Added 2026.08.21.1."
               }
             }
           }
@@ -6914,7 +7761,7 @@
             "properties": {
               "env": {
                 "type": "object",
-                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values, so a server secret cannot reach a browser bundle by mistake. EVERY KEY IS OPTIONAL: a block that would be empty is dropped rather than returned as \"\", so a project with nothing configured returns `env: {}`. Handle the missing key — piping an absent block into a file writes an empty file with no error.",
+                "description": "Ready-to-paste .env fragments. `vite` and `next` contain ONLY client_safe values, so a server secret cannot reach a browser bundle by mistake. EVERY KEY IS OPTIONAL: a block that would be empty is dropped rather than returned as \"\", so a project with nothing configured returns `env: {}`. Handle the missing key \u2014 piping an absent block into a file writes an empty file with no error.",
                 "properties": {
                   "vite": {
                     "type": "string"
@@ -6935,7 +7782,7 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "`service.field` names that HOLD a value which could not be decrypted — stored under a previous APP_KEY. Reported honestly so you can tell 'not set' from 'set but unreadable'. Re-enter those in the dashboard."
+                "description": "`service.field` names that HOLD a value which could not be decrypted \u2014 stored under a previous APP_KEY. Reported honestly so you can tell 'not set' from 'set but unreadable'. Re-enter those in the dashboard."
               }
             }
           }
@@ -6943,7 +7790,7 @@
       },
       "SupabaseAccountSummary": {
         "type": "object",
-        "description": "Safe view of a Supabase account — never the personal access token, only whether one is stored.",
+        "description": "Safe view of a Supabase account \u2014 never the personal access token, only whether one is stored.",
         "properties": {
           "id": {
             "type": "integer"
@@ -7051,7 +7898,7 @@
                     },
                     "credentials_via": {
                       "type": "string",
-                      "description": "That project's own vault endpoint — a different scope (can_manage_supabase)."
+                      "description": "That project's own vault endpoint \u2014 a different scope (can_manage_supabase)."
                     }
                   }
                 }
@@ -7087,7 +7934,7 @@
                 "properties": {
                   "cli": {
                     "type": "string",
-                    "description": "SUPABASE_ACCESS_TOKEN=... — the variable the Supabase CLI reads."
+                    "description": "SUPABASE_ACCESS_TOKEN=... \u2014 the variable the Supabase CLI reads."
                   }
                 }
               }
@@ -7101,7 +7948,7 @@
         "required": [
           "values"
         ],
-        "description": "Partial upsert for one service. 3.1 note: a null in `values` is MEANINGFUL — it deletes that field's row — which is why the value type is a nullable string rather than a plain one.",
+        "description": "Partial upsert for one service. 3.1 note: a null in `values` is MEANINGFUL \u2014 it deletes that field's row \u2014 which is why the value type is a nullable string rather than a plain one.",
         "properties": {
           "values": {
             "type": "object",
@@ -7189,7 +8036,7 @@
             "enum": [
               true
             ],
-            "description": "Must be true. Clearing a whole service deletes every credential and file under it, so the acknowledgement is explicit — a caller meaning to clear ONE field should use PUT with a null value instead."
+            "description": "Must be true. Clearing a whole service deletes every credential and file under it, so the acknowledgement is explicit \u2014 a caller meaning to clear ONE field should use PUT with a null value instead."
           }
         }
       },
@@ -7203,7 +8050,7 @@
           "from": {
             "type": "string",
             "maxLength": 64,
-            "description": "The source service. MAY be a name the registry never declared — that is the purpose of this endpoint.",
+            "description": "The source service. MAY be a name the registry never declared \u2014 that is the purpose of this endpoint.",
             "example": "google cloud firebase"
           },
           "to": {
@@ -7241,7 +8088,7 @@
           },
           "content_base64": {
             "type": "string",
-            "description": "Base64 of the RAW file bytes — no data: URI prefix. Decoded strictly and size-checked AFTER decoding, so a corrupted payload is refused rather than stored as something that fails at use time."
+            "description": "Base64 of the RAW file bytes \u2014 no data: URI prefix. Decoded strictly and size-checked AFTER decoding, so a corrupted payload is refused rather than stored as something that fails at use time."
           },
           "mime_type": {
             "type": [
@@ -7320,7 +8167,7 @@
       },
       "VaultChanges": {
         "type": "object",
-        "description": "What the write moved, as FIELD NAMES (`service.key`) only — never a value. The same names are what the audit log records.",
+        "description": "What the write moved, as FIELD NAMES (`service.key`) only \u2014 never a value. The same names are what the audit log records.",
         "properties": {
           "created": {
             "type": "array",
@@ -7356,11 +8203,11 @@
             }
           }
         ],
-        "description": "Every write answers with the SAME payload GET /projects/{project}/vault returns — so a caller confirms what landed without a second call and without needing can_reveal_vault — plus the changes block."
+        "description": "Every write answers with the SAME payload GET /projects/{project}/vault returns \u2014 so a caller confirms what landed without a second call and without needing can_reveal_vault \u2014 plus the changes block."
       },
       "AiAccountAssignment": {
         "type": "object",
-        "description": "A POINTER to an AI account — never a credential.",
+        "description": "A POINTER to an AI account \u2014 never a credential.",
         "properties": {
           "id": {
             "type": "integer"
@@ -7400,7 +8247,7 @@
               "string",
               "null"
             ],
-            "description": "What this project uses the account FOR — chat, embeddings, transcription."
+            "description": "What this project uses the account FOR \u2014 chat, embeddings, transcription."
           },
           "has_key": {
             "type": "boolean"
@@ -7489,7 +8336,7 @@
               "string",
               "null"
             ],
-            "description": "The provider's own key page — derived, not stored."
+            "description": "The provider's own key page \u2014 derived, not stored."
           },
           "has": {
             "type": "object",
@@ -7566,14 +8413,14 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Names the field when a value is stored but could not be decrypted (rotated APP_KEY) — distinguishing that from 'not set', which an indistinguishable null would not."
+                "description": "Names the field when a value is stored but could not be decrypted (rotated APP_KEY) \u2014 distinguishing that from 'not set', which an indistinguishable null would not."
               },
               "env": {
                 "type": "object",
                 "additionalProperties": {
                   "type": "string"
                 },
-                "description": "Only ever a `node` block. 🔴 There is deliberately no vite/next block: an AI key must never reach a browser bundle."
+                "description": "Only ever a `node` block. \ud83d\udd34 There is deliberately no vite/next block: an AI key must never reach a browser bundle."
               }
             }
           }
@@ -7642,7 +8489,7 @@
           },
           "clear_api_key": {
             "type": "boolean",
-            "description": "Update only. The unambiguous way to remove a stored key — a blank value cannot mean this, because ConvertEmptyStringsToNull makes an empty string and null identical to the controller."
+            "description": "Update only. The unambiguous way to remove a stored key \u2014 a blank value cannot mean this, because ConvertEmptyStringsToNull makes an empty string and null identical to the controller."
           },
           "all_projects": {
             "type": "boolean",
@@ -7740,7 +8587,7 @@
       },
       "AiAccountProjectsWrite": {
         "type": "object",
-        "description": "Send EITHER project_ids OR all_existing — never both. They mean different things and the precedence between them is deliberately undefined, so a body carrying both is refused with 422.",
+        "description": "Send EITHER project_ids OR all_existing \u2014 never both. They mean different things and the precedence between them is deliberately undefined, so a body carrying both is refused with 422.",
         "properties": {
           "project_ids": {
             "type": "array",
@@ -7752,7 +8599,7 @@
           },
           "all_existing": {
             "type": "boolean",
-            "description": "A SNAPSHOT: attach every project that exists right now (and that this token may reach). A project created later is NOT covered — for that, set all_projects on the account itself."
+            "description": "A SNAPSHOT: attach every project that exists right now (and that this token may reach). A project created later is NOT covered \u2014 for that, set all_projects on the account itself."
           }
         }
       }

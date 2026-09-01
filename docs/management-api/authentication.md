@@ -44,7 +44,10 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "can_manage_supabase": true,
     "can_read_vault": true,
     "can_reveal_vault": false,
+    "can_write_vault": false,
     "can_read_supabase_tokens": false,
+    "can_read_ai_accounts": false,
+    "can_read_developer_accounts": false,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -68,12 +71,22 @@ Four further booleans are **separate, off-by-default axes**, independent of the 
 |---|---|
 | `can_manage_supabase` | The [Supabase project vault](./supabase-projects.md) — account-wide, so the project scope cannot express it |
 | `can_read_vault` | The [project vault](./project-vault.md): metadata, links, and **which** credentials exist — never a value |
+| `can_read_developer_accounts` | [Developer accounts](./developer-accounts.md) — the tokens that publish under your name (npm, Hugging Face, Docker Hub, …). Its own axis: neither `can_reveal_vault` nor `can_read_ai_accounts` grants it |
 | `can_reveal_vault` | The project vault's credential **values**, config-file bytes and `.env` blocks. Implies read |
 | `can_read_supabase_tokens` | A [Supabase account's personal access token](./supabase-accounts.md) (`sbp_…`) — the whole account, not one project |
+| `can_write_vault` | Writing project credentials, and assigning accounts to projects. Implies read, **not** reveal — a caller populating a vault needs to see which fields are already set, and does not need every secret handed back |
+| `can_read_ai_accounts` | An [AI provider account's](./project-vault.md) key — account-wide, so it spends that account's balance and reaches every model on it |
 
-Only `can_reveal_vault` implies another (`can_read_vault`). The rest grant nothing but themselves — in
-particular **`can_manage_supabase` does not grant `can_read_supabase_tokens`**: one reaches a project's
-credentials, the other reaches the account that owns every project.
+**Two imply `can_read_vault`: `can_reveal_vault` and `can_write_vault`.** Nothing else implies anything —
+each remaining flag grants only itself. In particular:
+
+- **`can_manage_supabase` does not grant `can_read_supabase_tokens`** — one reaches a project's credentials,
+  the other reaches the account that owns every project.
+- **`can_reveal_vault` does not grant `can_read_ai_accounts` or `can_read_developer_accounts`.** It is the
+  strongest grant over *one project's* configuration, and neither an account-wide AI key nor a token that
+  publishes packages under your name is that.
+- **`can_read_ai_accounts` and `can_read_developer_accounts` do not imply each other.** Spending an AI
+  balance and publishing a package are separate decisions.
 
 A token missing one of these gets **`403 TOKEN_PERMISSION_DENIED`** with `details.required_scope`, rather
 than the anti-enumeration `404` used for resources — the scope is a property of your own token, so an

@@ -133,6 +133,8 @@
 - Management API Supabase project vault: https://fileshub-docs.zaions.com/management-api/supabase-projects
 - Management API Supabase account tokens: https://fileshub-docs.zaions.com/management-api/supabase-accounts
 - Management API project vault: https://fileshub-docs.zaions.com/management-api/project-vault
+- Management API developer accounts (npm, Hugging Face, Docker Hub, PyPI, store and hosting tokens): https://fileshub-docs.zaions.com/management-api/developer-accounts
+- Management API debug keystores (per-machine Android signing fingerprints): https://fileshub-docs.zaions.com/management-api/debug-keystores
 - Management API agent workflow: https://fileshub-docs.zaions.com/management-api/agent-workflow
 - Quick Start: https://fileshub-docs.zaions.com/getting-started/quick-start
 - Authentication: https://fileshub-docs.zaions.com/getting-started/authentication
