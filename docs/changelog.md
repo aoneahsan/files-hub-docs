@@ -4,13 +4,20 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-09-01
+  date: 2026-09-04
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-09-04 — a 22nd developer-account provider, and formats that both write planes enforce
+
+- **[Developer accounts](management-api/developer-accounts) now lists 22 providers**, adding `native_update` — the account-wide token that administers every over-the-air app on a native-update account. Backend `2026.09.04.1`.
+- 🔴 **New section: a provider name may also be a project-vault service.** Six names appear in both places, and the page now says plainly why that is not duplication: the vault row is *that project's* configuration (a DSN, an extension id, an OTA app id and its device key), the developer account is the credential that administers every one of them. A DSN says where errors go; an auth token can delete the project.
+- 🔴 **New section: a field may declare a format.** A value that does not match is refused on write with **422 `INVALID_DEVELOPER_ACCOUNT_CREDENTIAL`**, and `details` names the provider and field — **never the value**, because an error that echoes what was sent puts a credential into the response body, your log and your CI transcript. Documented with the real error body.
+- The rule this closes was real: the format check ran in the admin form and **not** on the API, so a value the form refused could still be stored over the write plane. Two planes disagreeing is worse than neither checking.
 
 ## 2026-09-01 — developer accounts, debug keystores, and the two releases this site had missed
 

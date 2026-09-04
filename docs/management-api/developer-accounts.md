@@ -4,7 +4,7 @@ title: Developer accounts
 description: Store the tokens that publish under your name — npm, Hugging Face, Docker Hub, PyPI, crates.io, the extension stores, Vercel, Netlify, Sentry — on one account-level record, and read them back over the FilesHub Management API with a ready-to-write .npmrc line.
 keywords: [npm token storage, store npm publish token, huggingface token api, docker hub pat storage, pypi token vault, ci publishing credentials, npmrc from api, can_read_developer_accounts, package publishing secrets, store marketplace credentials, developer account vault]
 last_update:
-  date: 2026-09-01
+  date: 2026-09-04
   author: Ahsan Mahmood
 ---
 
@@ -22,7 +22,7 @@ Available since backend **`2026.09.01.1`**.
 
 ## What it holds
 
-Twenty-one providers ship declared. `GET /developer-accounts/providers` returns the live list — call that
+Twenty-two providers ship declared. `GET /developer-accounts/providers` returns the live list — call that
 rather than trusting this paragraph, because adding a provider is a config entry and does not need a release
 note.
 
@@ -32,9 +32,45 @@ note.
 | Developer platforms | `huggingface`, `github`, `docker_hub` |
 | Extension & plugin stores | `chrome_web_store`, `vscode_marketplace`, `firefox_addons`, `edge_addons`, `jetbrains_marketplace` |
 | Hosting & infrastructure | `cloudflare`, `vercel`, `netlify`, `expo`, `sentry` |
+| Own products | `native_update` |
 
 Each provider declares its own fields, because providers disagree about what a credential *is*: npm takes a
 token, Docker Hub a username **and** a token, Maven Central a Sonatype token pair **and** a GPG passphrase.
+
+### A provider name may also be a project-vault service
+
+Six of these names — `github`, `cloudflare`, `sentry`, `native_update`, and the extension stores — also exist
+as services in a [project's vault](./project-vault.md). They are not duplicates, and merging them loses the
+distinction that matters:
+
+- the **project vault** row is *that project's* configuration — a Sentry DSN, an extension id, a repo name,
+  an OTA app id and its per-app device key. One row per project, and much of it is safe in a bundle.
+- the **developer account** is the account-wide credential that can administer every one of them.
+
+A DSN says where errors go; an auth token can delete the project. Storing them together is how the wrong one
+gets sent.
+
+### A field may declare a format, and both write planes enforce it
+
+Since `2026.09.04.1`, a provider can declare the shape its own backend requires, and a value that does not
+match is refused on write with **422 `INVALID_DEVELOPER_ACCOUNT_CREDENTIAL`**:
+
+```json
+{
+  "error": {
+    "code": "INVALID_DEVELOPER_ACCOUNT_CREDENTIAL",
+    "message": "A native-update access token looks like nu_pat_ followed by 64 hex characters and a 4-character checksum. An app API key (nu_app_…) authenticates the device update plane and is rejected here on format.",
+    "details": { "provider": "native_update", "field": "token" }
+  }
+}
+```
+
+`details` names the provider and the field and **never the value** — a validation error that echoes what was
+sent puts a credential into the response body, your log and your CI transcript.
+
+Only `native_update.token` declares one today. It exists because that platform mints two token families whose
+names differ by four characters, one of which is meant to ship inside an app; sending the wrong one fails on
+*format* at your first publish, months later, with an error that reads like a revoked token.
 
 ## The scope
 

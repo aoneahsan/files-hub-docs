@@ -4791,7 +4791,7 @@
           "Management API"
         ],
         "summary": "List the developer-account provider registry",
-        "description": "Every declared provider, its fields, which of them are secret and the env var each maps to. Describes the SCHEMA, never a record, so any valid token may read it. 21 providers ship declared; adding one is a config entry in the app and needs no release, so call this rather than trusting a written list. Added in backend 2026.09.01.1.",
+        "description": "Every declared provider, its fields, which of them are secret and the env var each maps to. Describes the SCHEMA, never a record, so any valid token may read it. 22 providers ship declared; adding one is a config entry in the app and needs no release, so call this rather than trusting a written list. Added in backend 2026.09.01.1; `native_update` added in 2026.09.04.1.",
         "operationId": "listDeveloperAccountProviders",
         "servers": [
           {
