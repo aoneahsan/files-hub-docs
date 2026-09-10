@@ -79,6 +79,8 @@ const sidebars: SidebarsConfig = {
         'management-api/project-vault',
         'management-api/developer-accounts',
         'management-api/debug-keystores',
+        'management-api/credential-checks',
+        'management-api/google-oauth-keepalive',
         'management-api/agent-workflow',
       ],
     },

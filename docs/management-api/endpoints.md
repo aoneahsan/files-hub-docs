@@ -4,7 +4,7 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
 last_update:
-  date: 2026-09-10
+  date: 2026-09-11
   author: Ahsan Mahmood
 ---
 
@@ -86,7 +86,13 @@ re-deriving one from a committed `.env` and a name match. Two conditions: the to
 `can_manage_supabase`, and the target must be a Supabase project it could already see — linking widens what
 the token may read, so the write is gated by the same rule as the read (`422` otherwise).
 
-Credential **values** are still not writable here, and no endpoint for that is planned — see
+Since `2026.09.11.1` it also accepts the project's two opt-in switches, both **off by default** so a client
+project is never touched: **`test_events_enabled`** (FilesHub may send it "Test Analytics" events — see
+[Credential checks](./credential-checks.md)) and **`google_oauth_keepalive_enabled`** (FilesHub keeps its
+Google OAuth clients in use — see [Google OAuth clients](./google-oauth-keepalive.md)). Either needs
+`can_write_vault`; without it the field is refused with a `422`.
+
+Credential **values** are written through the vault endpoints, not here — see
 [Project vault](./project-vault.md).
 
 ### `DELETE /projects/{project}`
@@ -98,15 +104,16 @@ credential, every stored config file, every project link and the whole reveal tr
 recoverable, and the vault rows are the least recoverable part.
 
 Until `2026.08.19.1` the response named only `api_keys` and `stored_objects`, so the credentials went
-unmentioned, and this was the one write on the plane that left **no audit row at all**. Both are fixed: all
-six counts come back, and the call is recorded as `public_api.project.deleted` with those counts in its
+unmentioned, and this was the one write on the plane that left **no audit row at all**. Both are fixed: every
+count comes back (eight since `2026.09.11.1`, which added the OAuth-client inventory and the check history), and the call is recorded as `public_api.project.deleted` with those counts in its
 metadata — written *before* the delete, because the audit row's own `project_id` cascades too.
 :::
 
 ```json
 { "data": { "deleted": true, "cascade": {
     "api_keys": 3, "stored_objects": 128,
-    "vault_credentials": 11, "vault_files": 2, "links": 4, "vault_reveals": 7 } } }
+    "vault_credentials": 11, "vault_files": 2, "links": 4, "vault_reveals": 7,
+    "google_oauth_clients": 3, "credential_check_results": 21 } } }
 ```
 
 ## API keys
@@ -330,6 +337,20 @@ scopes — `can_read_vault` (metadata and presence flags), `can_reveal_vault` (t
 `2026.08.20.1`, `can_write_vault` (creating, changing and deleting them). Full guide:
 **[Project vault](./project-vault.md)**.
 
+## Credential checks
+
+`POST /projects/{project}/credential-checks` · `POST /credential-checks` · `GET /credential-checks/{run}` ·
+`GET /credential-checks/{run}/results`. `verify` (read-only probes) needs `can_read_vault`; `send` (real
+"Test Analytics" events) needs `can_write_vault` and a project whose `test_events_enabled` switch is on —
+otherwise `409 TEST_EVENTS_DISABLED`. Full guide: **[Credential checks](./credential-checks.md)**.
+
+## Google OAuth clients
+
+`GET /projects/{project}/google-oauth-clients` (`can_read_vault`, no secrets) ·
+`POST …/google-oauth-clients/import` and `POST …/google-oauth-clients/keepalive` (`can_write_vault`). The
+keep-alive answers `409 GOOGLE_OAUTH_KEEPALIVE_DISABLED` while the project's switch is off. Full guide:
+**[Google OAuth clients and keep-alive](./google-oauth-keepalive.md)**.
+
 ## AI provider accounts
 
 `GET|POST /ai-accounts` · `GET|PATCH /ai-accounts/{account}` · `POST /ai-accounts/{account}/reveal` ·
@@ -396,6 +417,8 @@ code — see [Errors & limits](../api/errors-and-limits.md).)
 | 409 | `SLUG_ALREADY_EXISTS` | A project slug you supplied is taken |
 | 409 | `ORIGIN_ALREADY_EXISTS` | That key already has an origin with the same type and value |
 | 409 | `PLAINTEXT_UNAVAILABLE` | A secret cannot be handed back; `details.reason` is `not_retained` or `undecryptable` |
+| 409 | `TEST_EVENTS_DISABLED` | A `send` credential check on a project whose Test Events switch is off; `details.enable_with` shows the PATCH |
+| 409 | `GOOGLE_OAUTH_KEEPALIVE_DISABLED` | A keep-alive run on a project whose Google OAuth Keep-Alive switch is off |
 | 422 | `VALIDATION_FAILED` | Bad body — `details` holds the per-field messages |
 | 429 | — | Over **120 requests/minute** per token. This plane's limit is fixed, unlike the per-key limit on the data plane |
 

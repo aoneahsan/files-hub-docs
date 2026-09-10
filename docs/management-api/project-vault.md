@@ -4,7 +4,7 @@ title: Project vault
 description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
 keywords: [project credential vault, store api keys per project, write credentials via api, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, can_write_vault, secrets vault for developers, bootstrap project credentials cli, seed project secrets programmatically]
 last_update:
-  date: 2026-08-21
+  date: 2026-09-11
   author: Ahsan Mahmood
 ---
 
@@ -166,13 +166,19 @@ curl -s https://fileshub.zaions.com/api/public/v1/vault/services \
 
 ### Services covered
 
-**22 services, 101 fields** as of 2026-08-24:
+Count them from `GET /vault/services` rather than trusting a number written here:
 
 `supabase` (linked — see below) · `firebase` · `google_cloud` · `sentry` · `onesignal` · `clarity` ·
-`amplitude` · `ai` (linked — see below) · `openai` (superseded by `ai`) · `smtp` · `cloudflare` ·
+**`google_analytics`** · `amplitude` · **`yandex_metrica`** · `ai` (linked — see below) · `openai`
+(superseded by `ai`) · `smtp` · `cloudflare` ·
 **`turnstile`** · `capacitor` · `github` · `play_console` · `app_store` ·
 `chrome_web_store` · `firefox_addons` · `edge_addons` · `fileshub` (derived — see below) · `native_update` ·
 **`general`** (freeform — your own key/value pairs).
+
+`google_analytics` (a GA4 property that Firebase did **not** create — Firebase's is the `firebase` tab's
+Measurement ID) and `yandex_metrica` (counter id, plus the optional `counter_key` app-identifier tag) joined
+in `2026.09.11.1`. Every analytics, error and push credential here can be exercised with a
+[credential check](./credential-checks.md).
 
 :red_circle: **`turnstile` is separate from `cloudflare` on purpose.** A project uses Cloudflare Turnstile
 without owning any Cloudflare account configuration — no API token, no zone, no R2 — so merging them would

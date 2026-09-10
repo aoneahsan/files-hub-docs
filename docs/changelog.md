@@ -4,13 +4,20 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-09-10
+  date: 2026-09-11
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-09-11 — "Test Analytics" credential checks and the Google OAuth keep-alive
+
+- 🔴 **New page: [Credential checks](management-api/credential-checks).** Send a real "Test Analytics" event to a project's Amplitude, Sentry, Firebase Analytics and GA4 — or verify every stored analytics, error and push credential read-only — and get one verdict per tool. The page is honest about the limits. Amplitude and Sentry acknowledge what they receive, and Firebase proves its config. GA4 answers the same for any id. Clarity has no server-side event API at all. Backend `2026.09.11.1`.
+- 🔴 **New page: [Google OAuth clients and keep-alive](management-api/google-oauth-keepalive).** Google deletes an OAuth client that makes no token request for six months. FilesHub now imports every client a project owns, from Firebase, `google-services.json` and Supabase, and exercises each one daily.
+- 🔴 **Both are opt-in per project, and off by default**, so a client project is never sent a test event or has its tokens used. The two switches are writable on [`PATCH /projects/{project}`](management-api/endpoints#patch-projectsproject).
+- [Project vault](management-api/project-vault) lists two new services: `google_analytics` (a GA4 property Firebase did not create) and `yandex_metrica`.
 
 ## 2026-09-10 — a server's `X-App-Id` no longer refuses its own requests
 

@@ -1351,6 +1351,14 @@
                       "type": "string",
                       "maxLength": 64
                     }
+                  },
+                  "test_events_enabled": {
+                    "type": "boolean",
+                    "description": "Off by default. On: FilesHub may send this project \"Test Analytics\" events (on demand and daily). Needs can_write_vault. Added in 2026.09.11.1."
+                  },
+                  "google_oauth_keepalive_enabled": {
+                    "type": "boolean",
+                    "description": "Off by default. On: FilesHub keeps this project's Google OAuth clients in use daily. Needs can_write_vault. Added in 2026.09.11.1."
                   }
                 }
               }
@@ -5631,6 +5639,576 @@
           }
         }
       }
+    },
+    "/projects/{project}/credential-checks": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Run credential checks for one project",
+        "description": "Send a real \"Test Analytics\" event (`mode: send`) or probe read-only (`mode: verify`) for every tool the project stores credentials for, synchronously. \ud83d\udd34 `send` needs `can_write_vault` and a project whose `test_events_enabled` switch is ON \u2014 otherwise 409 `TEST_EVENTS_DISABLED` and nothing is sent. `verify` needs `can_read_vault`. Added in backend 2026.09.11.1.",
+        "operationId": "runProjectCredentialChecks",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run and every result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "run": {
+                          "$ref": "#/components/schemas/CredentialCheckRun"
+                        },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CredentialCheckResult"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID public_id, or slug."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CredentialCheckRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credential-checks": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Queue credential checks for many projects",
+        "description": "Queues one job per project and answers 202 with the run to poll. In `send` mode a listed project whose switch is off is recorded as `skipped`, never sent to. Added in backend 2026.09.11.1.",
+        "operationId": "startCredentialChecks",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "run": {
+                          "$ref": "#/components/schemas/CredentialCheckRun"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CredentialCheckFleetRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credential-checks/{run}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Get a credential-check run",
+        "description": "Status and counters. A project-scoped token sees only runs it started. Needs `can_read_vault`.",
+        "operationId": "getCredentialCheckRun",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "run": {
+                          "$ref": "#/components/schemas/CredentialCheckRun"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The run's ULID (`run.id` in every response)."
+          }
+        ]
+      }
+    },
+    "/credential-checks/{run}/results": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List a run's results",
+        "description": "Paginated (default 20, max 50). Filters: `status`, `service`, `project`. Only projects the token may reach are listed. Needs `can_read_vault`.",
+        "operationId": "listCredentialCheckResults",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CredentialCheckResult"
+                      }
+                    },
+                    "meta": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The run's ULID (`run.id` in every response)."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "passed",
+                "sent",
+                "warning",
+                "failed",
+                "skipped"
+              ]
+            }
+          },
+          {
+            "name": "service",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        ]
+      }
+    },
+    "/projects/{project}/google-oauth-clients": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List a project's Google OAuth clients",
+        "description": "The keep-alive inventory. Never returns a secret \u2014 only `has_client_secret` / `has_refresh_token`. Paginated. Needs `can_read_vault`. Added in backend 2026.09.11.1.",
+        "operationId": "listGoogleOAuthClients",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clients",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GoogleOAuthClient"
+                      }
+                    },
+                    "meta": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID public_id, or slug."
+          }
+        ]
+      }
+    },
+    "/projects/{project}/google-oauth-clients/import": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Import a project's Google OAuth clients",
+        "description": "Reads every client, read-only, from Firebase Auth's Google provider, each Android app's live google-services.json, the stored google-services.json, and a linked Supabase project. Fills only BLANK google_cloud vault fields; a different stored value is reported under `conflicts`, never overwritten. Needs `can_write_vault`.",
+        "operationId": "importGoogleOAuthClients",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The import report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "report": {
+                          "$ref": "#/components/schemas/GoogleOAuthImportReport"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID public_id, or slug."
+          }
+        ]
+      }
+    },
+    "/projects/{project}/google-oauth-clients/keepalive": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Run the Google OAuth keep-alive now",
+        "description": "A refresh-token exchange for each connected web client, a token-endpoint probe for the rest. 409 `GOOGLE_OAUTH_KEEPALIVE_DISABLED` while the project's google_oauth_keepalive_enabled switch is off. Needs `can_write_vault`.",
+        "operationId": "runGoogleOAuthKeepAlive",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One entry per client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "runs": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "google_oauth_client_id": {
+                                "type": "integer"
+                              },
+                              "mode": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "ok",
+                                  "failed",
+                                  "skipped"
+                                ]
+                              },
+                              "http_status": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "error": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID public_id, or slug."
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6626,6 +7204,12 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "test_events_enabled": {
+            "type": "boolean"
+          },
+          "google_oauth_keepalive_enabled": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -6649,6 +7233,12 @@
               "api_keys_count": {
                 "type": "integer",
                 "description": "Keys in this project, including inactive and rotated-away ones."
+              },
+              "test_events_enabled": {
+                "type": "boolean"
+              },
+              "google_oauth_keepalive_enabled": {
+                "type": "boolean"
               }
             }
           }
@@ -6686,6 +7276,12 @@
                     }
                   }
                 }
+              },
+              "test_events_enabled": {
+                "type": "boolean"
+              },
+              "google_oauth_keepalive_enabled": {
+                "type": "boolean"
               }
             }
           }
@@ -8600,6 +9196,411 @@
           "all_existing": {
             "type": "boolean",
             "description": "A SNAPSHOT: attach every project that exists right now (and that this token may reach). A project created later is NOT covered \u2014 for that, set all_projects on the account itself."
+          }
+        }
+      },
+      "CredentialCheckRun": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ULID"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "send",
+              "verify",
+              "browser"
+            ]
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "triggered_by": {
+            "type": "string",
+            "enum": [
+              "nova",
+              "api",
+              "schedule",
+              "artisan",
+              "browser"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed"
+            ]
+          },
+          "projects_total": {
+            "type": "integer"
+          },
+          "projects_done": {
+            "type": "integer"
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "passed": {
+                "type": "integer"
+              },
+              "sent": {
+                "type": "integer"
+              },
+              "warnings": {
+                "type": "integer"
+              },
+              "failed": {
+                "type": "integer"
+              },
+              "skipped": {
+                "type": "integer"
+              }
+            }
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "finished_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "results_url": {
+            "type": "string"
+          }
+        }
+      },
+      "CredentialCheckResult": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "public_id": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              }
+            }
+          },
+          "service": {
+            "type": "string",
+            "description": "firebase_analytics \u00b7 google_analytics \u00b7 amplitude \u00b7 sentry \u00b7 clarity \u00b7 onesignal \u00b7 yandex_metrica, or `all` for a whole-project skip"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "sent",
+              "warning",
+              "failed",
+              "skipped"
+            ],
+            "description": "passed = acknowledged or proven \u00b7 sent = delivered, no verdict available (GA4) \u00b7 warning \u00b7 failed \u00b7 skipped = not configured or the project's switch is off"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "description": "Redacted \u2014 never contains a credential."
+          },
+          "http_status": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "event_sent": {
+            "type": "boolean"
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CredentialCheckRequest": {
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "send",
+              "verify"
+            ],
+            "description": "send = real \"Test Analytics\" events (needs can_write_vault and the project's test_events_enabled switch); verify = read-only probes (can_read_vault)."
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "firebase_analytics",
+                "google_analytics",
+                "amplitude",
+                "sentry",
+                "clarity",
+                "onesignal",
+                "yandex_metrica"
+              ]
+            },
+            "description": "Absent or empty = every tool."
+          }
+        }
+      },
+      "GoogleOAuthClient": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_type": {
+            "type": "string",
+            "enum": [
+              "web",
+              "android",
+              "ios",
+              "unknown"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "package_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "certificate_sha1": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "firebase_auth",
+                "firebase_android_config",
+                "google_services_json",
+                "supabase_auth",
+                "manual"
+              ]
+            }
+          },
+          "is_vault_primary": {
+            "type": "boolean"
+          },
+          "has_client_secret": {
+            "type": "boolean"
+          },
+          "has_refresh_token": {
+            "type": "boolean"
+          },
+          "connected_email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "connected_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "keepalive": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "last_status": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "ok",
+                  "failed",
+                  null
+                ]
+              },
+              "last_mode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "refresh",
+                  "probe",
+                  null
+                ]
+              },
+              "last_run_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "last_error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "first_seen_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_seen_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "GoogleOAuthImportReport": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Per source: `ok`, `skipped: \u2026` or `error: \u2026`."
+          },
+          "clients_found": {
+            "type": "integer"
+          },
+          "clients_created": {
+            "type": "integer"
+          },
+          "clients_updated": {
+            "type": "integer"
+          },
+          "vault_written": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Field names only \u2014 blank google_cloud fields that were filled."
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Stored values that differ from what was found \u2014 never overwritten."
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CredentialCheckFleetRequest": {
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "send",
+              "verify"
+            ],
+            "description": "send = real \"Test Analytics\" events (needs can_write_vault and the project's test_events_enabled switch); verify = read-only probes (can_read_vault)."
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "firebase_analytics",
+                "google_analytics",
+                "amplitude",
+                "sentry",
+                "clarity",
+                "onesignal",
+                "yandex_metrica"
+              ]
+            },
+            "description": "Absent or empty = every tool."
+          },
+          "projects": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "all_enabled"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "maxItems": 100
+              }
+            ],
+            "description": "`all_enabled` (default) = every project whose test_events_enabled switch is on; or a list of ids / slugs / public ids."
           }
         }
       }
