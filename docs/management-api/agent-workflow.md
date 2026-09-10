@@ -4,7 +4,7 @@ title: Agent workflow — auto-configure a project's API key
 description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates.
 keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, global origins check, fh_pat access token workflow, wire up api key from env]
 last_update:
-  date: 2026-08-19
+  date: 2026-09-10
   author: Ahsan Mahmood
 ---
 
@@ -93,7 +93,8 @@ curl -s -X PATCH ".../projects/$PROJECT/api-keys/$KEY_ID" \
   -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN" -H 'Content-Type: application/json' \
   -d '{"restricted":true,"allow_no_origin":true}'
 ```
-Browser traffic is still matched against the allowlist; header-less traffic is let through. Weaker
+Browser traffic is still matched against the allowlist. Traffic with no `Origin` is let through, with or
+without an `X-App-Id` (from release `2026.09.10.1`; earlier releases refused an unlisted one). Weaker
 than an origin check (so is `curl`), far better than an unrestricted key.
 
 **Browser extensions** use a `domain` origin with the extension scheme —

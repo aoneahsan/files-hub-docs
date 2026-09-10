@@ -4,7 +4,7 @@ title: API key restrictions (ship a key in a frontend)
 description: Restrict a FilesHub API key to your own web origins, browser-extension ids, Android package + signing certificate, or iOS bundle id — so you can embed the key in a React/mobile/extension app without a proxy backend.
 keywords: [fileshub api key restriction, restrict api key origin, allowed origins, android signing certificate, X-App-Id, X-Android-Cert, frontend api key, no backend, sha256 fingerprint, chrome-extension origin, allow_no_origin]
 last_update:
-  date: 2026-07-30
+  date: 2026-09-10
   author: Ahsan Mahmood
 ---
 
@@ -133,6 +133,8 @@ A restricted key refuses any request that sends **neither** an `Origin` **nor** 
 
 Turn on the key's **Allow No Origin** flag and it accepts header-less requests, while every request that *does* carry an `Origin` is still matched against the allowlist. So a browser cannot borrow the key for another site, and your server keeps working.
 
+Your server may still send an `X-App-Id` to label its requests in the audit log. From release `2026.09.10.1`, an app id the key does not list never refuses a request that has no `Origin` on an Allow No Origin key. Earlier releases refused it, even though the same request without the header got through.
+
 Be clear about the guarantee: the absence of a header proves nothing, so `curl` also passes. This is **weaker** than an origin check and **much stronger** than leaving the key unrestricted — use it for keys that otherwise have no restriction at all.
 
 ## Global origins
@@ -165,6 +167,6 @@ In those cases, route calls through a small backend (a Cloudflare Worker is enou
 | Capacitor Android / iOS WebView | `domain` | `https://localhost` / `capacitor://localhost` | `Origin` (automatic) |
 | Android native | `android` | `com.example.myapp` | `X-App-Id` (+ `X-Android-Cert` if pinned) |
 | iOS native | `ios` | `com.example.myapp` | `X-App-Id` |
-| Server / CLI / Flutter | — | set **Allow No Origin** on the key | none |
+| Server / CLI / Flutter | — | set **Allow No Origin** on the key | none (`X-App-Id` optional, audit only) |
 
 A rejected request returns `403` with a short reason (`Origin / app not allowed. …`). See [Errors & limits](../api/errors-and-limits).

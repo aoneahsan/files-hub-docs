@@ -4,13 +4,18 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-09-04
+  date: 2026-09-10
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-09-10 — a server's `X-App-Id` no longer refuses its own requests
+
+- **[API key restrictions](getting-started/api-key-restrictions#server-side-consumers-allow_no_origin), [the `allow_no_origin` endpoint notes](management-api/endpoints) and the OpenAPI spec** now say what release `2026.09.10.1` changes. On a key with Allow No Origin, a request with no `Origin` is accepted whatever `X-App-Id` it carries. Earlier releases refused an app id the key did not list, even though the same request without the header got through, so a server that labelled itself for the audit log was locked out.
+- Unchanged: a request whose `Origin` is not allowed is still refused, with or without an app id, and a key **without** Allow No Origin still checks `X-App-Id` as a native-app identity.
 
 ## 2026-09-04 — a 22nd developer-account provider, and formats that both write planes enforce
 

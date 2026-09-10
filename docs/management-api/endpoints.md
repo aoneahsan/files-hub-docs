@@ -4,7 +4,7 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
 last_update:
-  date: 2026-08-19
+  date: 2026-09-10
   author: Ahsan Mahmood
 ---
 
@@ -159,7 +159,9 @@ Browsers always send `Origin`; server-side HTTP clients (Laravel/Guzzle, Cloudfl
 CLIs, Flutter's `dart:io`) send none, so such keys had to be left unrestricted.
 
 Set `allow_no_origin: true` and a restricted key accepts header-less requests while still matching
-every request that *does* send an `Origin` against its allowlist. Be honest about the guarantee:
+every request that *does* send an `Origin` against its allowlist. From release `2026.09.10.1`, a request
+with no `Origin` that carries an `X-App-Id` the key does not list is accepted too: the header is an audit
+tag there, never a reason to refuse. Be honest about the guarantee:
 absence of a header proves nothing, so `curl` passes too — this is weaker than an origin check, and
 much stronger than leaving the key unrestricted.
 
