@@ -36,7 +36,9 @@ list could describe it. Test with `'projects' in data`. Full detail: [Authentica
 A project carries more than a name. Alongside `id` / `public_id` / `name` / `slug` / `status` / `notes` /
 `created_at`, every read returns **`description`**, **`app_identifier`**, **`primary_url`**, **`repo_url`**,
 **`repo_is_public`**, **`platforms[]`** and **`tech_stack[]`** — and all seven are writable on create and
-update. `platforms` and `tech_stack` are always arrays, empty rather than `null`.
+update. `platforms` and `tech_stack` are always arrays, empty rather than `null`. Every project payload also
+carries three booleans that only [`PATCH`](#patch-projectsproject) writes: `test_events_enabled`,
+`google_oauth_keepalive_enabled` and, since `2026.09.11.3` (deploy pending), `is_client_project`.
 
 :::note One field is not yours to change later
 `app_identifier` is the reverse-DNS app id. It is **immutable once the app is published to a store** —
@@ -91,6 +93,13 @@ project is never touched: **`test_events_enabled`** (FilesHub may send it "Test 
 [Credential checks](./credential-checks.md)) and **`google_oauth_keepalive_enabled`** (FilesHub keeps its
 Google OAuth clients in use — see [Google OAuth clients](./google-oauth-keepalive.md)). Either needs
 `can_write_vault`; without it the field is refused with a `422`.
+
+Since `2026.09.11.3` (deploy pending) it also accepts **`is_client_project`**, default `false`. It marks a
+client's project and **outranks both switches**: such a project is never sent a test event and never has its
+Google OAuth clients kept alive, whatever the switches say, and a Supabase project linked to it is never kept
+alive either. The switches already default off; this is a second, independent layer, so a switch turned on
+by mistake still cannot reach a client's analytics, OAuth clients or database. Clearing the flag re-exposes
+the project to its switches, so it needs the same `can_write_vault` scope (`422` without it).
 
 Credential **values** are written through the vault endpoints, not here — see
 [Project vault](./project-vault.md).
@@ -342,13 +351,15 @@ scopes — `can_read_vault` (metadata and presence flags), `can_reveal_vault` (t
 `POST /projects/{project}/credential-checks` · `POST /credential-checks` · `GET /credential-checks/{run}` ·
 `GET /credential-checks/{run}/results`. `verify` (read-only probes) needs `can_read_vault`; `send` (real
 "Test Analytics" events) needs `can_write_vault` and a project whose `test_events_enabled` switch is on —
-otherwise `409 TEST_EVENTS_DISABLED`. Full guide: **[Credential checks](./credential-checks.md)**.
+otherwise `409 TEST_EVENTS_DISABLED`. A client project answers `409 CLIENT_PROJECT` first, whatever the switch
+says; `verify` still runs on it. Full guide: **[Credential checks](./credential-checks.md)**.
 
 ## Google OAuth clients
 
 `GET /projects/{project}/google-oauth-clients` (`can_read_vault`, no secrets) ·
 `POST …/google-oauth-clients/import` and `POST …/google-oauth-clients/keepalive` (`can_write_vault`). The
-keep-alive answers `409 GOOGLE_OAUTH_KEEPALIVE_DISABLED` while the project's switch is off. Full guide:
+keep-alive answers `409 CLIENT_PROJECT` on a client project, then `409 GOOGLE_OAUTH_KEEPALIVE_DISABLED`
+while the project's switch is off; the import runs either way. Full guide:
 **[Google OAuth clients and keep-alive](./google-oauth-keepalive.md)**.
 
 ## AI provider accounts
@@ -417,6 +428,7 @@ code — see [Errors & limits](../api/errors-and-limits.md).)
 | 409 | `SLUG_ALREADY_EXISTS` | A project slug you supplied is taken |
 | 409 | `ORIGIN_ALREADY_EXISTS` | That key already has an origin with the same type and value |
 | 409 | `PLAINTEXT_UNAVAILABLE` | A secret cannot be handed back; `details.reason` is `not_retained` or `undecryptable` |
+| 409 | `CLIENT_PROJECT` | A `send` credential check or a Google OAuth keep-alive run on a client project (`is_client_project: true`). Checked before either switch; `details` is `{"is_client_project": true}` |
 | 409 | `TEST_EVENTS_DISABLED` | A `send` credential check on a project whose Test Events switch is off; `details.enable_with` shows the PATCH |
 | 409 | `GOOGLE_OAUTH_KEEPALIVE_DISABLED` | A keep-alive run on a project whose Google OAuth Keep-Alive switch is off |
 | 422 | `VALIDATION_FAILED` | Bad body — `details` holds the per-field messages |

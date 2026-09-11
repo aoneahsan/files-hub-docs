@@ -17,11 +17,20 @@ that is not live yet, that is a production Google sign-in quietly broken on laun
 FilesHub keeps an inventory of every client a project owns and uses each one every day. Available since
 backend **`2026.09.11.1`**.
 
-:::danger The keep-alive only touches a project whose switch is ON
+:::danger The keep-alive only touches a project that is not a client's and whose switch is ON
 
-Every project has a **`google_oauth_keepalive_enabled`** switch, **off by default**, so a client project's
-OAuth tokens are never exercised. Turn it on with
-`PATCH /projects/{project} {"google_oauth_keepalive_enabled": true}` (needs `can_write_vault`).
+A client project's OAuth tokens are never exercised. Two independent checks guard it, in this order:
+
+1. **`is_client_project`** marks a client's project and **outranks the switch**. The keep-alive endpoint
+   answers `409 CLIENT_PROJECT`, the daily run skips the project, and each of its clients reads
+   `keepalive.enabled: false`, whatever `google_oauth_keepalive_enabled` says. Backend `2026.09.11.3`,
+   deploy pending.
+2. **`google_oauth_keepalive_enabled`** is **off by default**. Turn it on with
+   `PATCH /projects/{project} {"google_oauth_keepalive_enabled": true}`.
+
+Both are set on [`PATCH /projects/{project}`](./endpoints.md#patch-projectsproject) and need
+`can_write_vault`. The [import](#post-projectsprojectgoogle-oauth-clientsimport) still runs on a client
+project: it only reads configuration.
 :::
 
 ## How a client is kept in use
@@ -64,8 +73,8 @@ Finds every client, **read-only** towards Google and Supabase, from:
 | `firebase_auth` | Firebase Auth's Google provider — the web client id **and its secret** |
 | `firebase_android_config` | Each Android app's live `google-services.json` — Android clients with their package and signing SHA-1, plus the web client |
 | `google_services_json` | The `google-services.json` stored in the project vault |
-| `supabase_auth` | A linked Supabase project's Google provider — client ids only. Supabase's API returns the provider secret as a SHA-256 hash, so since backend `2026.09.11.2` no secret is taken from it (deploy pending) |
-| `vault` | Client ids already stored on the `google_cloud` vault service — `oauth_web_client_id`, `oauth_android_client_id` and `oauth_ios_client_id` — registered as web, Android and iOS clients. Backend `2026.09.11.2`, deploy pending |
+| `supabase_auth` | A linked Supabase project's Google provider — client ids only. Supabase's API returns the provider secret as a SHA-256 hash, so since backend `2026.09.11.2` no secret is taken from it |
+| `vault` | Client ids already stored on the `google_cloud` vault service — `oauth_web_client_id`, `oauth_android_client_id` and `oauth_ios_client_id` — registered as web, Android and iOS clients. Since backend `2026.09.11.2` |
 
 The first two authenticate with the project's stored Firebase service account. Blank `google_cloud` vault
 fields are filled: `oauth_web_client_id`, `oauth_web_client_secret`, `oauth_android_client_id` (the client
@@ -77,8 +86,7 @@ Firebase Auth names, else Supabase Auth's, else one from a `google-services.json
 priority, so a sign-in provider's client always wins. A stored value that does not end in
 `.apps.googleusercontent.com` is ignored and reported in `notes`.
 
-The report, as backend `2026.09.11.2` returns it. `2026.09.11.1` has no `vault` key, and its Android config
-notes end at the status code.
+The report:
 
 ```json
 { "data": { "report": {
@@ -98,13 +106,14 @@ notes end at the status code.
 :::note A client created by hand needs its id recorded
 No Google API lists OAuth clients created by hand in Cloud Console, so no discovery source can find one.
 Add it in the admin panel, or store its id on `google_cloud` and re-run the import: the `vault` source then
-registers it (backend `2026.09.11.2`, deploy pending).
+registers it (since backend `2026.09.11.2`).
 :::
 
 ### `POST /projects/{project}/google-oauth-clients/keepalive`
 
-Runs the keep-alive for every client of the project now. `409 GOOGLE_OAUTH_KEEPALIVE_DISABLED` when the
-project's switch is off.
+Runs the keep-alive for every client of the project now. On a client project it answers
+`409 CLIENT_PROJECT` (`details: {"is_client_project": true}`), checked first. Otherwise it answers
+`409 GOOGLE_OAUTH_KEEPALIVE_DISABLED` while the project's switch is off.
 
 ## Buying time right now
 
@@ -126,6 +135,3 @@ The import records the note and carries on with the other sources, so the rest o
 To keep that Android client alive, store its id on `google_cloud.oauth_android_client_id`
 ([writing to the vault](./project-vault.md#writing-to-the-vault)) and re-run the import. The `vault` source
 then registers it.
-
-Both the full message and the `vault` source arrive in backend `2026.09.11.2` (deploy pending). On
-`2026.09.11.1` the note ends at `(HTTP 400)`.

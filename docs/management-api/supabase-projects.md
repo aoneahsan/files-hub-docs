@@ -4,7 +4,7 @@ title: Supabase project vault
 description: Read and reveal a Supabase project's full credential set — API keys, JWT secret, Postgres connection details, and S3 keys — over the FilesHub Management API, plus ready-to-paste React, Node and Laravel .env blocks.
 keywords: [supabase credentials api, supabase vault, reveal supabase keys, supabase service_role key api, supabase connection string, can_manage_supabase scope, wire supabase into react node laravel, supabase project management api]
 last_update:
-  date: 2026-07-22
+  date: 2026-09-11
   author: Ahsan Mahmood
 ---
 
@@ -120,7 +120,7 @@ saying which secrets a reveal would return:
         "requires_scope": "can_read_supabase_tokens"
       },
       "is_active": true,
-      "keepalive": { "enabled": true, "last_run_at": "2026-07-22T00:00:00+00:00", "last_status": "ok" },
+      "keepalive": { "enabled": true, "client_project": false, "last_run_at": "2026-07-22T00:00:00+00:00", "last_status": "ok" },
       "has": {
         "service_key": true, "legacy_service_role_key": false, "jwt_secret": true,
         "db_password": true, "db_url_direct": false, "db_url_session_pooler": true,
@@ -164,7 +164,7 @@ One project: the summary above **plus** `notes`, the derived `endpoints`, and th
   "data": {
     "id": 1, "name": "my-app", "ref": "abcdefghijklmnop", "url": "https://abcdefghijklmnop.supabase.co",
     "organization": "My Org", "region": "ap-southeast-1", "account_email": "you@example.com",
-    "is_active": true, "keepalive": { "enabled": true, "last_run_at": "...", "last_status": "ok" },
+    "is_active": true, "keepalive": { "enabled": true, "client_project": false, "last_run_at": "...", "last_status": "ok" },
     "has": { "service_key": true, "jwt_secret": true, "db_password": true, "...": false },
     "last_revealed_at": null, "created_at": "...",
     "notes": "Used by my-app's web + worker.",
@@ -209,6 +209,18 @@ A **client** project is `active: true, keepalive.enabled: false`: its credential
 FilesHub never touches its data. :red_circle: **A `keepalive.last_status` that never moves is not a broken
 project when `enabled` is `false`** — it is a project deliberately left alone, and a skip writes no run row
 rather than recording a failure. Filter with `?keepalive=false` to list them.
+
+### A client's database is never kept alive (`2026.09.11.3`, deploy pending)
+
+`keepalive.client_project` reports whether the registration is a client's database. It is `true` when the
+registration is flagged as one itself (a checkbox on the Supabase project in the FilesHub admin panel), **or**
+when any FilesHub project linked to it has
+[`is_client_project: true`](./endpoints.md#patch-projectsproject). It **outranks `enabled`**: the keep-alive
+never writes to such a database, whatever `enabled` says, so a switch turned on by mistake still cannot reach
+it.
+
+`?keepalive=` filters on `enabled` alone, so a client database whose switch is on still appears under
+`?keepalive=true`. Read `client_project` before concluding that FilesHub writes to a database.
 
 ### JWT signing keys (`2026.08.23.1`)
 

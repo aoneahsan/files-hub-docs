@@ -1359,6 +1359,10 @@
                   "google_oauth_keepalive_enabled": {
                     "type": "boolean",
                     "description": "Off by default. On: FilesHub keeps this project's Google OAuth clients in use daily. Needs can_write_vault. Added in 2026.09.11.1."
+                  },
+                  "is_client_project": {
+                    "type": "boolean",
+                    "description": "Off by default. On: this is a client's project, and the flag OUTRANKS both switches \u2014 FilesHub never sends it a \"Test Analytics\" event and never keeps its Google OAuth clients, or a Supabase project linked to it, alive, whatever the switches say. Clearing it re-exposes the project to its switches, so it needs can_write_vault. Added in 2026.09.11.3."
                   }
                 }
               }
@@ -5646,7 +5650,7 @@
           "Management API"
         ],
         "summary": "Run credential checks for one project",
-        "description": "Send a real \"Test Analytics\" event (`mode: send`) or probe read-only (`mode: verify`) for every tool the project stores credentials for, synchronously. \ud83d\udd34 `send` needs `can_write_vault` and a project whose `test_events_enabled` switch is ON \u2014 otherwise 409 `TEST_EVENTS_DISABLED` and nothing is sent. `verify` needs `can_read_vault`. Added in backend 2026.09.11.1.",
+        "description": "Send a real \"Test Analytics\" event (`mode: send`) or probe read-only (`mode: verify`) for every tool the project stores credentials for, synchronously. \ud83d\udd34 `send` needs `can_write_vault` and a project whose `test_events_enabled` switch is ON \u2014 otherwise 409 `TEST_EVENTS_DISABLED` and nothing is sent. A client project (`is_client_project: true`) answers 409 `CLIENT_PROJECT` first, with details {\"is_client_project\": true}, whatever the switch says (2026.09.11.3). `verify` needs `can_read_vault` and runs on any project, a client's included. Added in backend 2026.09.11.1.",
         "operationId": "runProjectCredentialChecks",
         "servers": [
           {
@@ -6113,7 +6117,7 @@
           "Management API"
         ],
         "summary": "Run the Google OAuth keep-alive now",
-        "description": "A refresh-token exchange for each connected web client, a token-endpoint probe for the rest. 409 `GOOGLE_OAUTH_KEEPALIVE_DISABLED` while the project's google_oauth_keepalive_enabled switch is off. Needs `can_write_vault`.",
+        "description": "A refresh-token exchange for each connected web client, a token-endpoint probe for the rest. 409 `CLIENT_PROJECT` on a client project (`is_client_project: true`), checked first, with details {\"is_client_project\": true} (2026.09.11.3); otherwise 409 `GOOGLE_OAUTH_KEEPALIVE_DISABLED` while the project's google_oauth_keepalive_enabled switch is off. Needs `can_write_vault`.",
         "operationId": "runGoogleOAuthKeepAlive",
         "servers": [
           {
@@ -7210,6 +7214,10 @@
           },
           "google_oauth_keepalive_enabled": {
             "type": "boolean"
+          },
+          "is_client_project": {
+            "type": "boolean",
+            "description": "A client's project. Outranks both switches: never sent a test event and never kept alive, whatever test_events_enabled and google_oauth_keepalive_enabled say. Written only by PATCH /projects/{project}. Added in 2026.09.11.3."
           }
         },
         "required": [
@@ -7238,6 +7246,9 @@
                 "type": "boolean"
               },
               "google_oauth_keepalive_enabled": {
+                "type": "boolean"
+              },
+              "is_client_project": {
                 "type": "boolean"
               }
             }
@@ -7281,6 +7292,9 @@
                 "type": "boolean"
               },
               "google_oauth_keepalive_enabled": {
+                "type": "boolean"
+              },
+              "is_client_project": {
                 "type": "boolean"
               }
             }
@@ -7699,6 +7713,14 @@
           "keepalive": {
             "type": "object",
             "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "The keep-alive switch: FilesHub may WRITE to this database (it inserts, counts and prunes rows). The ?keepalive= filter reads this field alone. Added in 2026.08.23.1."
+              },
+              "client_project": {
+                "type": "boolean",
+                "description": "A client's database: flagged on the registration itself, or linked to a FilesHub project with is_client_project true. Outranks enabled \u2014 the keep-alive never runs while this is true. Added in 2026.09.11.3."
+              },
               "last_run_at": {
                 "type": [
                   "string",
@@ -9601,7 +9623,7 @@
                 "maxItems": 100
               }
             ],
-            "description": "`all_enabled` (default) = every project whose test_events_enabled switch is on; or a list of ids / slugs / public ids."
+            "description": "`all_enabled` (default) = every project whose test_events_enabled switch is on, client projects excepted; or a list of ids / slugs / public ids. In send mode a listed client project, or one with the switch off, is recorded as skipped."
           }
         }
       }

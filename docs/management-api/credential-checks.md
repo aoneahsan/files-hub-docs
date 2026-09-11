@@ -20,15 +20,22 @@ Available since backend **`2026.09.11.1`**.
 
 | Mode | What happens | Scope |
 | --- | --- | --- |
-| `verify` | Read-only probes. **No event is created anywhere.** Works on any project | `can_read_vault` |
+| `verify` | Read-only probes. **No event is created anywhere.** Works on any project, a client's included | `can_read_vault` |
 | `send` | A real "Test Analytics" event wherever the provider has an API for one | `can_write_vault` |
 
-:::danger `send` only reaches a project whose Test Events switch is ON
+:::danger `send` only reaches a project that is not a client's and whose switch is ON
 
-Every project has a **`test_events_enabled`** switch, and it is **off by default**, because client projects
-are registered here too and must never receive a test event. A `send` on a project with the switch off is
-`409 TEST_EVENTS_DISABLED` — nothing is sent. Turn it on with
-`PATCH /projects/{project} {"test_events_enabled": true}` (needs `can_write_vault`).
+Client projects are registered here too, and must never receive a test event. Two independent checks guard
+them, in this order, and each answers with its own `409` before anything is sent:
+
+1. **`is_client_project`** marks a client's project and **outranks the switch**. A `send` on one is
+   `409 CLIENT_PROJECT`, with `details: {"is_client_project": true}`, whatever `test_events_enabled` says.
+   Backend `2026.09.11.3`, deploy pending.
+2. **`test_events_enabled`** is **off by default**. A `send` on a project with the switch off is
+   `409 TEST_EVENTS_DISABLED`. Turn it on with `PATCH /projects/{project} {"test_events_enabled": true}`.
+
+Both are set on [`PATCH /projects/{project}`](./endpoints.md#patch-projectsproject) and need
+`can_write_vault`. A switch turned on by mistake still cannot reach a client's analytics.
 :::
 
 ## What each tool can actually prove
@@ -75,8 +82,9 @@ curl -s -X POST https://fileshub.zaions.com/api/public/v1/projects/my-app/creden
 ### `POST /credential-checks`
 
 Many projects, queued — **202** with a run to poll. `projects` is a list of ids, slugs or public ids (at most
-100), or `"all_enabled"` for every project whose switch is on. In `send` mode, a listed project with the
-switch off is recorded as `skipped` rather than failing the whole run.
+100), or `"all_enabled"` for every project whose switch is on, client projects excepted. In `send` mode, a
+listed project that is a client's, or has the switch off, is recorded as `skipped` rather than failing the
+whole run.
 
 ### `GET /credential-checks/{run}` · `GET /credential-checks/{run}/results`
 
@@ -86,4 +94,4 @@ The run's status and counters, and its results — paginated (default 20, max 50
 ## Daily runs
 
 Every project with its switch on receives a "Test Analytics" event **daily at 05:20** (server time). A
-project with the switch off is never touched.
+client project, or one with the switch off, is never touched.

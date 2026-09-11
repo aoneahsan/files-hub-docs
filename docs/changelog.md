@@ -12,9 +12,18 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
-## 2026-09-11 — OAuth client ids stored on the vault get the keep-alive (deploy pending)
+## 2026-09-11 — a client's project is never sent a test event or kept alive (deploy pending)
 
-- **Deploy pending.** Backend `2026.09.11.2` is built and not live yet. Until it is, the import behaves as `2026.09.11.1` does, and [the keep-alive page](management-api/google-oauth-keepalive) marks each change below with its version.
+- **Deploy pending.** Backend `2026.09.11.3` is built and not live yet. Until it is, the two per-project switches are the only gate.
+- 🔴 **A new project flag, `is_client_project`** (boolean, default `false`). It marks a client's project and **outranks both switches**: such a project is never sent a "Test Analytics" event and never has its Google OAuth clients kept alive, whatever `test_events_enabled` and `google_oauth_keepalive_enabled` say. The switches already default off; the flag is a second, independent layer, so a switch turned on by mistake still cannot reach a client's analytics, OAuth clients or database. It is written on [`PATCH /projects/{project}`](management-api/endpoints#patch-projectsproject) with `can_write_vault` (`422` without it), and every project payload carries it.
+- **A new `409 CLIENT_PROJECT`**, checked before the switch, on a [credential-check `send`](management-api/credential-checks) and on a [keep-alive run](management-api/google-oauth-keepalive). `details` is `{"is_client_project": true}`. A `verify` run and the OAuth import still work on a client project, because neither sends anything.
+- The daily test events, the daily keep-alive and a queued run's `"all_enabled"` never select a client project, and a queued run that lists one records it as `skipped`. A client project's OAuth clients read `keepalive.enabled: false`.
+- 🔴 **The Supabase keep-alive honours it too.** A registration is never kept alive when it is flagged as a client's database itself, or when any FilesHub project linked to it is a client project. [`GET /supabase-projects`](management-api/supabase-projects) gains `keepalive.client_project`, that effective value, beside `keepalive.enabled`.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json): `is_client_project` on the project schemas and the `PATCH` body, `CLIENT_PROJECT` on both operations, and `keepalive.enabled` + `keepalive.client_project` on the Supabase project schema (`enabled` had been missing from it since `2026.08.23.1`).
+
+## 2026-09-11 — OAuth client ids stored on the vault get the keep-alive
+
+- **Live.** Backend `2026.09.11.2` was deployed on 2026-09-11.
 - 🔴 **A fifth import source, `vault`.** Client ids already stored on the `google_cloud` vault service (`oauth_web_client_id`, `oauth_android_client_id` and `oauth_ios_client_id`) are registered as web, Android and iOS clients, so they are kept alive too. No Google API lists an OAuth client created by hand in Cloud Console. Recording its id on `google_cloud` is how such a client gets the keep-alive.
 - 🔴 **No secret is taken from Supabase any more.** Supabase's auth-config API returns the Google provider's secret as a SHA-256 hash, not the secret itself. `2026.09.11.1` compared that hash with the vault, which reported a false `conflicts` entry, and could write it into a blank `oauth_web_client_secret`. The import now reads client ids only from Supabase and never stores a 64-hex value as a secret.
 - **A sign-in provider still picks the primary web client.** When Firebase Auth or Supabase Auth names a web client, that client wins; `vault` is the lowest priority. A stored value that does not end in `.apps.googleusercontent.com` is ignored and reported in `notes`.
