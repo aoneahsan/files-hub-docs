@@ -12,9 +12,20 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-09-11 — OAuth client ids stored on the vault get the keep-alive (deploy pending)
+
+- **Deploy pending.** Backend `2026.09.11.2` is built and not live yet. Until it is, the import behaves as `2026.09.11.1` does, and [the keep-alive page](management-api/google-oauth-keepalive) marks each change below with its version.
+- 🔴 **A fifth import source, `vault`.** Client ids already stored on the `google_cloud` vault service (`oauth_web_client_id`, `oauth_android_client_id` and `oauth_ios_client_id`) are registered as web, Android and iOS clients, so they are kept alive too. No Google API lists an OAuth client created by hand in Cloud Console. Recording its id on `google_cloud` is how such a client gets the keep-alive.
+- 🔴 **No secret is taken from Supabase any more.** Supabase's auth-config API returns the Google provider's secret as a SHA-256 hash, not the secret itself. `2026.09.11.1` compared that hash with the vault, which reported a false `conflicts` entry, and could write it into a blank `oauth_web_client_secret`. The import now reads client ids only from Supabase and never stores a 64-hex value as a secret.
+- **A sign-in provider still picks the primary web client.** When Firebase Auth or Supabase Auth names a web client, that client wins; `vault` is the lowest priority. A stored value that does not end in `.apps.googleusercontent.com` is ignored and reported in `notes`.
+- The report's `sources` gains a `vault` key: `ok (N client id(s))`, or `skipped: no OAuth client id stored on google_cloud`.
+- **An Android config failure now carries Google's own message**, e.g. `(HTTP 400: …The length of field 'display_name' value exceeds 63 characters.)`, where `2026.09.11.1` stopped at the status code. That particular 400 is a Google-side failure; [Troubleshooting](management-api/google-oauth-keepalive#troubleshooting) explains the cause and the way round it.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json): `vault` added to a client's `sources` enum and to the import report's `sources` description.
+
 ## 2026-09-11 — "Test Analytics" credential checks and the Google OAuth keep-alive
 
-- 🔴 **New page: [Credential checks](management-api/credential-checks).** Send a real "Test Analytics" event to a project's Amplitude, Sentry, Firebase Analytics and GA4 — or verify every stored analytics, error and push credential read-only — and get one verdict per tool. The page is honest about the limits. Amplitude and Sentry acknowledge what they receive, and Firebase proves its config. GA4 answers the same for any id. Clarity has no server-side event API at all. Backend `2026.09.11.1`.
+- **Live.** Backend `2026.09.11.1`, which carries both features below, was deployed on 2026-09-11.
+- 🔴 **New page: [Credential checks](management-api/credential-checks).** Send a real "Test Analytics" event to a project's Amplitude, Sentry, Firebase Analytics and GA4 — or verify every stored analytics, error and push credential read-only — and get one verdict per tool. The page is honest about the limits. Amplitude and Sentry acknowledge what they receive, and Firebase proves its config. GA4 answers the same for any id. Clarity has no server-side event API at all.
 - 🔴 **New page: [Google OAuth clients and keep-alive](management-api/google-oauth-keepalive).** Google deletes an OAuth client that makes no token request for six months. FilesHub now imports every client a project owns, from Firebase, `google-services.json` and Supabase, and exercises each one daily.
 - 🔴 **Both are opt-in per project, and off by default**, so a client project is never sent a test event or has its tokens used. The two switches are writable on [`PATCH /projects/{project}`](management-api/endpoints#patch-projectsproject).
 - [Project vault](management-api/project-vault) lists two new services: `google_analytics` (a GA4 property Firebase did not create) and `yandex_metrica`.

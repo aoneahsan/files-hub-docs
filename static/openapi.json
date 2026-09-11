@@ -6047,7 +6047,7 @@
           "Management API"
         ],
         "summary": "Import a project's Google OAuth clients",
-        "description": "Reads every client, read-only, from Firebase Auth's Google provider, each Android app's live google-services.json, the stored google-services.json, and a linked Supabase project. Fills only BLANK google_cloud vault fields; a different stored value is reported under `conflicts`, never overwritten. Needs `can_write_vault`.",
+        "description": "Reads every client, read-only, from Firebase Auth's Google provider, each Android app's live google-services.json, the stored google-services.json, a linked Supabase project, and (backend 2026.09.11.2) the client ids already stored on google_cloud. Fills only BLANK google_cloud vault fields; a different stored value is reported under `conflicts`, never overwritten. Needs `can_write_vault`.",
         "operationId": "importGoogleOAuthClients",
         "servers": [
           {
@@ -9427,6 +9427,7 @@
                 "firebase_android_config",
                 "google_services_json",
                 "supabase_auth",
+                "vault",
                 "manual"
               ]
             }
@@ -9520,7 +9521,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "description": "Per source: `ok`, `skipped: \u2026` or `error: \u2026`."
+            "description": "Per source: `ok`, `skipped: \u2026` or `error: \u2026`. The `vault` source (backend 2026.09.11.2) answers `ok (N client id(s))` or `skipped: no OAuth client id stored on google_cloud`."
           },
           "clients_found": {
             "type": "integer"

@@ -64,15 +64,41 @@ Finds every client, **read-only** towards Google and Supabase, from:
 | `firebase_auth` | Firebase Auth's Google provider — the web client id **and its secret** |
 | `firebase_android_config` | Each Android app's live `google-services.json` — Android clients with their package and signing SHA-1, plus the web client |
 | `google_services_json` | The `google-services.json` stored in the project vault |
-| `supabase_auth` | A linked Supabase project's Google provider |
+| `supabase_auth` | A linked Supabase project's Google provider — client ids only. Supabase's API returns the provider secret as a SHA-256 hash, so since backend `2026.09.11.2` no secret is taken from it (deploy pending) |
+| `vault` | Client ids already stored on the `google_cloud` vault service — `oauth_web_client_id`, `oauth_android_client_id` and `oauth_ios_client_id` — registered as web, Android and iOS clients. Backend `2026.09.11.2`, deploy pending |
 
 The first two authenticate with the project's stored Firebase service account. Blank `google_cloud` vault
 fields are filled: `oauth_web_client_id`, `oauth_web_client_secret`, `oauth_android_client_id` (the client
 bound to the Play app-signing SHA-1, else the upload key's), and `project_number`. **A field that already
 holds a different value is reported under `conflicts` and never overwritten.**
 
-:::note No Google API lists clients created by hand
-A client created manually in Cloud Console is invisible to every source above. Add it in the admin panel.
+The **primary web client** is the one written into a blank `oauth_web_client_id`. It is the web client
+Firebase Auth names, else Supabase Auth's, else one from a `google-services.json`. `vault` is the lowest
+priority, so a sign-in provider's client always wins. A stored value that does not end in
+`.apps.googleusercontent.com` is ignored and reported in `notes`.
+
+The report, as backend `2026.09.11.2` returns it. `2026.09.11.1` has no `vault` key, and its Android config
+notes end at the status code.
+
+```json
+{ "data": { "report": {
+  "sources": {
+    "firebase_auth": "ok",
+    "firebase_android_config": "ok (2 Android app(s))",
+    "google_services_json": "skipped: no firebase.google_services_json stored",
+    "supabase_auth": "skipped: no Supabase project linked",
+    "vault": "ok (1 client id(s))" },
+  "clients_found": 3, "clients_created": 1, "clients_updated": 2,
+  "vault_written": [], "conflicts": [],
+  "notes": [ "Could not read the config of Android app com.example.inventory.app (HTTP 400: …The length of field 'display_name' value exceeds 63 characters.)" ] } } }
+```
+
+`sources.vault` is `ok (N client id(s))`, or `skipped: no OAuth client id stored on google_cloud`.
+
+:::note A client created by hand needs its id recorded
+No Google API lists OAuth clients created by hand in Cloud Console, so no discovery source can find one.
+Add it in the admin panel, or store its id on `google_cloud` and re-run the import: the `vault` source then
+registers it (backend `2026.09.11.2`, deploy pending).
 :::
 
 ### `POST /projects/{project}/google-oauth-clients/keepalive`
@@ -85,3 +111,21 @@ project's switch is off.
 Google counts **any settings edit** on a client as activity. For a client already flagged for deletion,
 saving a change in Cloud Console resets the six-month clock immediately. Adding FilesHub's connect callback
 to the client's authorised redirect URIs is a good edit to make, because Connect can then use it.
+
+## Troubleshooting
+
+### An Android app's config fails with HTTP 400 and `display_name`
+
+The import note reads `Could not read the config of Android app <package> (HTTP 400: …The length of field
+'display_name' value exceeds 63 characters.)`. **The failure is on Google's side.** When the config is
+requested, the Firebase Management API tries to auto-create the app's Android OAuth client. The name it
+generates, `Android client for <package> (auto created by Google Service)`, is longer than Google's
+63-character limit when the package name is long.
+
+The import records the note and carries on with the other sources, so the rest of the report still holds.
+To keep that Android client alive, store its id on `google_cloud.oauth_android_client_id`
+([writing to the vault](./project-vault.md#writing-to-the-vault)) and re-run the import. The `vault` source
+then registers it.
+
+Both the full message and the `vault` source arrive in backend `2026.09.11.2` (deploy pending). On
+`2026.09.11.1` the note ends at `(HTTP 400)`.
