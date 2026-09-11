@@ -30,7 +30,7 @@ them, in this order, and each answers with its own `409` before anything is sent
 
 1. **`is_client_project`** marks a client's project and **outranks the switch**. A `send` on one is
    `409 CLIENT_PROJECT`, with `details: {"is_client_project": true}`, whatever `test_events_enabled` says.
-   Backend `2026.09.11.3`, deploy pending.
+   Backend `2026.09.11.3`.
 2. **`test_events_enabled`** is **off by default**. A `send` on a project with the switch off is
    `409 TEST_EVENTS_DISABLED`. Turn it on with `PATCH /projects/{project} {"test_events_enabled": true}`.
 

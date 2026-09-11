@@ -38,7 +38,7 @@ A project carries more than a name. Alongside `id` / `public_id` / `name` / `slu
 **`repo_is_public`**, **`platforms[]`** and **`tech_stack[]`** — and all seven are writable on create and
 update. `platforms` and `tech_stack` are always arrays, empty rather than `null`. Every project payload also
 carries three booleans that only [`PATCH`](#patch-projectsproject) writes: `test_events_enabled`,
-`google_oauth_keepalive_enabled` and, since `2026.09.11.3` (deploy pending), `is_client_project`.
+`google_oauth_keepalive_enabled` and, since `2026.09.11.3`, `is_client_project`.
 
 :::note One field is not yours to change later
 `app_identifier` is the reverse-DNS app id. It is **immutable once the app is published to a store** —
@@ -94,7 +94,7 @@ project is never touched: **`test_events_enabled`** (FilesHub may send it "Test 
 Google OAuth clients in use — see [Google OAuth clients](./google-oauth-keepalive.md)). Either needs
 `can_write_vault`; without it the field is refused with a `422`.
 
-Since `2026.09.11.3` (deploy pending) it also accepts **`is_client_project`**, default `false`. It marks a
+Since `2026.09.11.3` it also accepts **`is_client_project`**, default `false`. It marks a
 client's project and **outranks both switches**: such a project is never sent a test event and never has its
 Google OAuth clients kept alive, whatever the switches say, and a Supabase project linked to it is never kept
 alive either. The switches already default off; this is a second, independent layer, so a switch turned on

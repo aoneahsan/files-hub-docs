@@ -23,8 +23,7 @@ A client project's OAuth tokens are never exercised. Two independent checks guar
 
 1. **`is_client_project`** marks a client's project and **outranks the switch**. The keep-alive endpoint
    answers `409 CLIENT_PROJECT`, the daily run skips the project, and each of its clients reads
-   `keepalive.enabled: false`, whatever `google_oauth_keepalive_enabled` says. Backend `2026.09.11.3`,
-   deploy pending.
+   `keepalive.enabled: false`, whatever `google_oauth_keepalive_enabled` says. Backend `2026.09.11.3`.
 2. **`google_oauth_keepalive_enabled`** is **off by default**. Turn it on with
    `PATCH /projects/{project} {"google_oauth_keepalive_enabled": true}`.
 

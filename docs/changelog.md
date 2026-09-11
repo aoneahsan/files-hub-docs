@@ -12,9 +12,9 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
-## 2026-09-11 — a client's project is never sent a test event or kept alive (deploy pending)
+## 2026-09-11 — a client's project is never sent a test event or kept alive
 
-- **Deploy pending.** Backend `2026.09.11.3` is built and not live yet. Until it is, the two per-project switches are the only gate.
+- **Live.** Backend `2026.09.11.3` was deployed on 2026-09-11.
 - 🔴 **A new project flag, `is_client_project`** (boolean, default `false`). It marks a client's project and **outranks both switches**: such a project is never sent a "Test Analytics" event and never has its Google OAuth clients kept alive, whatever `test_events_enabled` and `google_oauth_keepalive_enabled` say. The switches already default off; the flag is a second, independent layer, so a switch turned on by mistake still cannot reach a client's analytics, OAuth clients or database. It is written on [`PATCH /projects/{project}`](management-api/endpoints#patch-projectsproject) with `can_write_vault` (`422` without it), and every project payload carries it.
 - **A new `409 CLIENT_PROJECT`**, checked before the switch, on a [credential-check `send`](management-api/credential-checks) and on a [keep-alive run](management-api/google-oauth-keepalive). `details` is `{"is_client_project": true}`. A `verify` run and the OAuth import still work on a client project, because neither sends anything.
 - The daily test events, the daily keep-alive and a queued run's `"all_enabled"` never select a client project, and a queued run that lists one records it as `skipped`. A client project's OAuth clients read `keepalive.enabled: false`.

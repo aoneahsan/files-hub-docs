@@ -210,7 +210,7 @@ FilesHub never touches its data. :red_circle: **A `keepalive.last_status` that n
 project when `enabled` is `false`** — it is a project deliberately left alone, and a skip writes no run row
 rather than recording a failure. Filter with `?keepalive=false` to list them.
 
-### A client's database is never kept alive (`2026.09.11.3`, deploy pending)
+### A client's database is never kept alive (`2026.09.11.3`)
 
 `keepalive.client_project` reports whether the registration is a client's database. It is `true` when the
 registration is flagged as one itself (a checkbox on the Supabase project in the FilesHub admin panel), **or**
