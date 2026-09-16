@@ -4,13 +4,23 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-09-11
+  date: 2026-09-16
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-09-16 — the vault takes a file of any format, and the OTA signing key has a home
+
+- **Not yet live.** Backend `2026.09.16.1` is built and committed; these endpoints behave as documented once it is deployed.
+- 🔴 **A new freeform service, [`general_files`](management-api/project-vault#services-covered) — it accepts any file, of any format, under a key you name.** There is no allow-list, no extension check and no content sniffing anywhere on the upload path. Previously a file could only be stored on a key the registry declared as a file field, so anything else — a `.pem`, a `.zip`, a recovery-codes `.txt` — had nowhere to go. It is deliberately separate from `general`, which holds freeform *text*: the two row kinds share a `(project, service, key)` identity in different tables, so one service accepting both would let them shadow each other.
+- **`mime_type` is documented** on both upload forms. It is what "pick the file type" means: recorded, handed back on read, optional, and never validated against a list.
+- **A new field, `native_update.signing_private_key`** (`type: file`, `secret: true`). The OTA platform stores a signing key's public half and fingerprint and never the private key, so a locally generated one has no second copy anywhere; this gives it one. It carries no `env_key`, so no generated `.env` block can ever contain it.
+- **Two limits, neither about format:** 10 MB per file (raised from 1 MB), and 100 files per project — `422 VAULT_FILE_LIMIT_REACHED`. The second keeps the un-paginated file list in `GET /projects/{project}/vault` finite; replacing a file you already store is not a new file.
+- **Two refusals now name the endpoint that would have worked** instead of dead-ending: a file sent to `general` points at `general_files`, and a string sent to `general_files` points at `vault-files`.
+- **Corrected:** the `GET /vault/services` description in `openapi.json` claimed "18 services and 87 fields" and `llms.txt` claimed "20 services, 95 fields". Both had been stale for months. They now tell you to count from the response, which is what [the page itself](management-api/project-vault#services-covered) has always said.
 
 ## 2026-09-11 — a client's project is never sent a test event or kept alive
 

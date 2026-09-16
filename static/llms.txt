@@ -101,7 +101,8 @@
 - Project vault (read): `GET /vault/services`, `GET /vault/projects`, `GET /projects/{project}/vault`,
   `POST /projects/{project}/vault/reveal`, `GET /projects/{project}/vault-files/{service}.{key}` — every
   third-party credential, config file and identifier a project needs (Firebase, OAuth, Sentry, OneSignal,
-  Cloudflare, the store consoles, signing keys, `google-services.json`). 20 services, 95 fields.
+  Cloudflare, the store consoles, signing keys, `google-services.json`). Read the service and field
+  count from `GET /vault/services`; `general_files` takes a file of ANY format under a key you name.
 - Project vault (write, since backend `2026.08.20.1`): `PUT|DELETE /projects/{project}/vault/{service}`,
   `POST /projects/{project}/vault` (bulk, atomic), `POST /projects/{project}/vault-move` (retire an
   orphaned service onto declared fields), `POST|DELETE /projects/{project}/vault-files/{service}.{key}`,

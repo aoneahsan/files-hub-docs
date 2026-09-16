@@ -173,7 +173,8 @@ Count them from `GET /vault/services` rather than trusting a number written here
 (superseded by `ai`) · `smtp` · `cloudflare` ·
 **`turnstile`** · `capacitor` · `github` · `play_console` · `app_store` ·
 `chrome_web_store` · `firefox_addons` · `edge_addons` · `fileshub` (derived — see below) · `native_update` ·
-**`general`** (freeform — your own key/value pairs).
+**`general`** (freeform — your own key/value pairs) · **`general_files`** (freeform files — any format, see
+below).
 
 `google_analytics` (a GA4 property that Firebase did **not** create — Firebase's is the `firebase` tab's
 Measurement ID) and `yandex_metrica` (counter id, plus the optional `counter_key` app-identifier tag) joined
@@ -186,9 +187,25 @@ make `configured_services` report a Cloudflare account that does not exist. Its 
 [`POST /api/v1/turnstile/verify`](../api/turnstile), which is the one vault credential FilesHub spends on
 your behalf.
 
+:red_circle: **`general_files` takes any file, of any format** (`2026.09.16.1`). It is the backup surface:
+you name the key, optionally declare a `mime_type`, and upload anything. There is **no format restriction
+anywhere** — no allow-list, no extension check, no content sniffing — because a backup vault that refuses a
+file type is a backup vault that loses that file, and what it loses is by construction the thing that
+existed in only one place.
+
+It is deliberately separate from `general`, which holds freeform **text**. Text rows and file rows are keyed
+`(project, service, key)` in different tables, so a single service accepting both would let them shadow each
+other — the same collision `VAULT_FIELD_IS_A_FILE` / `VAULT_FIELD_IS_NOT_A_FILE` exist to prevent. Send a
+file to `general` and the refusal names `general_files`; send a string to `general_files` and it names the
+upload endpoint.
+
+The only thing validated is the **key's shape** — 1–128 characters of `A-Za-z0-9._-`. No `/`, because it
+would end the `vault-files/{service}.{key}` path segment; dots are fine, since the identifier splits on the
+first one, so `general_files.id_rsa.pem` resolves the way it reads.
+
 Read the count from the response rather than from this page — a service is added by editing config, so the
-registry grows without an API change. `supabase` and `general` report **zero fields**: the first links
-elsewhere, the second lets you name your own keys.
+registry grows without an API change. `supabase`, `general` and `general_files` report **zero fields**: the
+first links elsewhere, and the other two let you name your own keys.
 
 Each service also reports two booleans that matter before you try to write to it:
 
@@ -425,6 +442,27 @@ JSON is what an agent already holding the bytes reaches for, with no temp file:
 The size cap applies to the **decoded** bytes in both cases, and base64 is decoded strictly — a truncated or
 corrupted payload is refused rather than stored as *something* that fails at signing time months later.
 
+Both forms accept an optional **`mime_type`**, which is what "pick the file type" means here. It is recorded
+and handed back on read; it is **never validated against a list**, and leaving it out is fine — multipart
+falls back to the uploaded file's own type, and the JSON form stores nothing.
+
+```bash
+curl -X POST .../projects/my-app/vault-files/general_files.bk_signing_key \
+  -H "Authorization: Bearer $FH_PAT" \
+  -F file=@signing.pem -F mime_type=application/x-pem-file
+```
+
+Two limits, both configurable, neither about the file's format:
+
+| Limit | Default | Why |
+|---|---|---|
+| Bytes per file | **10 MB** | The column is `longText`, so the practical ceiling is the database's `max_allowed_packet` |
+| Files per project — `422 VAULT_FILE_LIMIT_REACHED` | **100** | `GET /projects/{project}/vault` lists every file with no pagination, so the bound sits on the write side to keep that response finite. Replacing a file you already store is not a new file |
+
+`GET` the same path to download it. The response carries the bytes with `X-Checksum-Sha256` — the SHA-256 of
+the **plaintext**, so you can prove a restored file is byte-identical to what you uploaded. Downloading needs
+`can_reveal_vault`; uploading and deleting need `can_write_vault`.
+
 ### `PUT /projects/{project}/links`
 
 Replaces the link list. `type` must be one of the known kinds (`website`, `web_app`, `repo`, `docs`,
@@ -437,7 +475,9 @@ Each of these exists because of something that already went wrong:
 | Refused | Why |
 |---|---|
 | A **free-text service name** on create — `422 UNKNOWN_VAULT_SERVICE` | This is the entry-side half of the ISSUE-09 story above. An **existing** orphan stays deletable and movable: the write side must be able to clean up whatever the read side can see |
-| An **undeclared field** on a declared service — `422 UNKNOWN_VAULT_FIELD` | Name your own keys on `general` instead |
+| An **undeclared field** on a declared service — `422 UNKNOWN_VAULT_FIELD` | Name your own keys on `general` (values) or `general_files` (files) instead |
+| A file key that is not 1–128 characters of `A-Za-z0-9._-` — `422 VALIDATION_FAILED` | The key's shape only. The **file's** format is never restricted |
+| More files than the per-project cap — `422 VAULT_FILE_LIMIT_REACHED` | Keeps the un-paginated file list in `GET .../vault` finite |
 | A **file field** on the value endpoint (`422 VAULT_FIELD_IS_A_FILE`), or a value field on the file endpoint (`422 VAULT_FIELD_IS_NOT_A_FILE`) | Both are keyed `(service, key)` in different tables, so the wrong one silently shadows the right one |
 | Any write to a **linked** or **derived** service — `422 VAULT_SERVICE_NOT_WRITABLE` with `details.reason` | `GET /vault/services` publishes `writable` and `derived`, so you can know before you try |
 

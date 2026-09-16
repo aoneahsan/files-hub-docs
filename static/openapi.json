@@ -3143,7 +3143,7 @@
           "Management API"
         ],
         "summary": "The vault field registry (schema discovery)",
-        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project \u2014 it describes the SHAPE of the vault, never its contents \u2014 so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Currently 18 services and 87 fields. Read it before guessing a field name.",
+        "description": "Every service and field the project vault can hold: label, where to find the value, whether it is secret, whether it may ship in a browser bundle, and its .env name. Identical for every project \u2014 it describes the SHAPE of the vault, never its contents \u2014 so ANY VALID TOKEN MAY READ IT: this endpoint needs neither can_read_vault nor any other scope, and cannot 403. Count the services and fields from this response rather than from any number written in a doc — a service is added by editing config, so the registry grows without an API change, and every count ever written down went stale silently. Read it before guessing a field name.",
         "operationId": "listVaultServices",
         "servers": [
           {
