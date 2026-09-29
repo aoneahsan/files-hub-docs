@@ -62,6 +62,14 @@ curl -X POST https://fileshub.zaions.com/api/v1/emails/templates \
   }'
 ```
 
+### Marketing templates
+
+Send `"is_marketing": true` (with a key that has `can_manage_email_marketing`) to create a **campaign**
+template for [email-marketing sequences](../email-marketing/api#marketing-templates). It belongs to your
+project only — other projects' keys cannot see, edit or delete it — its category is always `marketing`, and
+it can never be used by `POST /emails/send`. Add `"layout": "marketing"` to write only the content and let
+FilesHub wrap it in its branded layout (header, footer, postal address, unsubscribe line).
+
 ## Update a template
 
 ```

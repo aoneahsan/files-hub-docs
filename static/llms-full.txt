@@ -134,6 +134,19 @@ Errors return a JSON body `{ "message": "..." }` with an appropriate status code
   `@monthly`), `timezone` (IANA), `recipients` (1–50, one email each per run), template or raw
   content. `PATCH {"is_active": false}` pauses.
 
+## Email marketing API
+
+- Per-project contact lists, imports (paste text or a private CSV object; one pipeline; counters always sum
+  to total_rows), project-wide suppression, drip sequences (tracks, conditions on clicks and product events),
+  click tracking with `?c=<contact_token>`, product events, RFC 8058 one-click unsubscribe, double opt-in.
+- Key flag `can_manage_email_marketing` (default off); every endpoint except
+  `POST /api/v1/email-lists/{list}/subscribe` refuses a browser `Origin` (server-side only).
+- Lists `GET|POST /api/v1/email-lists` · contacts `…/email-lists/{list}/contacts` · imports
+  `POST …/email-lists/{list}/imports` · sequences `/api/v1/email-sequences` (+ `/activate`, `/enroll`,
+  `/steps/{key}/test`) · events `POST /api/v1/email-contacts/events` (idempotent) · settings
+  `/api/v1/email-marketing/settings`. Management plane: the same under `/api/public/v1/projects/{project}/`.
+- Docs: https://fileshub-docs.zaions.com/docs/email-marketing/overview
+
 ## Jobs & status
 
 - Jobs — `GET /api/v1/jobs` (read; paginated, default 20 / max 50; filters `status`, `type`) and

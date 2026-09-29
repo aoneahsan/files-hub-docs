@@ -68,6 +68,16 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Email marketing',
+      collapsed: true,
+      items: [
+        'email-marketing/overview',
+        'email-marketing/api',
+        'email-marketing/product-integration',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Management API',
       collapsed: false,
       items: [

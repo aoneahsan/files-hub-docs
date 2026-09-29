@@ -12,6 +12,14 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-09-29 — email marketing: lists, imports, drip sequences, one-click unsubscribe
+
+- **Not yet live.** The backend release that carries it is built and committed; these endpoints behave as documented once it is deployed. Check `GET /api/version`.
+- 🔴 **A new section, [Email marketing](email-marketing/overview).** Per-project contact lists; imports by CSV (with a column map), by pasting addresses, or one at a time — all through one pipeline whose counters always add up; project-wide suppression; RFC 8058 one-click unsubscribe; double opt-in sign-up forms; drip sequences with tracks and conditions on clicks and product events; click tracking; and product events (`signed_up`, `activated`). [API reference](email-marketing/api) · [product integration recipe](email-marketing/product-integration).
+- **A new key flag, `can_manage_email_marketing`** (default off), on API keys and access tokens. It is a flag, not a service permission, because the endpoints return personal data — and every one of them except `subscribe` refuses a browser `Origin`.
+- **Email templates:** `is_marketing` and `layout` on [create](api/email-templates). A marketing template belongs to one project, is invisible to other projects' keys, and cannot be sent through `POST /emails/send`.
+- `openapi.json` gains the 49 new paths (both planes) under the `Email marketing` tag.
+
 ## 2026-09-16 — the vault takes a file of any format, and the OTA signing key has a home
 
 - **Not yet live.** Backend `2026.09.16.1` is built and committed; these endpoints behave as documented once it is deployed.
