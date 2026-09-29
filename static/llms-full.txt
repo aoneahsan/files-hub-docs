@@ -145,7 +145,7 @@ Errors return a JSON body `{ "message": "..." }` with an appropriate status code
   `POST …/email-lists/{list}/imports` · sequences `/api/v1/email-sequences` (+ `/activate`, `/enroll`,
   `/steps/{key}/test`) · events `POST /api/v1/email-contacts/events` (idempotent) · settings
   `/api/v1/email-marketing/settings`. Management plane: the same under `/api/public/v1/projects/{project}/`.
-- Docs: https://fileshub-docs.zaions.com/docs/email-marketing/overview
+- Docs: https://fileshub-docs.zaions.com/email-marketing/overview
 
 ## Jobs & status
 

@@ -49,7 +49,7 @@
     },
     {
       "name": "Email marketing",
-      "description": "Lists, contacts, imports, suppressions, drip sequences, events and the public subscribe form. See https://fileshub-docs.zaions.com/docs/email-marketing/overview"
+      "description": "Lists, contacts, imports, suppressions, drip sequences, events and the public subscribe form. See https://fileshub-docs.zaions.com/email-marketing/overview"
     }
   ],
   "paths": {
