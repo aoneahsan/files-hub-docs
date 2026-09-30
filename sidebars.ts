@@ -88,6 +88,7 @@ const sidebars: SidebarsConfig = {
         'management-api/supabase-accounts',
         'management-api/project-vault',
         'management-api/developer-accounts',
+        'management-api/payment-accounts',
         'management-api/debug-keystores',
         'management-api/credential-checks',
         'management-api/google-oauth-keepalive',

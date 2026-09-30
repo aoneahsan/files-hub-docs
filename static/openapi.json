@@ -11235,6 +11235,217 @@
           }
         ]
       }
+    },
+    "/payment-accounts/providers": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List the payment-account provider registry",
+        "description": "Every declared payment provider, its fields, which are secret and the env var each maps to. Describes the SCHEMA, never a record, so any valid token may read it. Added in backend 2026.09.30.3.",
+        "operationId": "listPaymentAccountProviders",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          }
+        }
+      }
+    },
+    "/payment-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List payment accounts",
+        "description": "Paginated. Filters `q`, `provider`, `email`, `active`. Non-secret identifiers and `has.*` presence flags only. Requires `can_read_payment_accounts` (default false); no other scope implies it. Added in backend 2026.09.30.3.",
+        "operationId": "listPaymentAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      }
+    },
+    "/payment-accounts/{account}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Show a payment account",
+        "description": "Non-secret identifiers (account ids, publishable keys, client ids) and `has.*` presence flags; never a secret value. Requires `can_read_payment_accounts` (default false); no other scope implies it. Added in backend 2026.09.30.3.",
+        "operationId": "showPaymentAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or `provider:email`. A bare email is refused \u2014 one login often owns accounts at several providers."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      }
+    },
+    "/payment-accounts/{account}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal a payment account's credentials",
+        "description": "Every stored value and an `env.node` block \u2014 never a `vite`/`next` block. Always audited with field NAMES only. `409` when nothing is stored yet. Requires `can_read_payment_accounts` (default false); no other scope implies it. Added in backend 2026.09.30.3.",
+        "operationId": "revealPaymentAccount",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or `provider:email`. A bare email is refused \u2014 one login often owns accounts at several providers."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          },
+          "409": {
+            "description": "Nothing stored to reveal"
+          }
+        }
+      }
+    },
+    "/projects/{project}/payment-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List the payment accounts a project sells through",
+        "description": "Pointers only \u2014 no value. Accounts are attached to projects in the dashboard. Requires `can_read_payment_accounts` (default false); no other scope implies it. Added in backend 2026.09.30.3.",
+        "operationId": "listProjectPaymentAccounts",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, public id or slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Missing scope \u2014 `details.required_scope` names it"
+          },
+          "404": {
+            "description": "Not found, or out of this token's project scope"
+          }
+        }
+      }
     }
   },
   "components": {

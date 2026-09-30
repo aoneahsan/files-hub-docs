@@ -48,6 +48,7 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "can_read_supabase_tokens": false,
     "can_read_ai_accounts": false,
     "can_read_developer_accounts": false,
+    "can_read_payment_accounts": false,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -65,7 +66,7 @@ with `'projects' in data` (or `data.projects !== undefined`), never `data.projec
 field on this page is always present.
 :::
 
-Four further booleans are **separate, off-by-default axes**, independent of the project scope:
+These booleans are **separate, off-by-default axes**, independent of the project scope:
 
 | Flag | Gates |
 |---|---|
@@ -76,6 +77,7 @@ Four further booleans are **separate, off-by-default axes**, independent of the 
 | `can_read_supabase_tokens` | A [Supabase account's personal access token](./supabase-accounts.md) (`sbp_…`) — the whole account, not one project |
 | `can_write_vault` | Writing project credentials, and assigning accounts to projects. Implies read, **not** reveal — a caller populating a vault needs to see which fields are already set, and does not need every secret handed back |
 | `can_read_ai_accounts` | An [AI provider account's](./project-vault.md) key — account-wide, so it spends that account's balance and reaches every model on it |
+| `can_read_payment_accounts` | [Payment accounts](./payment-accounts.md) — Stripe, PayPal, Polar.sh and other payment-provider keys. They move money, so **no other flag grants it** |
 
 **Two imply `can_read_vault`: `can_reveal_vault` and `can_write_vault`.** Nothing else implies anything —
 each remaining flag grants only itself. In particular:

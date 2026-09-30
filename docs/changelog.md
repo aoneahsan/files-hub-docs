@@ -12,6 +12,13 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-09-30 — payment accounts: Stripe, PayPal, Polar.sh and 19 more
+
+- **Not yet live.** Backend `2026.09.30.3` is built and committed; these endpoints behave as documented once it is deployed. Check `GET /api/version`.
+- **A new page, [Payment accounts](management-api/payment-accounts).** Keys, webhook secrets and login details for 22 payment providers, entered in the dashboard. Only the account email is required.
+- **A new token flag, `can_read_payment_accounts`** (default off). No other flag grants it.
+- `openapi.json` gains the 5 read-only paths.
+
 ## 2026-09-29 — email marketing: lists, imports, drip sequences, one-click unsubscribe
 
 - **Not yet live.** The backend release that carries it is built and committed; these endpoints behave as documented once it is deployed. Check `GET /api/version`.
