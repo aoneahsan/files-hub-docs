@@ -29,6 +29,25 @@ a campaign can never affect password-reset mail.
 | **Tracking and events** | Link clicks (scanner clicks filtered out) and events your product reports (`signed_up`, `activated`) steer the sequence immediately. |
 | **Designed in FilesHub** | A branded layout — your name, colour and logo, the footer, postal address and unsubscribe line — wraps each email's content. |
 
+## Writing the content — blocks
+
+A template's body is plain, inline-styled HTML. The layout supplies the header, the footer, the unsubscribe
+line and a set of **content blocks** that stay readable in every mail client:
+
+| Block | Use it for | On phones |
+|---|---|---|
+| Hook and one-line summary | What the email is about, and what your product is, in a few words | Unchanged |
+| Hero image | One real screen of your product on a lightly tinted panel | Shrinks to 70% width |
+| Section heading | Splitting the email so a skimmer reads only the headings | Unchanged |
+| Big bullets | The problem or the value: check mark, bold lead phrase, a few words | Unchanged |
+| Feature row | An image beside a title and one sentence | Image stacks above the text |
+| Callout | The offer or the key promise, in text | Unchanged |
+
+Mark the blocks with the classes the layout reads: `fh-col` and `fh-col-img` on a feature row's two cells,
+`fh-hero-img` and `fh-feat-img` on images, and `fh-panel` on a tinted panel (it turns dark in dark mode).
+Images must be absolute `https` URLs, ideally public FilesHub objects, under 150 KB each, with alt text that
+carries their meaning. The panel tint is your brand colour mixed 8% over white.
+
 ## What it does not do
 
 - It never sends to scraped or bought lists: a row without a consent basis is refused.
