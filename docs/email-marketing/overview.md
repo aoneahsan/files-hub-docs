@@ -43,6 +43,10 @@ line and a set of **content blocks** that stay readable in every mail client:
 | Feature row | An image beside a title and one sentence | Image stacks above the text |
 | Callout | The offer or the key promise, in text | Unchanged |
 
+Put the **button above the fold**: straight after the one-line summary, so it shows on a phone without
+scrolling. Then give the reader who is hooked the depth: sections, feature rows, how to start, and a
+callout. End with the **same button again**. One action, offered twice.
+
 Mark the blocks with the classes the layout reads: `fh-col` and `fh-col-img` on a feature row's two cells,
 `fh-hero-img` and `fh-feat-img` on images, and `fh-panel` on a tinted panel (it turns dark in dark mode).
 Images must be absolute `https` URLs, ideally public FilesHub objects, under 150 KB each, with alt text that
