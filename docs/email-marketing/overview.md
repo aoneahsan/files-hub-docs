@@ -73,6 +73,11 @@ whole window. At 45 a day over a 9-hour window that is one email about every 12 
 minutes between campaign sends. The gap is never shorter than the minimum, so a cap the gap cannot reach inside
 the window carries over to the next day.
 
+**Every sending day gets a report** (from `2026.10.03.3`). A scheduled job on the server writes one row per project
+per day: how many went out against that day's cap, when, how far apart, from which mailbox, and what was measured
+afterwards. A day that broke a rule (over the cap, sent as a burst, a mailbox that did not rest) is marked "needs a
+look". The reports are in the admin under Email Marketing → Daily Reports and on the API.
+
 A project pauses itself automatically when hard bounces pass its threshold or a spam
 complaint arrives, until an admin clears the pause.
 

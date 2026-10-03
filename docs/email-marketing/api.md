@@ -126,6 +126,23 @@ when you have no token. `event` is a lowercase slug; `clicked`, `unsubscribed`, 
 `confirmed` are reserved. 201 the first time, 200 `{duplicate: true}` after; an unknown or another project's
 token is 404. `POST /email-contacts/events/batch` takes up to 100 `{events: [...]}` and answers per item.
 
+## Daily reports
+
+From `2026.10.03.3`. FilesHub builds one report per project per sending day, every hour, on the server. Nothing
+has to be run to get it.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/email-marketing/reports` | `?from=&to=` (`YYYY-MM-DD`, the project's timezone) and `?status=`; newest first, paginated |
+| `GET` | `/email-marketing/reports/{day}` | One day, plus `sends`: time, mailbox, step and the wait since the send before (first 200) |
+
+A report: `day`, `status` (`in_progress` · `complete` · `flagged`), `cap_that_day`, `sent`, `failed`,
+`first_sent_at`, `last_sent_at`, `gaps {min_seconds, median_seconds, max_seconds}`, `paced`, `per_mailbox`,
+`per_step`, `unique_clicks`, `unsubscribes`, `bounces`, `complaints`, `flags`, `note`, `generated_at`.
+Flags: `over_cap`, `burst`, `gap_under_minimum`, `mailbox_not_rested`, `project_paused`,
+`nothing_sent_with_due_work`. A report never contains a recipient, a delivery rate or an open rate. Clicks for a
+day keep updating for 7 days.
+
 ## Settings
 
 `GET` · `PATCH /email-marketing/settings` — `enabled`, `from_name`, `reply_to`, `postal_address`, brand
