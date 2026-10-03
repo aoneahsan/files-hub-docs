@@ -5,7 +5,7 @@ description: Endpoints for FilesHub email marketing — lists, contacts, paste a
 keywords: [email marketing api, POST /email-lists, contact import api, paste import, csv import api, sequences api, enroll contacts, email events api, subscribe endpoint, suppression api]
 tags: [email-marketing]
 last_update:
-  date: 2026-09-29
+  date: 2026-10-03
   author: Ahsan Mahmood
 ---
 
@@ -130,7 +130,9 @@ token is 404. `POST /email-contacts/events/batch` takes up to 100 `{events: [...
 
 `GET` · `PATCH /email-marketing/settings` — `enabled`, `from_name`, `reply_to`, `postal_address`, brand
 (`brand_name`, `brand_color`, `brand_logo_url`, `brand_website_url`), `daily_cap`, `send_window_start/end`,
-`timezone`, `bounce_pause_threshold_percent`. On the management plane, `accounts: ["apps@…"]` chooses the
+`timezone`, `bounce_pause_threshold_percent`, and the pacing fields `send_gap_min_seconds` (default 300),
+`send_gap_max_seconds` (default 900, never below the minimum) and `spread_sends` (default true). The response
+carries a `pacing` block: `{min_gap_seconds, max_gap_seconds, spread, next_send_at, max_per_day}`. On the management plane, `accounts: ["apps@…"]` chooses the
 project's marketing mailboxes (empty = every active marketing mailbox). `?dns=1` adds each mailbox's
 SPF/DKIM/DMARC check.
 

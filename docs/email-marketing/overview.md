@@ -5,7 +5,7 @@ description: FilesHub email marketing keeps per-project contact lists, imports c
 keywords: [fileshub email marketing, drip sequences, contact lists, csv import, unsubscribe, list-unsubscribe, double opt-in, suppression, email campaigns api]
 tags: [email-marketing]
 last_update:
-  date: 2026-09-29
+  date: 2026-10-03
   author: Ahsan Mahmood
 ---
 
@@ -65,7 +65,15 @@ carries their meaning. The panel tint is your brand colour mixed 8% over white.
 A scheduled job runs every minute and sends the steps that are due, inside the project's sending window and
 under its daily cap. Each email leaves from one of the project's **marketing mailboxes** (least-used first)
 and never from a transactional one. New mailboxes start at a low daily limit and are raised by hand as the
-numbers stay healthy. A project pauses itself automatically when hard bounces pass its threshold or a spam
+numbers stay healthy.
+
+**Sends are paced** (from `2026.10.03.1`). A project sends one marketing email at a time and waits a random gap
+before the next: 5 to 15 minutes by default. With "spread sends" on, the gaps stretch so the daily cap covers the
+whole window. At 45 a day over a 9-hour window that is one email about every 12 minutes. A mailbox also rests two
+minutes between campaign sends. The gap is never shorter than the minimum, so a cap the gap cannot reach inside
+the window carries over to the next day.
+
+A project pauses itself automatically when hard bounces pass its threshold or a spam
 complaint arrives, until an admin clears the pause.
 
 ## Access
