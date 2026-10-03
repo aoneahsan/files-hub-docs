@@ -132,7 +132,7 @@ token is 404. `POST /email-contacts/events/batch` takes up to 100 `{events: [...
 (`brand_name`, `brand_color`, `brand_logo_url`, `brand_website_url`), `daily_cap`, `send_window_start/end`,
 `timezone`, `bounce_pause_threshold_percent`, and the pacing fields `send_gap_min_seconds` (default 300),
 `send_gap_max_seconds` (default 900, never below the minimum) and `spread_sends` (default true). The response
-carries a `pacing` block: `{min_gap_seconds, max_gap_seconds, spread, next_send_at, max_per_day}`. On the management plane, `accounts: ["apps@…"]` chooses the
+carries a `pacing` block: `{min_gap_seconds, max_gap_seconds, spread, next_send_at, max_per_day}`. Since `2026.10.03.2` a project also warms up: `warmup_start` (default 10) is its cap on the first sending day and `warmup_step_per_day` (default 3) is added each day until `daily_cap` is reached (`warmup_start: 0` turns it off); the response reports today's cap as `daily_cap_today` beside a `warmup` block. A sequence step accepts `track_clicks` (default true); with false the email keeps its real links and that step records no clicks. On the management plane, `accounts: ["apps@…"]` chooses the
 project's marketing mailboxes (empty = every active marketing mailbox). `?dns=1` adds each mailbox's
 SPF/DKIM/DMARC check.
 
