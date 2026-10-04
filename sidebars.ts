@@ -74,6 +74,9 @@ const sidebars: SidebarsConfig = {
         'email-marketing/overview',
         'email-marketing/api',
         'email-marketing/product-integration',
+        'email-marketing/people-pool',
+        'email-marketing/cross-campaign-gap',
+        'email-marketing/send-log',
       ],
     },
     {

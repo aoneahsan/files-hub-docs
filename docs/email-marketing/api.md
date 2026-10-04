@@ -40,12 +40,13 @@ before a double opt-in form can accept sign-ups.
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/email-lists/{list}/contacts` | `?status=&tag=&q=` (prefix search on email and names) |
+| `GET` | `/email-lists/{list}/contacts` | `?status=&tag=&q=` (prefix search on email and names). Each contact carries `person` and `last_campaign_email_at` (any project) |
 | `POST` | `/email-lists/{list}/contacts` | One contact through the pipeline: 201 created · 200 `{duplicate: true}` · 422 with a `code` (`invalid_syntax`, `no_mx`, `missing_consent`, `suppressed`) |
 | `GET` · `PATCH` | `/email-contacts/{contact}` | Names, tags, custom fields, source, reason — never `status` |
 | `POST` | `/email-contacts/{contact}/unsubscribe` | Suppress across the project |
 | `POST` | `/email-lists/{list}/contacts/bulk-tag` | `{contact_ids? or filter?, add?, remove?}` |
-| `POST` | `/email-lists/{list}/imports` | Paste or CSV — see below |
+| `GET` | `/email-contacts/{contact}/history` | The person's timeline, limited to this project. See [the people pool](./people-pool.md) |
+| `POST` | `/email-lists/{list}/imports` | Paste, CSV, or `method: "pool"` to fill the list [from the pool](./people-pool.md#fill-a-list-from-the-pool) with no upload |
 | `GET` | `/email-imports/{import}` | Status, counters, progress |
 | `GET` | `/email-imports/{import}/rejected` | `text/csv`: `row_number, email, reason` |
 | `POST` | `/email-imports/{import}/resume` | Continue a failed CSV import from where it stopped |
@@ -70,6 +71,8 @@ holds personal data), then `{"method":"csv","object":"<public_id>","column_map":
 Up to 500 rows finish in the request (201); larger files run in the background, 500 rows a minute (202) —
 poll the import. Without `column_map`, headers are mapped by name (`email`, `first name`, `linkedin profile url`, …).
 The counters always add up to `total_rows`, and importing the same rows again accepts none of them.
+`existing_person` says how many accepted rows were people the [pool](./people-pool.md) already knew.
+`defaults.consent_basis` accepts `opt_in`, `legitimate_interest`, `existing_relationship` and `new_contact`.
 
 ## Suppressions
 
@@ -87,9 +90,10 @@ Removing a suppression is an admin action in the dashboard, with a written reaso
 | `GET` · `POST` | `/email-sequences` | Create with `{name, list, max_recipients, exit_events?, enroll_tags?, auto_enroll_new_contacts?, track_opens?, steps: [...]}` |
 | `GET` · `PATCH` | `/email-sequences/{sequence}` | Detail includes steps (with the condition in plain words) and measured stats. While a draft, `steps` replaces all; once running, only a step's `template`, `delay_hours` and `variables` change |
 | `GET` | `/email-sequences/{sequence}/check` | The activation checks, without activating |
+| `GET` | `/email-sequences/{sequence}/report` | The stored [campaign report](./send-log.md#campaign-report) |
 | `POST` | `…/activate` · `…/resume` · `…/pause` · `…/finish` | Activation returns 422 `activation_refused` listing **every** problem |
-| `POST` | `/email-sequences/{sequence}/enroll` | `{all: true}` · `{tags: [...]}` · `{contact_ids: [...]}` (≤ 500) → `{enrolled, already, refused_suppressed, refused_status}` |
-| `GET` | `/email-sequences/{sequence}/enrollments` | `?state=&track=`. Each row carries `next_step`, `next_due_at` and `created_at` |
+| `POST` | `/email-sequences/{sequence}/enroll` | `{all: true}` · `{tags: [...]}` · `{contact_ids: [...]}` (≤ 500) → `{enrolled, already, refused_suppressed, refused_status, will_wait_for_gap}`. See [the gap between campaigns](./cross-campaign-gap.md) |
+| `GET` | `/email-sequences/{sequence}/enrollments` | `?state=&track=&waiting=gap`. Each row carries `next_step`, `next_due_at`, `wait_reason`, `wait_until` and `created_at` |
 | `POST` | `/email-sequences/{sequence}/enrollments/reschedule` | Since `2026.10.04.1`. Moves the due date of enrollments still waiting for their next step. `filter` (at least one of `next_step`, `tags`, `enrolled_from`, `enrolled_to`) and exactly one of `next_due_at` (ISO, future) or `recompute: true` (previous step's send time, or track entry, plus the step's `delay_hours`). `dry_run: true` only counts. → `{matched, moved, dry_run}`. Never moves a row being sent or already sent. Refusals: `reschedule_filter_required`, `reschedule_target_required`, `unknown_step` |
 | `POST` | `/email-sequences/{sequence}/steps/{key}/test` | `{to}` — a `[TEST]` copy; no enrollment moves |
 
@@ -135,18 +139,20 @@ has to be run to get it.
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/email-marketing/reports` | `?from=&to=` (`YYYY-MM-DD`, the project's timezone) and `?status=`; newest first, paginated |
+| `GET` | `/email-marketing/sends` | The [send log](./send-log.md): one row per campaign send |
 | `GET` | `/email-marketing/reports/{day}` | One day, plus `sends`: time, mailbox, step and the wait since the send before (first 200) |
 
 A report: `day`, `status` (`in_progress` · `complete` · `flagged`), `cap_that_day`, `sent`, `failed`,
 `first_sent_at`, `last_sent_at`, `gaps {min_seconds, median_seconds, max_seconds}`, `paced`, `per_mailbox`,
-`per_step`, `unique_clicks`, `unsubscribes`, `bounces`, `complaints`, `flags`, `note`, `generated_at`.
+`per_step`, `unique_clicks`, `unsubscribes`, `bounces`, `complaints`, `gap_deferrals`, `flags`, `note`, `generated_at`.
 Flags: `over_cap`, `burst`, `gap_under_minimum`, `mailbox_not_rested`, `project_paused`,
 `nothing_sent_with_due_work`. A report never contains a recipient, a delivery rate or an open rate. Clicks for a
 day keep updating for 7 days.
 
 ## Settings
 
-`GET` · `PATCH /email-marketing/settings` — `enabled`, `from_name`, `reply_to`, `postal_address`, brand
+`GET` · `PATCH /email-marketing/settings` (the response also carries the account-wide, read-only
+`cross_campaign_gap_days`) — `enabled`, `from_name`, `reply_to`, `postal_address`, brand
 (`brand_name`, `brand_color`, `brand_logo_url`, `brand_website_url`), `daily_cap`, `send_window_start/end`,
 `timezone`, `bounce_pause_threshold_percent`, and the pacing fields `send_gap_min_seconds` (default 300),
 `send_gap_max_seconds` (default 900, never below the minimum) and `spread_sends` (default true). The response

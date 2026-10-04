@@ -10366,6 +10366,289 @@
         ]
       }
     },
+    "/email-marketing/sends": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Send log",
+        "description": "Since 2026.10.04.5. One row per campaign send of the project, newest first. Test sends are left out unless include_tests=1.",
+        "operationId": "listEmailSends",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "mailbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "clicked",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "include_tests",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          }
+        ]
+      }
+    },
+    "/email-sequences/{sequence}/report": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Campaign report",
+        "description": "Since 2026.10.04.5. The stored report of one sequence (queue, forecast, per step, per day, per source) and built_at. Rebuilt hourly on the server; report is null before the first build.",
+        "operationId": "getEmailSequenceReport",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/email-contacts/{contact}/history": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Contact history",
+        "description": "Since 2026.10.04.5. The timeline of the contact's person, limited to this project, newest first.",
+        "operationId": "getEmailContactHistory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "contact",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/projects/{project}/email-sequences/{sequence}/enrollments": {
       "get": {
         "tags": [
@@ -10584,6 +10867,337 @@
         "security": [
           {
             "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/email-marketing/sends": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Send log",
+        "description": "Since 2026.10.04.5. One row per campaign send of the project, newest first. Test sends are left out unless include_tests=1. Management plane: needs the token's can_manage_email_marketing scope; envelope {data} / {error}.",
+        "operationId": "listEmailSendsPublic",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sequence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "mailbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "clicked",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "include_tests",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/projects/{project}/email-sequences/{sequence}/report": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Campaign report",
+        "description": "Since 2026.10.04.5. The stored report of one sequence (queue, forecast, per step, per day, per source) and built_at. Rebuilt hourly on the server; report is null before the first build. Management plane: needs the token's can_manage_email_marketing scope; envelope {data} / {error}.",
+        "operationId": "getEmailSequenceReportPublic",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/projects/{project}/email-contacts/{contact}/history": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Contact history",
+        "description": "Since 2026.10.04.5. The timeline of the contact's person, limited to this project, newest first. Management plane: needs the token's can_manage_email_marketing scope; envelope {data} / {error}.",
+        "operationId": "getEmailContactHistoryPublic",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "contact",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ]
       }
@@ -11698,6 +12312,537 @@
             "description": "Not found, or out of this token's project scope"
           }
         }
+      }
+    },
+    "/email-people": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "List people",
+        "description": "Since 2026.10.04.5. The shared people pool. Management plane only; needs can_manage_email_marketing. A token limited to some projects sees only people in a project it reaches.",
+        "operationId": "listEmailPeople",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "consent_basis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "global_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "sent_within_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "not_sent_within_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/email-people/{person}": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Get a person",
+        "description": "Since 2026.10.04.5. Identity, memberships (projects and lists) and what is planned next. 404 PERSON_NOT_FOUND outside the token's reach. Management plane only; needs can_manage_email_marketing. A token limited to some projects sees only people in a project it reaches.",
+        "operationId": "getEmailPerson",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/email-people/{person}/history": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Person history",
+        "description": "Since 2026.10.04.5. The timeline across products, newest first. Management plane only; needs can_manage_email_marketing. A token limited to some projects sees only people in a project it reaches.",
+        "operationId": "getEmailPersonHistory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/email-people/{person}/stop": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Stop all mail to a person",
+        "description": "Since 2026.10.04.5. Sets global_status to unsubscribed_all: no project mails the address again. Audited. Reversed only in Nova. Management plane only; needs can_manage_email_marketing. A token limited to some projects sees only people in a project it reaches.",
+        "operationId": "stopEmailPerson",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 255
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/email-marketing/account-settings": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Get the account settings",
+        "description": "Since 2026.10.04.5. cross_campaign_gap_days: days a person waits between two different campaigns (0 = off). Management plane only; needs can_manage_email_marketing. A token limited to some projects sees only people in a project it reaches.",
+        "operationId": "getEmailMarketingAccountSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Change the account settings",
+        "description": "Since 2026.10.04.5. cross_campaign_gap_days from 0 to 365; needs a token for every project. 422 GAP_OUT_OF_RANGE otherwise. Management plane only; needs can_manage_email_marketing. A token limited to some projects sees only people in a project it reaches.",
+        "operationId": "updateEmailMarketingAccountSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cross_campaign_gap_days"
+                ],
+                "properties": {
+                  "cross_campaign_gap_days": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 365
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
       }
     }
   },
