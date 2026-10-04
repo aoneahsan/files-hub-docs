@@ -89,7 +89,8 @@ Removing a suppression is an admin action in the dashboard, with a written reaso
 | `GET` | `/email-sequences/{sequence}/check` | The activation checks, without activating |
 | `POST` | `…/activate` · `…/resume` · `…/pause` · `…/finish` | Activation returns 422 `activation_refused` listing **every** problem |
 | `POST` | `/email-sequences/{sequence}/enroll` | `{all: true}` · `{tags: [...]}` · `{contact_ids: [...]}` (≤ 500) → `{enrolled, already, refused_suppressed, refused_status}` |
-| `GET` | `/email-sequences/{sequence}/enrollments` | `?state=&track=` |
+| `GET` | `/email-sequences/{sequence}/enrollments` | `?state=&track=`. Each row carries `next_step`, `next_due_at` and `created_at` |
+| `POST` | `/email-sequences/{sequence}/enrollments/reschedule` | Since `2026.10.04.1`. Moves the due date of enrollments still waiting for their next step. `filter` (at least one of `next_step`, `tags`, `enrolled_from`, `enrolled_to`) and exactly one of `next_due_at` (ISO, future) or `recompute: true` (previous step's send time, or track entry, plus the step's `delay_hours`). `dry_run: true` only counts. → `{matched, moved, dry_run}`. Never moves a row being sent or already sent. Refusals: `reschedule_filter_required`, `reschedule_target_required`, `unknown_step` |
 | `POST` | `/email-sequences/{sequence}/steps/{key}/test` | `{to}` — a `[TEST]` copy; no enrollment moves |
 
 A step:

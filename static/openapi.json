@@ -10242,6 +10242,130 @@
         ]
       }
     },
+    "/email-sequences/{sequence}/enrollments/reschedule": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Reschedule waiting enrollments",
+        "description": "Since 2026.10.04.1. Moves the due date of enrollments still waiting for their next step. Body: filter (at least one of next_step, tags, enrolled_from, enrolled_to) and exactly one of next_due_at (ISO 8601, in the future) or recompute: true (previous step send time, or track entry time, plus the step delay_hours). dry_run: true only counts. A row the engine has claimed, or whose next step was already sent, is never moved. Refusals: reschedule_filter_required, reschedule_target_required, unknown_step.",
+        "operationId": "rescheduleEmailEnrollments",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "matched": {
+                          "type": "integer"
+                        },
+                        "moved": {
+                          "type": "integer"
+                        },
+                        "dry_run": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailMarketingError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "filter"
+                ],
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "properties": {
+                      "next_step": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "enrolled_from": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "enrolled_to": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  },
+                  "next_due_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recompute": {
+                    "type": "boolean"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/projects/{project}/email-sequences/{sequence}/enrollments": {
       "get": {
         "tags": [
@@ -10320,6 +10444,135 @@
               "type": "string"
             },
             "description": ""
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/email-sequences/{sequence}/enrollments/reschedule": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Reschedule waiting enrollments",
+        "description": "Since 2026.10.04.1. Moves the due date of enrollments still waiting for their next step. Body: filter (at least one of next_step, tags, enrolled_from, enrolled_to) and exactly one of next_due_at (ISO 8601, in the future) or recompute: true (previous step send time, or track entry time, plus the step delay_hours). dry_run: true only counts. A row the engine has claimed, or whose next step was already sent, is never moved. Refusals: reschedule_filter_required, reschedule_target_required, unknown_step. Management plane: needs the token's can_manage_email_marketing scope; envelope {data} / {error}.",
+        "operationId": "rescheduleEmailEnrollmentsPublic",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "matched": {
+                          "type": "integer"
+                        },
+                        "moved": {
+                          "type": "integer"
+                        },
+                        "dry_run": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "filter"
+                ],
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "properties": {
+                      "next_step": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "enrolled_from": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "enrolled_to": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  },
+                  "next_due_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recompute": {
+                    "type": "boolean"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "servers": [
