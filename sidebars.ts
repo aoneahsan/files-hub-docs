@@ -77,6 +77,7 @@ const sidebars: SidebarsConfig = {
         'email-marketing/people-pool',
         'email-marketing/cross-campaign-gap',
         'email-marketing/send-log',
+        'email-marketing/batches',
       ],
     },
     {
