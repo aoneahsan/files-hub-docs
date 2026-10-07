@@ -12844,6 +12844,51 @@
           }
         ]
       }
+    },
+    "/email-marketing/warmup": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Get the mailbox warm-up status",
+        "description": "Since 2026.10.07.2. Per marketing mailbox, the last 7 days of the server-side warm-up (mailboxes sending short notes to each other, read back over IMAP): sent, send_failed, received, found_inbox, found_spam, rescued, not_found, replied, inbox_share (null until something is found), plus warmup_enabled, warmup_started_on, warmup_max, target_today, sent_today, daily_limit and emails_sent_today. Top level: days, window {from_hour,to_hour,timezone} and ramp {start,step_per_day,default_max}. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "getEmailMarketingWarmup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "parameters": [],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
     }
   },
   "components": {
