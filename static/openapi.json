@@ -16844,6 +16844,19 @@
           "stats": {
             "type": "object",
             "description": "Measured only: enrolled, active, completed, exited, suppressed, failed, unsubscribed, bounced, complained, per-step sent/failed/unique_clicks"
+          },
+          "auto_topup_enabled": {
+            "type": "boolean",
+            "description": "Hourly, when fewer people than auto_topup_below are waiting for their first email, assign one random eligible contact batch to this campaign."
+          },
+          "auto_topup_below": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 100000,
+            "description": "Waiting-enrolment threshold for the automatic top-up. Required when auto_topup_enabled is true (422 auto_topup_below_required)."
           }
         }
       },
@@ -16883,6 +16896,19 @@
             "items": {
               "$ref": "#/components/schemas/EmailSequenceStep"
             }
+          },
+          "auto_topup_enabled": {
+            "type": "boolean",
+            "description": "Hourly, when fewer people than auto_topup_below are waiting for their first email, assign one random eligible contact batch to this campaign."
+          },
+          "auto_topup_below": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 100000,
+            "description": "Waiting-enrolment threshold for the automatic top-up. Required when auto_topup_enabled is true (422 auto_topup_below_required)."
           }
         }
       },
