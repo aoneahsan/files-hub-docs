@@ -4,13 +4,20 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-09-16
+  date: 2026-10-10
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-10-10 — AI credit routing: which AI account and tier a project uses
+
+- **Not yet live.** The backend release that carries it (`2026.10.10.1`) is built and committed; check `GET /api/version`.
+- **Three new routes**, described in [Management API endpoints](management-api/endpoints#ai-credit-routing): `GET /projects/{project}/ai/route` and `POST /projects/{project}/ai/usage` on the Management plane (`can_read_ai_accounts`), and the browser-safe `GET /api/v1/ai/status`.
+- AI accounts gain credit grants with expiry dates, reserved and shared accounts, and a balance-capped tier. The account records in `GET /ai-accounts` now carry a `credits` block.
+- `openapi.json` gains the 3 paths.
 
 ## 2026-09-30 — payment accounts: Stripe, PayPal, Polar.sh and 19 more
 

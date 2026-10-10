@@ -12889,6 +12889,392 @@
           }
         ]
       }
+    },
+    "/projects/{project}/ai/route": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Which AI account, key and tier this project uses now",
+        "description": "AI credit routing. FilesHub picks the account (assigned accounts are reserved for their projects; others borrow only above the account's reserve; the all-projects account is the default and failover; soonest-expiring credit first; paid accounts never) and caps the tier by the remaining balance. Call it from a SERVER only - the response holds a live provider key and needs can_read_ai_accounts; every read is recorded as a reveal. Cache it until refresh_after (also sent as Cache-Control). Use the highest tier at or below both max_tier and the user's own plan. Never hardcode a model id.",
+        "operationId": "aiRoute",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug. Out of the token's scope answers 404."
+          },
+          {
+            "name": "capability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "chat",
+                "transcription"
+              ],
+              "default": "chat"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean",
+                          "description": "false: no account with usable credit - pause AI features until refresh_after; nothing is billed."
+                        },
+                        "capability": {
+                          "type": "string"
+                        },
+                        "via": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "explicit",
+                            "all_projects",
+                            "shared",
+                            null
+                          ]
+                        },
+                        "max_tier": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "economy",
+                            "standard",
+                            "enhanced",
+                            null
+                          ]
+                        },
+                        "refresh_after": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "account": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "provider": {
+                              "type": "string"
+                            },
+                            "base_url": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "organization_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "api_key": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "tiers": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "model": {
+                                "type": "string"
+                              },
+                              "effort": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "credits": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "billing_mode": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "healthy",
+                                "low",
+                                "expired",
+                                "no_credits",
+                                "unknown"
+                              ]
+                            },
+                            "remaining_usd": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "expires_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            },
+                            "hours_left": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "synced_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            }
+                          }
+                        },
+                        "note": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/projects/{project}/ai/usage": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Report AI usage after the calls",
+        "description": "Batches of up to 100 items, added to hourly buckets. This is how spend is known for an account without an Anthropic Admin key. An item naming an account this project cannot be routed to is refused with AI_ACCOUNT_NOT_ROUTABLE. Needs can_read_ai_accounts.",
+        "operationId": "aiUsageReport",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id, ULID public_id, or slug. Out of the token's scope answers 404."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "account_id",
+                        "model"
+                      ],
+                      "properties": {
+                        "account_id": {
+                          "type": "integer"
+                        },
+                        "model": {
+                          "type": "string"
+                        },
+                        "input_tokens": {
+                          "type": "integer"
+                        },
+                        "output_tokens": {
+                          "type": "integer"
+                        },
+                        "cache_read_tokens": {
+                          "type": "integer"
+                        },
+                        "cache_write_tokens": {
+                          "type": "integer"
+                        },
+                        "requests": {
+                          "type": "integer"
+                        },
+                        "occurred_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recorded": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
+    },
+    "/ai/status": {
+      "get": {
+        "summary": "Whether this project's AI features are available, and the best tier its credits allow",
+        "description": "Browser-safe half of AI credit routing: no key, no account, no balance - only available, max_tier and refresh_after. Safe to call with a key that ships in a frontend. Read it once per refresh_after (also sent as Cache-Control), never on a polling loop.",
+        "operationId": "aiStatus",
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "capability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "chat",
+                "transcription"
+              ],
+              "default": "chat"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        },
+                        "capability": {
+                          "type": "string"
+                        },
+                        "max_tier": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "economy",
+                            "standard",
+                            "enhanced",
+                            null
+                          ]
+                        },
+                        "refresh_after": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "description": "Unknown capability"
+          }
+        }
+      }
     }
   },
   "components": {

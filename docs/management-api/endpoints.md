@@ -373,6 +373,30 @@ is a snapshot of today's projects and does not. Sending `all_existing` and `proj
 for reading one project's configuration, while an AI key authorises a whole provider account. Full guide:
 **[Project vault](./project-vault.md#ai-provider-accounts-are-linked-not-copied)**.
 
+### AI credit routing
+
+**Not yet live** — backend `2026.10.10.1`. A product never hardcodes an AI model or key. Its **server** asks
+FilesHub which account and tier to use, calls the provider itself, then reports what it spent:
+
+| Route | Plane / scope | Returns |
+|---|---|---|
+| `GET /projects/{project}/ai/route?capability=chat` | Management, `can_read_ai_accounts` | `available`, `account`, `api_key`, `max_tier`, `tiers` (model + effort per tier), `credits`, `refresh_after` |
+| `POST /projects/{project}/ai/usage` | Management, `can_read_ai_accounts` | `202 {recorded}`; batches of up to 100 items |
+| `GET /api/v1/ai/status` | data plane, `X-API-Key` | `available`, `max_tier`, `refresh_after` only. Safe in a browser bundle |
+
+- **Which account.** Projects assigned to an account reserve it. Other projects borrow it only when *Allow
+  Other Projects* is on, and only while its balance is above its reserve. Projects with no assigned account use
+  the *All Projects* account, which is also the failover. Credit that expires soonest is spent first. Accounts
+  marked `paid` are never routed.
+- **Which tier.** `economy` < `standard` < `enhanced`. Use the highest tier at or below **both** `max_tier` and
+  the user's own plan. When the balance is low, `max_tier` drops to `economy`.
+- **When to ask again.** The answer changes at most hourly. Cache it until `refresh_after`, which is also sent
+  as `Cache-Control`, and do not poll.
+- `available: false` means no account has usable credit. Pause the AI features until `refresh_after`; nothing
+  is billed.
+- 🔴 The `route` response contains a live provider key. Call it from a server, never a browser. Every read is
+  recorded as a reveal.
+
 :::warning These endpoints are live; the data is thin
 Probed 2026-08-19: **7 of 55 projects hold a stored credential**, so most reveals return the empty skeleton.
 An empty service means *not entered*, never *not applicable*.
