@@ -19,7 +19,7 @@ This is a **yarn-only** repo (nvm → npm for globals → yarn for local work).
 
 ```bash
 yarn install      # install deps
-yarn start        # dev server on http://localhost:5994  (run it yourself; agents don't)
+yarn start        # dev server on http://localhost:5994  (use for local review)
 yarn build        # production build → ./build  (must exit 0)
 yarn typecheck    # tsc --noEmit  (must exit 0)
 yarn serve        # preview the built site on :5995
@@ -27,7 +27,7 @@ yarn serve        # preview the built site on :5995
 
 ## Deploying
 
-See [`DEPLOY.md`](./DEPLOY.md). **GitHub Pages** is the single host: push to `main` and the [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) workflow builds and deploys (enable Pages → Source "GitHub Actions" once). Custom domain `fileshub-docs.zaions.com` via [`static/CNAME`](./static/CNAME).
+See [`DEPLOY.md`](./DEPLOY.md). **GitHub Pages** is the single host: push to `main` and the [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) workflow builds and deploys (enable Pages → Source "GitHub Actions" once). Custom domain `fileshub-docs.zaions.com` via [`static/CNAME`](./static/CNAME).
 
 ## Editing content
 

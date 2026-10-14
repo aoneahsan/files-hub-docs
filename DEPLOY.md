@@ -16,7 +16,7 @@ free and auto-deploys on every push to `main`.
 ## Steps
 
 1. Push this repo to `github.com/aoneahsan/files-hub-docs` (remote `o`). The workflow at
-   `.github/workflows/deploy.yml` builds with yarn and deploys `./build` to Pages on every push
+   `.github/workflows/deploy-pages.yml` builds with yarn and deploys `./build` to Pages on every push
    to `main`.
 2. In GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. **Custom domain:** Settings → Pages → Custom domain → `fileshub-docs.zaions.com`. The
