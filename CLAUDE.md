@@ -1,5 +1,7 @@
 # FilesHub public docs
 
+**Last Updated:** 2026-10-20
+
 | Context | Value |
 |---|---|
 | Last optimized | 2026-10-14 |
@@ -25,3 +27,9 @@ yarn serve
 ```
 
 Inspect the exact `build/` output in a controlled browser before a deploy-triggering push. No legacy Firebase deployment is needed in this fleet pass. The next routine context review is eligible 2026-11-13 unless structure or correctness changes.
+
+## Stop-work Git gate
+
+<!-- RULE:stop-work-git-gate v2026-10-20 -->
+
+Before stopping, commit every legitimate change and work-progress checkpoint in this repository and each independent nested repository, fetch and merge the designated upstream, push the documented working branch, then verify an empty worktree and `0 0` ahead/behind. Never stash, discard, reset, rebase, or force-push. If synchronization is blocked, report the exact repository, branch, blocker, and next action instead of calling the work complete. The full workflow remains authoritative in `~/.claude/rules/git-workflow.md`.
