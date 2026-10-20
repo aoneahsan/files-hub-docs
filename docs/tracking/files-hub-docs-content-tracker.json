@@ -4,7 +4,7 @@
   "site": "https://fileshub-docs.zaions.com",
   "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
   "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
-  "lastUpdated": "2026-08-01",
+  "lastUpdated": "2026-10-20",
   "author": "Ahsan Mahmood",
   "buildGates": {
     "yarnInstall": "exit 0 expected",
@@ -200,10 +200,16 @@
       "path": "docs/privacy.md",
       "status": "complete",
       "seoFloor": false
+    },
+    {
+      "id": "email-marketing-deliverability",
+      "path": "docs/email-marketing/deliverability.md",
+      "status": "complete",
+      "seoFloor": false
     }
   ],
-  "totalPages": 33,
-  "completePages": 33,
+  "totalPages": 34,
+  "completePages": 34,
   "nextBatchSuggestion": {
     "id": "none",
     "note": "All pages complete; refresh on backend API changes."
@@ -223,6 +229,10 @@
       "date": "2026-08-01",
       "summary": "Added management-api/supabase-accounts (Supabase account PATs + the can_read_supabase_tokens scope); OpenAPI -> 1.2.0. Reconciled the tracker, which had drifted since 2026-07-14: normalized 8 entries stored without the docs/ prefix and registered 8 pages that had shipped untracked (all of management-api/, plus api/pagination). 25 -> 33 pages.",
       "by": "Opus 5"
+    },
+    {
+      "date": "2026-10-20",
+      "summary": "Added email-marketing/deliverability (backend 2026.10.20.1: warm-up for every purpose, warm-up partners, personas, the nightly tuner, 8 management routes) and the 8 OpenAPI operations; corrected GET /email-marketing/warmup's ramp description."
     }
   ]
 }

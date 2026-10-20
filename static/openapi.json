@@ -12851,7 +12851,7 @@
           "Email marketing"
         ],
         "summary": "Get the mailbox warm-up status",
-        "description": "Since 2026.10.07.2. Per marketing mailbox, the last 7 days of the server-side warm-up (mailboxes sending short notes to each other, read back over IMAP): sent, send_failed, received, found_inbox, found_spam, rescued, not_found, replied, inbox_share (null until something is found), plus warmup_enabled, warmup_started_on, warmup_max, target_today, sent_today, daily_limit and emails_sent_today. Top level: days, window {from_hour,to_hour,timezone} and ramp {start,step_per_day,default_max}. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "description": "Since 2026.10.07.2. Per mailbox in warm-up (any purpose since 2026.10.20.1, plus every marketing mailbox), the last 7 days of the server-side warm-up (mailboxes sending short notes to each other, read back over IMAP): sent, send_failed, received, found_inbox, found_spam, rescued, not_found, replied, inbox_share (null until something is found), plus warmup_enabled, warmup_started_on, warmup_max, target_today, sent_today, daily_limit and emails_sent_today. Top level: days, window {from_hour,to_hour,timezone} and ramp \u2014 per purpose since 2026.10.20.1: {marketing|outreach|transactional|warmup_partner: {start, step_per_day, max, reply_percent}}; rows also carry purpose. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
         "operationId": "getEmailMarketingWarmup",
         "responses": {
           "200": {
@@ -13272,6 +13272,584 @@
           },
           "422": {
             "description": "Unknown capability"
+          }
+        }
+      }
+    },
+    "/email-marketing/deliverability": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Get every mailbox's deliverability",
+        "description": "Since 2026.10.20.1. Per mailbox: purpose, provider, is_active, daily_limit, sent_today, marketing_ready_at, marketing_paused_until, warmup {enabled, started_on, max, purpose_ramp, target_today}, persona, and last_7_days / last_30_days, each with campaign {sent, failed, bounced, complained, opened, clicked, replied, unsubscribed, bounce_rate, complaint_rate, reply_rate, click_rate}, warmup {sent, received, found_inbox, found_spam, rescued, not_found, replied, inbox_share}, utilisation, failure_streak, last_failure. A rate is null when there is too little evidence. Top level: capacity, policy {version, rules, defaults, bounds}, recent_events (30), last_review. ?dns=1 adds SPF/DKIM/DMARC per domain. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "getEmailDeliverability",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "dns",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Also check SPF, DKIM and DMARC per sending domain."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/email-marketing/mailboxes/{mailbox}": {
+      "patch": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Tune one mailbox",
+        "description": "Since 2026.10.20.1. Change daily_limit (inside the policy floor and ceiling for marketing and outreach), warmup_enabled, warmup_max (1-100 or null), marketing_paused_until (ISO time within 30 days, or null) or is_active. reason is required and stored with every change as a tuning event. 422 codes: REASON_REQUIRED, NOTHING_TO_UPDATE, LIMIT_OUT_OF_RANGE, WARMUP_MAX_OUT_OF_RANGE, INVALID_PAUSE, INVALID_FLAG. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "updateEmailMailbox",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "mailbox",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Email account id"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "daily_limit": {
+                    "type": "integer"
+                  },
+                  "warmup_enabled": {
+                    "type": "boolean"
+                  },
+                  "warmup_max": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "marketing_paused_until": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/email-marketing/deliverability/policy": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Get the tuner's policy",
+        "description": "Since 2026.10.20.1. The rules in force (the stored policy over the defaults), the defaults, and each rule's inclusive bounds. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "getDeliverabilityPolicy",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Change the tuner's policy",
+        "description": "Since 2026.10.20.1. rules is an object of rule name to number; unsent rules keep their value. One unknown, non-numeric or out-of-bounds rule refuses the whole request (INVALID_RULES, each problem under error.details.rules) and nothing is saved. The version goes up by one. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "updateDeliverabilityPolicy",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rules": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    }
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "rules"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/email-marketing/deliverability/reviews": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Record a deliverability review",
+        "description": "Since 2026.10.20.1. Stores the weekly review; the reminder is measured from the newest one. 201 answers id, recorded_at and next_review_due. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "createDeliverabilityReview",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "maxLength": 10000
+                  },
+                  "model": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "changes_applied": {
+                    "type": "array",
+                    "items": {}
+                  }
+                },
+                "required": [
+                  "summary"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/email-marketing/warmup/personas": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "List warm-up personas and storylines",
+        "description": "Since 2026.10.20.1. personas (id, mailbox, purpose, display_name, bio, voice, interests, timezone), relationships (id, persona_ids, kind, chapter, chapter_title, exchanges, last_exchanged_at, story_summary), kinds and arcs. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "listWarmupPersonas",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ]
+      }
+    },
+    "/email-marketing/warmup/personas/{persona}": {
+      "patch": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Edit a warm-up persona",
+        "description": "Since 2026.10.20.1. display_name, bio, voice, interests (at most 5) and timezone (IANA or null). Plain text only: a link, email address or markup is refused (INVALID_TEXT). Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "updateWarmupPersona",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "persona",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Persona id"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "display_name": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "bio": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "voice": {
+                    "type": "string",
+                    "maxLength": 400
+                  },
+                  "interests": {
+                    "type": "array",
+                    "maxItems": 5,
+                    "items": {
+                      "type": "string",
+                      "maxLength": 60
+                    }
+                  },
+                  "timezone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/email-marketing/warmup/relationships/{relationship}": {
+      "patch": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Steer a warm-up storyline",
+        "description": "Since 2026.10.20.1. kind (one of the listed kinds), chapter (an index into the kind's arc) and story_summary (plain text, at most 1200 characters). Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "operationId": "updateWarmupRelationship",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "relationship",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Relationship id"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "chapter": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "story_summary": {
+                    "type": "string",
+                    "maxLength": 1200
+                  }
+                }
+              }
+            }
           }
         }
       }
