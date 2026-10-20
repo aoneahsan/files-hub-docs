@@ -49,8 +49,10 @@ the inbox is flagged, moved or marked read. Bounce and complaint reports are rea
 
 At 02:30 each mailbox is measured over the policy window (7 days by default), and the tuner acts on the result:
 
-- **Repeated failures** (3 sends in a row): a warm-up partner stops warming up; a marketing or outreach
-  mailbox is paused from campaigns.
+- **Repeated failures** (3 sends in a row that the mailbox caused): a warm-up partner stops warming up; a
+  marketing or outreach mailbox is paused from campaigns. Since `2026.10.21.1` a failure the recipient caused,
+  such as an address that does not exist, a full mailbox or a reserved domain like `example.com`, neither
+  counts nor breaks the run.
 - **Trouble** (hard bounces over 2%, complaints over 0.1%, or warm-up notes landing in spam): a marketing or
   outreach mailbox's limit is cut to 75% (never below its floor) and it is paused for 48 hours. Its warm-up
   volume goes up.
@@ -70,7 +72,7 @@ mailboxes serve every product; otherwise they answer 403. An unknown id answers 
 
 | Method and path | What it does |
 |---|---|
-| `GET /email-marketing/deliverability` | Every mailbox: settings, warm-up state, persona, and `last_7_days` / `last_30_days` numbers. Also capacity, the policy with defaults and bounds, the last 30 tuning events and the last review. `?dns=1` adds SPF, DKIM and DMARC per domain. |
+| `GET /email-marketing/deliverability` | Every mailbox: settings, warm-up state, persona, and `last_7_days` / `last_30_days` numbers. Also capacity, the policy with defaults and bounds, the last 30 tuning events, the last review and, since `2026.10.21.1`, `notices` (the last 10 notices sent to the owner, with status and error). `?dns=1` adds SPF, DKIM and DMARC per domain. |
 | `PATCH /email-marketing/mailboxes/{id}` | Change `daily_limit`, `warmup_enabled`, `warmup_max` (1–100 or null), `marketing_paused_until` (within 30 days, or null) or `is_active`. `reason` is required and stored with each change. A marketing or outreach limit must sit inside the policy's floor and ceiling. |
 | `GET /email-marketing/deliverability/policy` | The rules in force, the defaults and each rule's bounds. |
 | `PUT /email-marketing/deliverability/policy` | `{"rules": {…}, "notes": "…"}` — change some or all rules. One bad rule refuses the whole request (`INVALID_RULES`, each problem in `error.details.rules`). The version goes up by one. |
@@ -89,6 +91,14 @@ The per-mailbox numbers come straight from the send and warm-up records:
 
 The older `GET /email-marketing/warmup` still answers. Since this release its `ramp` is the per-purpose map
 shown above, and its rows include every mailbox in warm-up.
+
+## In Nova
+
+**Dashboards → Mailbox overview** (since `2026.10.21.1`) lists every mailbox with its purpose, status, daily
+limit, sent today, and sends in the last 1, 3, 7, 14, 21, 30, 60, 90, 180 and 360 days. Filter by
+**Purpose**, and choose **What to count**: all real mail, marketing mail, other mail or warm-up notes. Open a
+mailbox for its **Sending history & health** panel, which gives the status and its reason in plain words, the
+week's and month's numbers, sends per window, the last changes and its persona.
 
 ## What to expect
 
