@@ -59,6 +59,13 @@ At 02:30 each mailbox is measured over the policy window (7 days by default), an
 - **Healthy and busy** (bounces under 1%, no complaints, 95%+ inbox, 80%+ of the limit used): the limit rises
   by 12%, at most once a week, up to the purpose's ceiling (marketing 150, outreach 40).
 
+- **Ready for campaigns** (since `2026.10.21.2`): a warming marketing mailbox is approved for campaigns by
+  itself once it has 14+ warm-up days, passing SPF/DKIM/DMARC, steady warm-up sends, inbox evidence and no
+  failed send, and once its own warm-up notes reach recipients' inboxes at least 90% of the time. The owner
+  is emailed; which product the mailbox sends for stays his choice.
+
+Warm-up placement always means where a mailbox's **own** notes landed, which is its reputation.
+
 **Transactional mailboxes never have their limit cut or their sending paused.** Only their warm-up volume
 moves. A rate with too little evidence behind it is `null` and never triggers anything. Every change, from
 the tuner, the API or Nova, is stored with its reason. The owner gets a notification only when a mailbox
