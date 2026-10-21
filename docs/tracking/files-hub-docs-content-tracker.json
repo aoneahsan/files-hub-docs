@@ -4,7 +4,7 @@
   "site": "https://fileshub-docs.zaions.com",
   "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
   "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
-  "lastUpdated": "2026-10-20",
+  "lastUpdated": "2026-10-21",
   "author": "Ahsan Mahmood",
   "buildGates": {
     "yarnInstall": "exit 0 expected",
@@ -206,10 +206,16 @@
       "path": "docs/email-marketing/deliverability.md",
       "status": "complete",
       "seoFloor": false
+    },
+    {
+      "id": "email-marketing-contact-cleaning",
+      "path": "docs/email-marketing/contact-cleaning.md",
+      "status": "complete",
+      "seoFloor": false
     }
   ],
-  "totalPages": 34,
-  "completePages": 34,
+  "totalPages": 35,
+  "completePages": 35,
   "nextBatchSuggestion": {
     "id": "none",
     "note": "All pages complete; refresh on backend API changes."
@@ -233,6 +239,10 @@
     {
       "date": "2026-10-20",
       "summary": "Added email-marketing/deliverability (backend 2026.10.20.1: warm-up for every purpose, warm-up partners, personas, the nightly tuner, 8 management routes) and the 8 OpenAPI operations; corrected GET /email-marketing/warmup's ramp description."
+    },
+    {
+      "date": "2026-10-21",
+      "summary": "Added email-marketing/contact-cleaning (backend 2026.10.21.5: verdicts, the five checks, bounce-pause self-resume, GET /email-marketing/contact-cleaning) and its OpenAPI operation."
     }
   ]
 }

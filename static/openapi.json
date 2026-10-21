@@ -13331,6 +13331,44 @@
         ]
       }
     },
+    "/email-marketing/contact-cleaning": {
+      "get": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Get where the contact cleaning stands",
+        "description": "Since 2026.10.21.5. people {total, checked, sendable, by_quality {unchecked, valid, unverified, risky, invalid}}, top_reasons [{quality, reasons, people}] (20 most common invalid/risky reason sets), domains {known, business, ai_reviewed, ai_dead, no_mail_server}, mailbox_checks {enabled, available, checked_at, detail} (available=false: this server cannot open port 25, the other checks still run), bounce_paused_projects [{project, paused_reason, paused_at, people_waiting_for_a_check, resumes_by_itself}]. Every number is one aggregate query. Management plane only; needs can_manage_email_marketing and a token for every project, otherwise 403.",
+        "operationId": "getEmailContactCleaning",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
     "/email-marketing/mailboxes/{mailbox}": {
       "patch": {
         "tags": [

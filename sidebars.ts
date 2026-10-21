@@ -79,6 +79,7 @@ const sidebars: SidebarsConfig = {
         'email-marketing/send-log',
         'email-marketing/batches',
         'email-marketing/deliverability',
+        'email-marketing/contact-cleaning',
       ],
     },
     {
