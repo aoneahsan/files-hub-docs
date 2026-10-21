@@ -13337,7 +13337,7 @@
           "Email marketing"
         ],
         "summary": "Get where the contact cleaning stands",
-        "description": "Since 2026.10.21.5. people {total, checked, sendable, by_quality {unchecked, valid, unverified, risky, invalid}}, top_reasons [{quality, reasons, people}] (20 most common invalid/risky reason sets), domains {known, business, ai_reviewed, ai_dead, no_mail_server}, mailbox_checks {enabled, available, checked_at, detail} (available=false: this server cannot open port 25, the other checks still run), bounce_paused_projects [{project, paused_reason, paused_at, people_waiting_for_a_check, resumes_by_itself}]. Every number is one aggregate query. Management plane only; needs can_manage_email_marketing and a token for every project, otherwise 403.",
+        "description": "Since 2026.10.21.5. people {total, checked, sendable, by_quality {unchecked, valid, unverified, risky, invalid}}, top_reasons [{quality, reasons, people}] (20 most common invalid/risky reason sets), domains {known, business, ai_reviewed, ai_dead, no_mail_server}, mailbox_checks {enabled, available, checked_at, detail, agent {last_seen_at, online, host, version, checked_24h, waiting}} (available=false: this server cannot open port 25, the other checks still run; agent is the check agent, since 2026.10.21.6), bounce_paused_projects [{project, paused_reason, paused_at, people_waiting_for_a_check, resumes_by_itself}]. Every number is one aggregate query. Management plane only; needs can_manage_email_marketing and a token for every project, otherwise 403.",
         "operationId": "getEmailContactCleaning",
         "responses": {
           "401": {
@@ -13890,6 +13890,173 @@
             }
           }
         }
+      }
+    },
+    "/email-marketing/mailbox-checks/claim": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Claim people for the mailbox-check agent",
+        "description": "Since 2026.10.21.6. Body {size: 1..1000, agent?: {host, version}}. Answers {items: [{person_id, email, domain, mail_host, provider, accepts_all}], claim_minutes: 120}: unverified people whose only open question is the mailbox (probe_unavailable), people waiting in a campaign first, then the newest. Yahoo-hosted and no-mail-host domains are closed as provider_unverifiable instead of handed out. An unreported claim is free again after claim_minutes. Management plane; needs can_manage_email_marketing and a token for every project.",
+        "operationId": "claimEmailMailboxChecks",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "agent": {
+                    "type": "object",
+                    "properties": {
+                      "host": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "description": "Invalid body; nothing was applied"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/email-marketing/mailbox-checks/results": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Report the mailbox-check agent's answers",
+        "description": "Since 2026.10.21.6. Body {results: [{person_id, result}] (at most 1000; result one of valid, missing, full, retry, blocked, skipped, unverifiable), domains?: [{domain, accepts_all}], agent?: {host, version}}. missing = invalid and stopped everywhere; valid = valid, or unverified when the domain accepts every address; full = risky; retry/blocked are handed out again until the third, which closes the person as unverified. An answer for a person not currently claimed is ignored. Answers {applied, retry_later, ignored, invalid, valid}.",
+        "operationId": "reportEmailMailboxChecks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "results"
+                ],
+                "properties": {
+                  "results": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "person_id",
+                        "result"
+                      ],
+                      "properties": {
+                        "person_id": {
+                          "type": "integer"
+                        },
+                        "result": {
+                          "type": "string",
+                          "enum": [
+                            "valid",
+                            "missing",
+                            "full",
+                            "retry",
+                            "blocked",
+                            "skipped",
+                            "unverifiable"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "domains": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "domain": {
+                          "type": "string"
+                        },
+                        "accepts_all": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "description": "Invalid body; nothing was applied"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     }
   },

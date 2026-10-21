@@ -243,6 +243,10 @@
     {
       "date": "2026-10-21",
       "summary": "Added email-marketing/contact-cleaning (backend 2026.10.21.5: verdicts, the five checks, bounce-pause self-resume, GET /email-marketing/contact-cleaning) and its OpenAPI operation."
+    },
+    {
+      "date": "2026-10-21",
+      "summary": "email-marketing/contact-cleaning: the check agent (backend 2026.10.21.6), POST /email-marketing/mailbox-checks/claim and /results with their OpenAPI operations, mailbox_checks.agent, and the Paused campaigns card in Nova."
     }
   ]
 }
