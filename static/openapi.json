@@ -14058,6 +14058,81 @@
           }
         ]
       }
+    },
+    "/email-marketing/mailbox-checks/reopen": {
+      "post": {
+        "tags": [
+          "Email marketing"
+        ],
+        "summary": "Reopen people closed as \"could not check\"",
+        "description": "Since 2026.10.22.2. Body {checked_from, checked_to (ISO times, at most 7 days apart), reasons (optional, subset of probe_inconclusive, probe_refused; default both)}. People who are active, unverified and were closed with one of those reasons inside the window go back to the mailbox-check queue (probe_unavailable) with their tries reset. Answers {reopened}. 422 INVALID_WINDOW for a bad window or reason. Management plane only; needs can_manage_email_marketing and a token for every project, otherwise 403.",
+        "operationId": "reopenEmailMailboxChecks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "checked_from",
+                  "checked_to"
+                ],
+                "properties": {
+                  "checked_from": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "checked_to": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "probe_inconclusive",
+                        "probe_refused"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "description": "Invalid body; nothing was applied"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {

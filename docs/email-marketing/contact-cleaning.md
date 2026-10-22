@@ -78,7 +78,10 @@ mail servers instead: `php artisan email:mailbox-check-agent`, run as a backgrou
 - People waiting in a campaign go first.
 - Yahoo-hosted mail is closed as unverifiable without asking.
 - A claim that is never reported returns to the queue after two hours.
-- Three inconclusive answers close a person as unverified.
+- Three inconclusive answers close a person as unverified. Since `2026.10.22.2` the tries are at least two
+  hours apart.
+- When a provider refuses the agent, that provider rests for six hours. Its people are not reported; they wait,
+  and keep every try.
 
 The answers mean the same as the server's own check:
 
@@ -115,7 +118,10 @@ otherwise it answers 403.
 domain, mail_host, provider, accepts_all}], "claim_minutes": 120}}`. `POST /email-marketing/mailbox-checks/results`
 takes `{"results": [{"person_id": 1, "result": "missing"}], "domains": [{"domain": "acme.io", "accepts_all": false}]}`
 (at most 1,000 results; `result` is one of `valid`, `missing`, `full`, `retry`, `blocked`, `skipped`,
-`unverifiable`) and answers the counts applied. Both need the same token as the report.
+`unverifiable`) and answers the counts applied. `POST /email-marketing/mailbox-checks/reopen` with
+`{"checked_from": "…", "checked_to": "…", "reasons": ["probe_inconclusive", "probe_refused"]}` (at most seven
+days apart) puts people closed as "could not check" inside that window back in the queue, with their tries reset,
+and answers `{"data": {"reopened": n}}`. All three need the same token as the report.
 
 The numbers in the example are illustrative. Each one is a single aggregate query, and nothing is listed
 person by person.

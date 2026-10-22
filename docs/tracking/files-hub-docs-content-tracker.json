@@ -251,6 +251,10 @@
     {
       "date": "2026-10-22",
       "summary": "email-marketing/contact-cleaning: send order (backend 2026.10.22.1) — confirmed people first, unverified people a last resort blended in at last_resort_every; send_order in the report, last_resort_sent_today per mailbox, the policy rule, and the Nova badge, filter and card row."
+    },
+    {
+      "date": "2026-10-22",
+      "summary": "email-marketing/contact-cleaning: backend 2026.10.22.2 — tries two hours apart, resting providers hold their people, POST /email-marketing/mailbox-checks/reopen with its OpenAPI operation."
     }
   ]
 }
