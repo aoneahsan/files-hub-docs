@@ -5,7 +5,7 @@ description: How FilesHub checks every address in the shared contact pool before
 keywords: [email list cleaning, email verification, mailbox check, bounce rate, disposable email, role address, catch-all, contact quality]
 tags: [email-marketing]
 last_update:
-  date: 2026-10-21
+  date: 2026-10-22
   author: Ahsan Mahmood
 ---
 
@@ -53,6 +53,20 @@ from `resumed_at`, and the same is true after a manual **Clear auto-pause**.
 A second bounce pause within 14 days of a self-resume stays paused for a person. Complaint pauses are never
 lifted automatically.
 
+## Send order: confirmed people first
+
+Since backend `2026.10.22.1`. A person whose mailbox could not be confirmed (`unverified`, whatever the reason)
+is a **last resort**:
+
+- While a project has confirmed (`valid`) people due, each sending mailbox carries one last-resort person per
+  8 of its other sends, which is 5 per 40, spread through the day. The rest stay due.
+- Once no confirmed person is due, last-resort people are sent normally, so a campaign never stalls.
+- The ratio is the deliverability policy rule `last_resort_every` (default 8, allowed 4–50).
+
+This group includes Yahoo, AOL and AT&T addresses (their servers accept every address), catch-all servers,
+refused or inconclusive checks, and people still waiting for a check. A person confirmed later moves to the
+front by themselves.
+
 ## The check agent
 
 Many hosts block port 25. When the FilesHub server cannot open it, a check agent on another machine asks the
@@ -86,6 +100,7 @@ otherwise it answers 403.
   "data": {
     "people": { "total": 115168, "checked": 41200, "sendable": 36950,
       "by_quality": { "unchecked": 73968, "valid": 21400, "unverified": 15550, "risky": 1800, "invalid": 2450 } },
+    "send_order": { "first_choice": 21400, "last_resort": 15550, "last_resort_waiting_for_check": 9800 },
     "top_reasons": [ { "quality": "invalid", "reasons": ["mailbox_missing"], "people": 1210 } ],
     "domains": { "known": 9120, "business": 8400, "ai_reviewed": 3200, "ai_dead": 410, "no_mail_server": 260 },
     "mailbox_checks": { "enabled": true, "available": false, "checked_at": "2026-10-21T10:00:00+00:00",
@@ -112,8 +127,11 @@ The first card on the dashboards, **Paused campaigns and mailbox checks**, shows
 - a link to **Dashboards → Paused campaigns**, where **Clear auto-pause** sits on each row. That sidebar item
   shows a red count while any campaign is paused.
 
-The card's last row says whether the check agent is online and how many people it checked in 24 hours.
+Its next rows say whether the check agent is online and how many people it checked in 24 hours, and the send
+order: how many confirmed people go first, how many are a last resort, and how many last-resort emails went out
+today.
 
-**Email People** shows a **Quality** badge and has a **Quality** filter. A person's page lists the reasons and
-when they were checked. **Allow mail again** also lifts an `invalid` stop; the address is checked again after
+**Email People** shows a **Quality** badge (amber "Last resort: not confirmed" for unverified people) and has
+**Quality** and **Send order** filters. A person's page shows the send order and lists the
+reasons and when they were checked. **Allow mail again** also lifts an `invalid` stop; the address is checked again after
 90 days.

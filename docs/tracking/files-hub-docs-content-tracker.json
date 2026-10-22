@@ -247,6 +247,10 @@
     {
       "date": "2026-10-21",
       "summary": "email-marketing/contact-cleaning: the check agent (backend 2026.10.21.6), POST /email-marketing/mailbox-checks/claim and /results with their OpenAPI operations, mailbox_checks.agent, and the Paused campaigns card in Nova."
+    },
+    {
+      "date": "2026-10-22",
+      "summary": "email-marketing/contact-cleaning: send order (backend 2026.10.22.1) — confirmed people first, unverified people a last resort blended in at last_resort_every; send_order in the report, last_resort_sent_today per mailbox, the policy rule, and the Nova badge, filter and card row."
     }
   ]
 }

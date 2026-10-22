@@ -13282,7 +13282,7 @@
           "Email marketing"
         ],
         "summary": "Get every mailbox's deliverability",
-        "description": "Since 2026.10.20.1. Per mailbox: purpose, provider, is_active, daily_limit, sent_today, marketing_ready_at, marketing_paused_until, warmup {enabled, started_on, max, purpose_ramp, target_today}, persona, and last_7_days / last_30_days, each with campaign {sent, failed, bounced, complained, opened, clicked, replied, unsubscribed, bounce_rate, complaint_rate, reply_rate, click_rate}, warmup {sent, received, found_inbox, found_spam, rescued, not_found, replied, inbox_share}, utilisation, failure_streak, last_failure. A rate is null when there is too little evidence. Top level: capacity, policy {version, rules, defaults, bounds}, recent_events (30), last_review, and since 2026.10.21.1 notices: the last 10 notices FilesHub sent its owner {at, to, subject, status, sent_at, error}. failure_streak counts only failures the mailbox caused; a recipient fault (unknown address, full mailbox, reserved domain) is skipped. ?dns=1 adds SPF/DKIM/DMARC per domain. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "description": "Since 2026.10.20.1. Per mailbox: purpose, provider, is_active, daily_limit, sent_today, last_resort_sent_today (since 2026.10.22.1), marketing_ready_at, marketing_paused_until, warmup {enabled, started_on, max, purpose_ramp, target_today}, persona, and last_7_days / last_30_days, each with campaign {sent, failed, bounced, complained, opened, clicked, replied, unsubscribed, bounce_rate, complaint_rate, reply_rate, click_rate}, warmup {sent, received, found_inbox, found_spam, rescued, not_found, replied, inbox_share}, utilisation, failure_streak, last_failure. A rate is null when there is too little evidence. Top level: capacity, policy {version, rules, defaults, bounds}, recent_events (30), last_review, and since 2026.10.21.1 notices: the last 10 notices FilesHub sent its owner {at, to, subject, status, sent_at, error}. failure_streak counts only failures the mailbox caused; a recipient fault (unknown address, full mailbox, reserved domain) is skipped. ?dns=1 adds SPF/DKIM/DMARC per domain. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
         "operationId": "getEmailDeliverability",
         "responses": {
           "401": {
@@ -13337,7 +13337,7 @@
           "Email marketing"
         ],
         "summary": "Get where the contact cleaning stands",
-        "description": "Since 2026.10.21.5. people {total, checked, sendable, by_quality {unchecked, valid, unverified, risky, invalid}}, top_reasons [{quality, reasons, people}] (20 most common invalid/risky reason sets), domains {known, business, ai_reviewed, ai_dead, no_mail_server}, mailbox_checks {enabled, available, checked_at, detail, agent {last_seen_at, online, host, version, checked_24h, waiting}} (available=false: this server cannot open port 25, the other checks still run; agent is the check agent, since 2026.10.21.6), bounce_paused_projects [{project, paused_reason, paused_at, people_waiting_for_a_check, resumes_by_itself}]. Every number is one aggregate query. Management plane only; needs can_manage_email_marketing and a token for every project, otherwise 403.",
+        "description": "Since 2026.10.21.5. people {total, checked, sendable, by_quality {unchecked, valid, unverified, risky, invalid}}, send_order {first_choice, last_resort, last_resort_waiting_for_check} (since 2026.10.22.1: unverified people are a last resort, blended in at one per last_resort_every other sends of a mailbox while valid people are due), top_reasons [{quality, reasons, people}] (20 most common invalid/risky reason sets), domains {known, business, ai_reviewed, ai_dead, no_mail_server}, mailbox_checks {enabled, available, checked_at, detail, agent {last_seen_at, online, host, version, checked_24h, waiting}} (available=false: this server cannot open port 25, the other checks still run; agent is the check agent, since 2026.10.21.6), bounce_paused_projects [{project, paused_reason, paused_at, people_waiting_for_a_check, resumes_by_itself}]. Every number is one aggregate query. Management plane only; needs can_manage_email_marketing and a token for every project, otherwise 403.",
         "operationId": "getEmailContactCleaning",
         "responses": {
           "401": {
@@ -13479,7 +13479,7 @@
           "Email marketing"
         ],
         "summary": "Get the tuner's policy",
-        "description": "Since 2026.10.20.1. The rules in force (the stored policy over the defaults), the defaults, and each rule's inclusive bounds. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "description": "Since 2026.10.20.1. The rules in force (the stored policy over the defaults), the defaults, and each rule's inclusive bounds. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403. Since 2026.10.22.1 the rules include last_resort_every (default 8, bounds 4-50): while valid people are due, a mailbox carries one unverified (last-resort) person per this many other sends.",
         "operationId": "getDeliverabilityPolicy",
         "responses": {
           "401": {
@@ -13522,7 +13522,7 @@
           "Email marketing"
         ],
         "summary": "Change the tuner's policy",
-        "description": "Since 2026.10.20.1. rules is an object of rule name to number; unsent rules keep their value. One unknown, non-numeric or out-of-bounds rule refuses the whole request (INVALID_RULES, each problem under error.details.rules) and nothing is saved. The version goes up by one. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403.",
+        "description": "Since 2026.10.20.1. rules is an object of rule name to number; unsent rules keep their value. One unknown, non-numeric or out-of-bounds rule refuses the whole request (INVALID_RULES, each problem under error.details.rules) and nothing is saved. The version goes up by one. Management plane only; needs can_manage_email_marketing and a token for every project (the mailboxes are shared by every product), otherwise 403. Since 2026.10.22.1 the rules include last_resort_every (default 8, bounds 4-50): while valid people are due, a mailbox carries one unverified (last-resort) person per this many other sends.",
         "operationId": "updateDeliverabilityPolicy",
         "responses": {
           "401": {
