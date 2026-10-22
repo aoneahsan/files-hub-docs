@@ -1,6 +1,6 @@
 # FilesHub — full LLM context
 
-> FilesHub (https://fileshub.zaions.com) is a zero-cost file-storage, email, and
+> FilesHub (https://fileshub.zaions.com) is a per-service-priced file-storage, email, and
 > developer-utility API built on Laravel + Nova. This file gives an AI assistant enough
 > detail to answer integration questions accurately without crawling every page. A
 > machine-readable OpenAPI 3.1 spec is at https://fileshub-docs.zaions.com/openapi.json, and

@@ -12,7 +12,7 @@ const SITE_URL = 'https://fileshub-docs.zaions.com';
 
 const config: Config = {
   title: 'FilesHub Docs',
-  tagline: 'Zero-cost file storage + utility API for every app. Upload, store, and serve files over a simple HTTP API keyed by X-API-Key.',
+  tagline: 'File storage + utility API for every app, priced per service. Upload, store, and serve files over a simple HTTP API keyed by X-API-Key.',
   favicon: 'img/favicon.svg',
 
   // Production URL — served from GitHub Pages (custom domain via static/CNAME).
@@ -65,7 +65,7 @@ const config: Config = {
         name: 'FilesHub Documentation',
         url: SITE_URL,
         description:
-          'Documentation for FilesHub, a zero-cost file-storage and utility API. Upload, store, list, and serve files over a simple HTTP API authenticated with an X-API-Key header. Maintained by Ahsan Mahmood.',
+          'Documentation for FilesHub, a file-storage and utility API, priced per service. Upload, store, list, and serve files over a simple HTTP API authenticated with an X-API-Key header. Maintained by Ahsan Mahmood.',
         inLanguage: 'en',
         publisher: {
           '@type': 'Person',
@@ -180,7 +180,7 @@ const config: Config = {
   themeConfig: {
     image: 'img/social-card.svg',
     metadata: [
-      { name: 'description', content: 'Documentation for FilesHub — a zero-cost file-storage + utility API. Upload, store, list, and serve files over HTTP with an X-API-Key. Maintained by Ahsan Mahmood.' },
+      { name: 'description', content: 'Documentation for FilesHub — a file-storage + utility API, priced per service. Upload, store, list, and serve files over HTTP with an X-API-Key. Maintained by Ahsan Mahmood.' },
       { name: 'keywords', content: 'fileshub, file storage api, file upload api, http file storage, public file url, image hosting api, x-api-key, multipart upload, laravel file storage, store files api, free file storage backend, capacitor file upload, react file upload api' },
       { name: 'author', content: 'Ahsan Mahmood' },
       { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },

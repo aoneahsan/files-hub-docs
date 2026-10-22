@@ -1,6 +1,6 @@
 # FilesHub
 
-> FilesHub is a zero-cost file-storage, email, and developer-utility API. You upload a file
+> FilesHub is a file-storage, email, and developer-utility API, priced per service. You upload a file
 > over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header and get back a stable
 > public URL plus a ULID. You can list, download, and delete objects, set each file's
 > visibility (`public` or `private`), auto-expire files, send transactional email from

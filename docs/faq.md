@@ -12,7 +12,7 @@ last_update:
 
 ### What is FilesHub?
 
-FilesHub is a zero-cost file-storage and developer-utility API. You upload a file over HTTP with an `X-API-Key` header and get back a stable URL; you can also list, download, and delete objects, set per-file visibility, send transactional email, and call 40+ utility endpoints on the same base URL.
+FilesHub is a file-storage and developer-utility API. You upload a file over HTTP with an `X-API-Key` header and get back a stable URL; you can also list, download, and delete objects, set per-file visibility, send transactional email, and call 40+ utility endpoints on the same base URL.
 
 ### How do I authenticate?
 
@@ -56,11 +56,11 @@ Yes — use a restricted key scoped to your domain (`Origin`) or your app (`X-Ap
 
 ### How is FilesHub different from S3 or Firebase Storage?
 
-S3 and Firebase Storage are cloud object stores with their own SDKs, IAM, and (usage-based) billing. FilesHub is a single, self-hostable HTTP service with one `X-API-Key`, per-file visibility, optional auto-expiry, and a bundle of developer utilities — designed to be the zero-cost upload backend for many small apps at once. It is single-region and locally stored, so for global edge delivery of large media you would still put a CDN in front.
+S3 and Firebase Storage are cloud object stores with their own SDKs, IAM, and (usage-based) billing. FilesHub is a single, self-hostable HTTP service with one `X-API-Key`, per-file visibility, optional auto-expiry, and a bundle of developer utilities — designed to be the shared upload backend for many small apps at once. It is single-region and locally stored, so for global edge delivery of large media you would still put a CDN in front.
 
-### Is FilesHub free?
+### How much does FilesHub cost?
 
-Yes. It is the zero-cost storage backend used across the Aoneahsan/Zaions projects. Run your own instance or use the hosted one at [fileshub.zaions.com](https://fileshub.zaions.com).
+Each service has its own monthly price, and a project pays only for the services it uses — file storage, email, email marketing and each developer API. The current list is at [fileshub.zaions.com/pricing](https://fileshub.zaions.com/pricing) (Markdown: [/pricing.md](https://fileshub.zaions.com/pricing.md)). A call to a service your project has no plan for is refused with HTTP 402.
 
 ### Where do I report a bug or security issue?
 

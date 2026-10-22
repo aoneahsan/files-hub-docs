@@ -56,6 +56,7 @@ code table lives with the endpoints it belongs to:
 | `200 OK` | Success. | List, download, delete. |
 | `201 Created` | Object stored. | Upload. |
 | `401 Unauthorized` | Missing/invalid key, or a private object requested without a key. | No `X-API-Key`, wrong key. |
+| `402 Payment Required` | The project has no plan for this service (since 2026-10-22). | An external project calling a service it has not subscribed to; the message names the service. See [pricing](https://fileshub.zaions.com/pricing). |
 | `403 Forbidden` | Authenticated but not allowed. | Key lacks `read`/`write`, or origin/app-id not allowed. |
 | `404 Not Found` | Resource absent. | Unknown/expired `public_id`, cross-project access, or stored file missing. |
 | `422 Unprocessable Entity` | Validation failed. | No file, file too large, bad `visibility`, disallowed MIME, bad query param. |

@@ -10,7 +10,7 @@ last_update:
 
 # About the author
 
-FilesHub and this documentation are built and maintained by **Ahsan Mahmood** — a senior full-stack engineer who builds web, mobile, and developer-tooling products under the **Aoneahsan / Zaions** banner. FilesHub exists because nearly every one of those products needs the same thing: a simple, zero-cost place to put a file and get a URL back. So it became the shared upload backend for all of them.
+FilesHub and this documentation are built and maintained by **Ahsan Mahmood** — a senior full-stack engineer who builds web, mobile, and developer-tooling products under the **Aoneahsan / Zaions** banner. FilesHub exists because nearly every one of those products needs the same thing: a simple place to put a file and get a URL back. So it became the shared upload backend for all of them.
 
 <div className="fh-author-card">
 
@@ -32,4 +32,4 @@ FilesHub and this documentation are built and maintained by **Ahsan Mahmood** �
 
 ## Support the work
 
-If FilesHub or these docs save you time, you can support continued development at [aoneahsan.com/payment](https://aoneahsan.com/payment). FilesHub itself stays zero-cost to use.
+If FilesHub or these docs save you time, you can support continued development at [aoneahsan.com/payment](https://aoneahsan.com/payment). FilesHub itself is priced per service; see [pricing](https://fileshub.zaions.com/pricing).

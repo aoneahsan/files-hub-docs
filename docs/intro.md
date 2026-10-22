@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Introduction
-description: FilesHub is a zero-cost file-storage and developer-utility API — upload a file over HTTP with an X-API-Key header, get a stable public URL, then list, download, or delete it.
+description: FilesHub is a file-storage and developer-utility API — upload a file over HTTP with an X-API-Key header, get a stable public URL, then list, download, or delete it.
 keywords: [fileshub, file storage api, file upload api, http file storage, public file url, x-api-key, store files api, image hosting api, laravel file storage]
 last_update:
   date: 2026-07-14
@@ -10,7 +10,7 @@ last_update:
 
 # Introduction
 
-**FilesHub is a zero-cost file-storage, email, and developer-utility API: you upload a file over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header, and FilesHub stores it and returns a stable URL you can link to or download.** Around that storage core it adds object listing, deletion, per-file visibility, optional auto-expiry, scoped API keys, transactional email (send, templates, recurring schedules), and 50+ stateless utility endpoints — all under one base URL and one key.
+**FilesHub is a file-storage, email, and developer-utility API: you upload a file over plain HTTP to `POST /api/v1/objects` with an `X-API-Key` header, and FilesHub stores it and returns a stable URL you can link to or download.** Around that storage core it adds object listing, deletion, per-file visibility, optional auto-expiry, scoped API keys, transactional email (send, templates, recurring schedules), and 50+ stateless utility endpoints — all under one base URL and one key.
 
 FilesHub runs at [fileshub.zaions.com](https://fileshub.zaions.com) and is the upload backend used by every Aoneahsan/Zaions project, so an app never has to run its own storage server. It is built on Laravel + Nova and maintained by [Ahsan Mahmood](https://aoneahsan.com).
 

@@ -4,7 +4,7 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
 last_update:
-  date: 2026-09-11
+  date: 2026-10-22
   author: Ahsan Mahmood
 ---
 
@@ -436,6 +436,15 @@ The same, narrowed to one service.
 The real bytes of a stored config file, with its original filename, `Content-Disposition`,
 `Content-Length` and `X-Checksum-Sha256`. Note the path segment is **`vault-files`**, not `vault/files` —
 the latter would be ambiguous with `vault/{service}/reveal`.
+
+## Database backups
+
+`GET /backups` lists the daily database backups on the server, newest first (`name`, `size_bytes`,
+`created_at`, plus the schedule and retention). `GET /backups/{name}` downloads one by its exact name.
+
+Both need **`can_read_backups`** — off by default, implied by no other scope — **and** a token for every
+project, because a backup is the whole database, every vault secret included. Each download is written to
+the audit log. An unknown name is a `404`. Since 2026-10-22.
 
 ## Error codes
 

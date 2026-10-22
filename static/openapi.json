@@ -3,7 +3,7 @@
   "info": {
     "title": "FilesHub API",
     "version": "1.8.0",
-    "summary": "Zero-cost file storage, email sending, and developer utilities over HTTP.",
+    "summary": "File storage, email sending, and developer utilities over HTTP, priced per service.",
     "description": "FilesHub is a file-storage and developer-utility API. Upload files and get a stable public URL, send transactional email from verified domains, run background jobs, and call 40+ utility groups \u2014 all authenticated with a per-project X-API-Key header. This spec covers the core integration surface (objects, emails, templates, schedules, jobs, version/health) plus the whole Public Management plane. The full list of stateless developer utilities is summarized at https://fileshub-docs.zaions.com/api/utilities-index. Docs: https://fileshub-docs.zaions.com.\n\nTWO PLANES, TWO ENVELOPES \u2014 do not reuse one parser for both. The v1 data plane answers {\"success\", \"data\"} on email, a FLAT body on POST /objects, and a bare {\"message\"} on error. The Management plane (/api/public/v1, the `Management API` tag) answers {\"data\"} on success and {\"error\": {code, message, details?}} on failure, and never carries `success`.\n\nHOW THIS SPEC IS MAINTAINED: the core operations are written by hand. Every other API route is added by `php artisan docs:openapi --write` in the FilesHub repo, built from the route itself (controller docblock, validation rules, path parameters, auth middleware) and marked `x-generated: true`; `php artisan docs:openapi` fails while any route is missing (since 2026-10-22, 392 of 392 routes). Where this document and the running API disagree, THE API IS RIGHT. Verified against the live routes and controllers on 2026-08-04 at backend_version 2026.08.01.2, covering all 33 Management routes. Report a divergence rather than coding around it.\n\nOn a 403 TOKEN_PERMISSION_DENIED, all four gates report details.required_scope as the access token\u2019s own column name (`can_read_vault`, `can_reveal_vault`, `can_manage_supabase`, `can_read_supabase_tokens`) \u2014 live since `2026.08.04.1`, deployed 2026-08-04. Releases before it returned two shorter labels on the Supabase gates (`supabase_projects` / `supabase_tokens`) that matched no column; the enum below accepts all six, so either release works.",
     "contact": {
       "name": "Ahsan Mahmood",
@@ -26798,6 +26798,97 @@
         "security": [
           {
             "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/backups": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List the database backups on the server, newest first",
+        "description": "List the database backups on the server, newest first. GET /api/public/v1/backups\n\nGenerated from the route definition (GET api/public/v1/backups). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicBackupControllerIndex",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/backups/{name}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Download one database backup by its exact name",
+        "description": "Download one database backup by its exact name. GET /api/public/v1/backups/{name}\n\nGenerated from the route definition (GET api/public/v1/backups/{name}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicBackupControllerDownload",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
           }
         ]
       }
