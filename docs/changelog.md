@@ -4,13 +4,18 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-10-10
+  date: 2026-10-22
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-10-22 — the OpenAPI spec now covers every API route
+
+- `openapi.json` 1.8.0 gains **201 operations**: every developer utility (converters, encoders, generators, text, network and date tools), notifications, pastes, short URLs, webhooks, mock APIs, uptime monitors, vault, push, and the newer Management routes (email batches, email-marketing reports, sequence step approve/hold, `api-keys/lookup`, `projects/{project}/ai/lease`).
+- Each generated operation names its server, its auth, its path parameters and its request fields from the validation rules, and carries `x-generated: true`. See [OpenAPI spec](api/openapi).
 
 ## 2026-10-10 — AI credit routing: which AI account and tier a project uses
 

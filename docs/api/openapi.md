@@ -1,10 +1,10 @@
 ---
 sidebar_position: 13
 title: OpenAPI spec (for AI agents & codegen)
-description: FilesHub ships a machine-readable OpenAPI 3.1 spec at /openapi.json covering the core APIs — feed it to Claude Code, Codex, or an OpenAPI generator to integrate without guesswork.
+description: FilesHub ships a machine-readable OpenAPI 3.1 spec at /openapi.json covering every API route — feed it to Claude Code, Codex, or an OpenAPI generator to integrate without guesswork.
 keywords: [fileshub openapi, openapi 3.1, /openapi.json, ai agent api, codegen, claude code, codex, machine readable api]
 last_update:
-  date: 2026-07-30
+  date: 2026-10-22
   author: Ahsan Mahmood
 ---
 
@@ -28,7 +28,7 @@ The core integration surface, with full request/response schemas:
 
 Two security schemes are declared. The data plane uses `X-API-Key` (an API-key header), with the app-restriction headers (`X-App-Id`, `X-Android-Cert`) as optional parameters on secured operations. The Management API operations use `BearerAuth` (a user-level `fh_pat_` access token) and each carries its own `servers` block pointing at `/api/public/v1`, since it is a different base URL.
 
-It does **not** enumerate the 40+ stateless [developer utilities](utilities-index) — those share the same base URL and key but are summarized rather than fully schematized, to keep the spec focused on what apps integrate.
+Every other API route is in it too — the 40+ stateless [developer utilities](utilities-index), notifications, pastes, short URLs, webhooks, mock APIs, uptime monitors and the newer Management routes. Those operations are generated from the route (marked `x-generated: true`): their request fields come from the validation rules, and their responses are a generic `{data}` object rather than a full schema.
 
 ## Use it with an AI coding agent
 
@@ -55,4 +55,4 @@ Every documentation page is also mirrored as raw Markdown under `/raw/`. Prefix 
 
 ## Honesty note
 
-The spec is hand-authored from the FilesHub source and kept in sync with it. If you find a mismatch between `/openapi.json` and the live API, the live API is the source of truth — please [open an issue](https://github.com/aoneahsan/files-hub-docs/issues).
+The core operations are written by hand from the FilesHub source. Every other route (392 of 392 since 2026-10-22) is added by a generator in the FilesHub repo that reads the route itself — the controller's description, its validation rules, path parameters and auth — and marks it `x-generated: true`; the generator fails while any route is missing. Generated operations describe request fields precisely but answer with a generic `{data}` object; the hand-written ones carry full response schemas. If you find a mismatch between `/openapi.json` and the live API, the live API is the source of truth — please [open an issue](https://github.com/aoneahsan/files-hub-docs/issues).
