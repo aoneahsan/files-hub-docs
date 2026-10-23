@@ -68,6 +68,19 @@
   `/api/v1/email-marketing/settings`. Management plane: the same under `/api/public/v1/projects/{project}/`.
 - Docs: https://fileshub-docs.zaions.com/email-marketing/overview
 
+## Password manager API (backend 2026.10.23.5)
+
+- Logins per project in the shape of iCloud Passwords: title, websites, username, encrypted password,
+  verification-code setup key (reveal returns the current 6-digit RFC 6238 code), notes, tags, favourite;
+  strength, reuse, last 10 earlier passwords, Recently Deleted.
+- Data plane, `X-API-Key`. Closed by default: a key needs `password_scope` `own` (only what it created) or
+  `admin` (admin-key and dashboard entries, never an own key's); `password_all_projects` gives an admin key
+  every project; `password_abilities` narrows to list / reveal / create / update / delete. Out of reach = 404.
+- `GET|POST /api/v1/passwords`, `GET|PATCH|DELETE /api/v1/passwords/{id}`, `POST /api/v1/passwords/{id}/reveal`,
+  `POST /api/v1/passwords/{id}/restore`, `POST /api/v1/passwords/generate`.
+- Granting a key's password fields over the Management API needs the token scope `can_manage_passwords`.
+- Docs: https://fileshub-docs.zaions.com/api/passwords
+
 ## Jobs & status
 
 - Jobs: `GET /api/v1/jobs` (paginated 20/max 50) and `GET /api/v1/jobs/{job_id}` (read) —
@@ -141,6 +154,7 @@
 ## Documentation pages
 
 - Introduction: https://fileshub-docs.zaions.com/intro
+- Password manager: https://fileshub-docs.zaions.com/api/passwords (quick start, access and scopes, endpoint reference, dashboard)
 - Management API overview: https://fileshub-docs.zaions.com/management-api/overview
 - Management API authentication: https://fileshub-docs.zaions.com/management-api/authentication
 - Management API endpoints: https://fileshub-docs.zaions.com/management-api/endpoints

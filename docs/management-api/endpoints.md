@@ -24,7 +24,7 @@ not generated**, so where it and the running API disagree the API is right — p
 
 ### `GET /token`
 Introspect the current token — name, `token_prefix`, expiry, last use, `all_projects`, and every capability
-boolean (eleven since `2026.10.23.3`, the newest being `can_manage_access_tokens`), **all off by default**.
+boolean (twelve since `2026.10.23.5`, the newest being `can_manage_passwords`), **all off by default**.
 Count them off the response, never off a written list. The table is in [Authentication](./authentication.md#introspect-first). The intended first call: it turns a later `403` into something you predicted.
 
 `projects[]` appears **only when `all_projects` is `false`**. On an all-projects token the key is absent
@@ -204,7 +204,9 @@ deploy, trust `has_more` / `next_page`.
 ### `POST /projects/{project}/api-keys`
 Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_send_emails`,
 `restricted`, `allow_no_origin`, `email_daily_limit`, `rate_limit_per_minute`, `permissions`
-object, `is_test`. **Every omitted boolean defaults to `false`** — ask for the capabilities you
+object, `is_test`, and (since `2026.10.23.5`, needing `can_manage_passwords`) the password-manager fields
+`password_scope`, `password_all_projects`, `password_abilities` — see
+[Password manager → Access and scopes](../api/passwords/access-and-scopes.md). **Every omitted boolean defaults to `false`** — ask for the capabilities you
 want. **Returns the plaintext once, flat under `data`** alongside the key's fields:
 ```json
 { "data": { "id": 7, "key_prefix": "fh_live_ab12", "can_read": true, "restricted": false, "plaintext_key": "fh_live_ab12..." } }
@@ -219,8 +221,9 @@ they are real `false` values now.
 Fetch one key (safe representation).
 
 ### `PATCH /projects/{project}/api-keys/{apiKey}`
-Update `name`, the `can_*` flags, `restricted`, `allow_no_origin`, limits, `permissions`, or
-`is_active`. Turning `restricted` on with no origins denies every request — add origins first
+Update `name`, the `can_*` flags, `restricted`, `allow_no_origin`, limits, `permissions`,
+`is_active`, or the password-manager fields (`password_scope`, `password_all_projects`,
+`password_abilities`; the token needs `can_manage_passwords`). Turning `restricted` on with no origins denies every request — add origins first
 (below), or rely on the platform-wide [global origins](#global-origins) an administrator has
 configured (check those first; a key does not need its own copy of one).
 

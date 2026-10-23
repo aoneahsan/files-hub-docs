@@ -12,6 +12,17 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-23 — password manager, and the weekly deliverability review on the server
+
+- **Not yet live** until backends `2026.10.23.4` and `2026.10.23.5` are deployed; check `GET /api/version`.
+- New [password manager](api/passwords/overview.md): logins per project with websites, username, encrypted password,
+  verification codes, notes, tags and Recently Deleted. A [quick start](api/passwords/quick-start.md), the
+  [access and scopes](api/passwords/access-and-scopes.md) rules (own and admin key scopes, every-project reach,
+  five abilities), the full [endpoint reference](api/passwords/endpoints.md) and the [dashboard](api/passwords/dashboard.md).
+- API keys on the Management plane gain `password_scope`, `password_all_projects` and `password_abilities`;
+  access tokens gain [`can_manage_passwords`](management-api/authentication.md).
+- [Deliverability](email-marketing/deliverability.md): the weekly review runs on the server, and two endpoints list and run reviews.
+
 ## 2026-10-23 — access tokens over the API, mailbox moves, resubscribe, lift and erase
 
 - **Not yet live** until backend `2026.10.23.3` is deployed; check `GET /api/version`.

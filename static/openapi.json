@@ -50,6 +50,10 @@
     {
       "name": "Email marketing",
       "description": "Lists, contacts, imports, suppressions, drip sequences, events and the public subscribe form. See https://fileshub-docs.zaions.com/email-marketing/overview"
+    },
+    {
+      "name": "Passwords",
+      "description": "The password manager: logins per project behind own and admin key scopes. https://fileshub-docs.zaions.com/api/passwords"
     }
   ],
   "paths": {
@@ -27882,76 +27886,32 @@
       }
     },
     "/passwords/{id}": {
-      "delete": {
-        "tags": [
-          "Passwords"
-        ],
-        "summary": "To Recently Deleted; `permanent=1` on a deleted entry removes it for good",
-        "description": "to Recently Deleted; `permanent=1` on a deleted entry removes it for good.\n\nGenerated from the route definition (DELETE api/v1/passwords/{id}). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerDestroy",
-        "servers": [
-          {
-            "url": "https://fileshub.zaions.com/api/v1"
-          }
-        ],
-        "x-generated": true,
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
-      },
       "get": {
         "tags": [
           "Passwords"
         ],
-        "summary": "Details, never the password",
-        "description": "details, never the password.\n\nGenerated from the route definition (GET api/v1/passwords/{id}). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerShow",
+        "operationId": "passwordsGet",
+        "summary": "Get one password entry",
+        "description": "Details including reused; never the password.\n\nAbility: `list`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 26,
+              "maxLength": 26
             }
           }
         ],
@@ -27961,7 +27921,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PasswordEntry"
+                    }
+                  }
                 }
               }
             }
@@ -27969,39 +27934,46 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
+        }
       },
       "patch": {
         "tags": [
           "Passwords"
         ],
-        "summary": "Update a Password",
-        "description": "Generated from the route definition (PATCH api/v1/passwords/{id}). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerUpdate",
+        "operationId": "passwordsUpdate",
+        "summary": "Change a password entry",
+        "description": "Send only what changes. A new password moves the old one into the history (last 10).\n\nAbility: `update`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 26,
+              "maxLength": 26
             }
           }
         ],
@@ -28010,56 +27982,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "maxLength": 191
-                  },
-                  "websites": {
-                    "type": [
-                      "array",
-                      "null"
-                    ],
-                    "maxItems": 20
-                  },
-                  "username": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "maxLength": 191
-                  },
-                  "password": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 1024
-                  },
-                  "totp_secret": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "maxLength": 1024
-                  },
-                  "notes": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "maxLength": 10000
-                  },
-                  "tags": {
-                    "type": [
-                      "array",
-                      "null"
-                    ],
-                    "maxItems": 20
-                  },
-                  "is_favorite": {
-                    "type": "boolean"
-                  }
-                }
+                "$ref": "#/components/schemas/PasswordInput"
               }
             }
           }
@@ -28070,7 +27993,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PasswordEntry"
+                    }
+                  }
                 }
               }
             }
@@ -28078,8 +28006,14 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -28087,12 +28021,92 @@
           "422": {
             "$ref": "#/components/responses/ValidationError"
           }
-        },
+        }
+      },
+      "delete": {
+        "tags": [
+          "Passwords"
+        ],
+        "operationId": "passwordsDelete",
+        "summary": "Delete a password entry",
+        "description": "Moves it to Recently Deleted. permanent=1 on a deleted entry removes it for good (409 on a live one).\n\nAbility: `delete`. Guide: https://fileshub-docs.zaions.com/api/passwords",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
         "security": [
           {
             "ApiKeyHeader": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 26,
+              "maxLength": 26
+            }
+          },
+          {
+            "name": "permanent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Remove a deleted entry for good"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "deleted": {
+                          "type": "boolean"
+                        },
+                        "purged": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
       }
     },
     "/passwords": {
@@ -28100,22 +28114,123 @@
         "tags": [
           "Passwords"
         ],
-        "summary": "`q`, `website`, `tag`, `favorite`, `project_id` (all-projects admin keys), `trashed=only`",
-        "description": "`q`, `website`, `tag`, `favorite`, `project_id` (all-projects admin keys), `trashed=only`.\n\nGenerated from the route definition (GET api/v1/passwords). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerIndex",
+        "operationId": "passwordsList",
+        "summary": "List and search passwords",
+        "description": "The entries this key can reach, favourites first. Never returns a password.\n\nAbility: `list`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Text in title, username or websites"
+          },
+          {
+            "name": "website",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Host or URL"
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Tag"
+          },
+          {
+            "name": "favorite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Favourites only (true) or the rest (false)"
+          },
+          {
+            "name": "trashed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "only"
+              ]
+            },
+            "description": "List Recently Deleted"
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Every-project admin keys only"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Page"
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "description": "Page size (default 20)"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "A page of entries",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PasswordEntry"
+                      }
+                    },
+                    "meta": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -28123,101 +28238,73 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
+        }
       },
       "post": {
         "tags": [
           "Passwords"
         ],
-        "summary": "Create a Password",
-        "description": "Generated from the route definition (POST api/v1/passwords). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerStore",
+        "operationId": "passwordsCreate",
+        "summary": "Save a password",
+        "description": "Owner follows the key: own key \u2192 owner_scope own; admin key \u2192 admin.\n\nAbility: `create`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "maxLength": 191
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PasswordInput"
                   },
-                  "websites": {
-                    "type": [
-                      "array",
-                      "null"
+                  {
+                    "type": "object",
+                    "required": [
+                      "title",
+                      "password"
                     ],
-                    "maxItems": 20
-                  },
-                  "username": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "maxLength": 191
-                  },
-                  "password": {
-                    "type": "string",
-                    "maxLength": 1024
-                  },
-                  "totp_secret": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "maxLength": 1024
-                  },
-                  "notes": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "maxLength": 10000
-                  },
-                  "tags": {
-                    "type": [
-                      "array",
-                      "null"
-                    ],
-                    "maxItems": 20
-                  },
-                  "is_favorite": {
-                    "type": "boolean"
-                  },
-                  "project_id": {
-                    "type": "integer"
+                    "properties": {
+                      "project_id": {
+                        "type": "integer",
+                        "description": "Every-project admin keys only"
+                      }
+                    }
                   }
-                },
-                "required": [
-                  "title",
-                  "password"
                 ]
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PasswordEntry"
+                    }
+                  }
                 }
               }
             }
@@ -28225,18 +28312,19 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           },
           "422": {
             "$ref": "#/components/responses/ValidationError"
           }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
+        }
       }
     },
     "/passwords/generate": {
@@ -28244,22 +28332,77 @@
         "tags": [
           "Passwords"
         ],
-        "summary": "`style` grouped (default) or random with `length`, `symbols`, `numbers`, `uppercase`",
-        "description": "`style` grouped (default) or random with `length`, `symbols`, `numbers`, `uppercase`. Stores nothing.\n\nGenerated from the route definition (POST api/v1/passwords/generate). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerGenerate",
+        "operationId": "passwordsGenerate",
+        "summary": "Generate a strong password",
+        "description": "Stores nothing.\n\nAbility: `create or update`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "style": {
+                    "type": "string",
+                    "enum": [
+                      "grouped",
+                      "random"
+                    ],
+                    "default": "grouped"
+                  },
+                  "length": {
+                    "type": "integer",
+                    "minimum": 8,
+                    "maximum": 128,
+                    "default": 20
+                  },
+                  "symbols": {
+                    "type": "boolean"
+                  },
+                  "numbers": {
+                    "type": "boolean"
+                  },
+                  "uppercase": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "password": {
+                          "type": "string"
+                        },
+                        "strength": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -28267,15 +28410,16 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
+        }
       }
     },
     "/passwords/{id}/restore": {
@@ -28283,22 +28427,28 @@
         "tags": [
           "Passwords"
         ],
-        "summary": "Restore (passwords)",
-        "description": "Generated from the route definition (POST api/v1/passwords/{id}/restore). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerRestore",
+        "operationId": "passwordsRestore",
+        "summary": "Restore from Recently Deleted",
+        "description": "No-op on a live entry.\n\nAbility: `delete`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 26,
+              "maxLength": 26
             }
           }
         ],
@@ -28308,7 +28458,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PasswordEntry"
+                    }
+                  }
                 }
               }
             }
@@ -28316,18 +28471,19 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
+        }
       }
     },
     "/passwords/{id}/reveal": {
@@ -28335,32 +28491,58 @@
         "tags": [
           "Passwords"
         ],
-        "summary": "The password and current verification code; `history=1` adds earlier passwords",
-        "description": "the password and current verification code; `history=1` adds earlier passwords.\n\nGenerated from the route definition (POST api/v1/passwords/{id}/reveal). Data plane: authenticate with X-API-Key.",
-        "operationId": "passwordControllerReveal",
+        "operationId": "passwordsReveal",
+        "summary": "Reveal a password",
+        "description": "The password, the current verification code and, with history: true, the earlier passwords. Audited.\n\nAbility: `reveal`. Guide: https://fileshub-docs.zaions.com/api/passwords",
         "servers": [
           {
             "url": "https://fileshub.zaions.com/api/v1"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 26,
+              "maxLength": 26
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "history": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PasswordReveal"
+                    }
+                  }
                 }
               }
             }
@@ -28368,18 +28550,19 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        },
-        "security": [
-          {
-            "ApiKeyHeader": []
-          }
-        ]
+        }
       }
     }
   },
@@ -28475,6 +28658,36 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ManagementError"
+            }
+          }
+        }
+      },
+      "PaymentRequired": {
+        "description": "An external project with no plan for this service.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The request conflicts with the entry's state.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -32531,6 +32744,249 @@
           "accounts": {
             "type": "object",
             "description": "mode (assigned | all_marketing_accounts), list of mailboxes with daily limits and optional DNS checks, remaining_today"
+          }
+        }
+      },
+      "PasswordEntry": {
+        "type": "object",
+        "description": "A saved login. Never contains the password, setup key or history.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 26,
+            "maxLength": 26,
+            "example": "01m5mjhqhzm44rckzkca0anxf0"
+          },
+          "project_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "websites": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "example": [
+              "https://registrar.example.com"
+            ]
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_favorite": {
+            "type": "boolean"
+          },
+          "has_verification_code": {
+            "type": "boolean"
+          },
+          "strength": {
+            "type": "object",
+            "properties": {
+              "score": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 4
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "weak",
+                  "fair",
+                  "strong",
+                  "very strong",
+                  null
+                ]
+              }
+            }
+          },
+          "reused": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Another live entry in the project has the same password. null in lists and restore answers."
+          },
+          "owner_scope": {
+            "type": "string",
+            "enum": [
+              "own",
+              "admin"
+            ]
+          },
+          "created_via": {
+            "type": "string",
+            "enum": [
+              "api",
+              "dashboard"
+            ]
+          },
+          "password_changed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_revealed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "PasswordInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 191
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "websites": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            }
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 191
+          },
+          "totp_secret": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Base32 setup key (16+ chars) or an otpauth:// link. null removes it on update."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10000
+          },
+          "tags": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "maxLength": 40
+            }
+          },
+          "is_favorite": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PasswordReveal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "password": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unreadable": {
+            "type": "boolean"
+          },
+          "verification_code": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{6}$"
+              },
+              "expires_in": {
+                "type": "integer"
+              }
+            }
+          },
+          "password_history": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "password": {
+                  "type": "string"
+                },
+                "replaced_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
           }
         }
       }

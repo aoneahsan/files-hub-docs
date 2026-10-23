@@ -23,6 +23,7 @@ These utility endpoints are documented in detail inside the FilesHub app itself;
 | **Notifications** | Store and fetch in-app notifications; unread counts; mark-read. |
 | **Push** | Register subscriptions and send web push messages. |
 | **Contact form** | Accept and store contact-form submissions from your sites. |
+| **Password manager** | Logins per project — websites, username, encrypted password, verification codes, notes, tags — behind own and admin key scopes. [Read the guide](api/passwords/overview.md). |
 
 ## Links & content
 

@@ -31,6 +31,7 @@ Send `X-API-Key: <key>` on every request. A key is per project and carries scope
 | `email` | Send email (`can_send_emails`). |
 | `email_template` | Manage email templates (with `write`). |
 | service scopes | Per-utility access (e.g. `converter`, `qr_code`) — all enabled by default. |
+| `password_scope` | The [password manager](passwords/overview.md): `none` (default), `own` or `admin`, plus every-project reach and five abilities. **Off by default.** |
 
 Keys can also be **restricted** to your own web origins or apps so you can ship one in a frontend — see [Authentication](../getting-started/authentication) and [API key restrictions](../getting-started/api-key-restrictions).
 
@@ -52,6 +53,18 @@ Keys can also be **restricted** to your own web origins or apps so you can ship 
 | `POST`/`PATCH`/`DELETE` | `/emails/templates{/slug}` | `write` + `email_template` | [Manage templates](email-templates). |
 | `GET`/`POST`/`PATCH`/`DELETE` | `/email-schedules{/id}` | `read`/`write` | [Recurring schedules](email-schedules). |
 | `POST` | `/email-schedules/{id}/run` | `write` | Run a schedule now. |
+
+## Password manager endpoints
+
+Since backend `2026.10.23.5`. Needs a key with a password scope; reach and abilities: [Access and scopes](passwords/access-and-scopes.md).
+
+| Method | Path | Ability | Purpose |
+|---|---|---|---|
+| `GET` / `POST` | `/passwords` | `list` / `create` | [List and search, or save](passwords/endpoints.md#list) a login. |
+| `GET` / `PATCH` / `DELETE` | `/passwords/{id}` | `list` / `update` / `delete` | [Read, change, delete](passwords/endpoints.md#get) (to Recently Deleted). |
+| `POST` | `/passwords/{id}/reveal` | `reveal` | [The password, current verification code, history](passwords/endpoints.md#reveal). |
+| `POST` | `/passwords/{id}/restore` | `delete` | [Restore from Recently Deleted](passwords/endpoints.md#restore). |
+| `POST` | `/passwords/generate` | `create` / `update` | [A strong password](passwords/endpoints.md#generate). |
 
 ## Jobs & status
 
