@@ -27880,6 +27880,507 @@
           }
         ]
       }
+    },
+    "/passwords/{id}": {
+      "delete": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "To Recently Deleted; `permanent=1` on a deleted entry removes it for good",
+        "description": "to Recently Deleted; `permanent=1` on a deleted entry removes it for good.\n\nGenerated from the route definition (DELETE api/v1/passwords/{id}). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerDestroy",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "Details, never the password",
+        "description": "details, never the password.\n\nGenerated from the route definition (GET api/v1/passwords/{id}). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerShow",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "Update a Password",
+        "description": "Generated from the route definition (PATCH api/v1/passwords/{id}). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerUpdate",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 191
+                  },
+                  "websites": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "maxItems": 20
+                  },
+                  "username": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 191
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "totp_secret": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1024
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 10000
+                  },
+                  "tags": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "maxItems": 20
+                  },
+                  "is_favorite": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/passwords": {
+      "get": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "`q`, `website`, `tag`, `favorite`, `project_id` (all-projects admin keys), `trashed=only`",
+        "description": "`q`, `website`, `tag`, `favorite`, `project_id` (all-projects admin keys), `trashed=only`.\n\nGenerated from the route definition (GET api/v1/passwords). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerIndex",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "Create a Password",
+        "description": "Generated from the route definition (POST api/v1/passwords). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerStore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 191
+                  },
+                  "websites": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "maxItems": 20
+                  },
+                  "username": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 191
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024
+                  },
+                  "totp_secret": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1024
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 10000
+                  },
+                  "tags": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "maxItems": 20
+                  },
+                  "is_favorite": {
+                    "type": "boolean"
+                  },
+                  "project_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "title",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/passwords/generate": {
+      "post": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "`style` grouped (default) or random with `length`, `symbols`, `numbers`, `uppercase`",
+        "description": "`style` grouped (default) or random with `length`, `symbols`, `numbers`, `uppercase`. Stores nothing.\n\nGenerated from the route definition (POST api/v1/passwords/generate). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerGenerate",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/passwords/{id}/restore": {
+      "post": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "Restore (passwords)",
+        "description": "Generated from the route definition (POST api/v1/passwords/{id}/restore). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerRestore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/passwords/{id}/reveal": {
+      "post": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "The password and current verification code; `history=1` adds earlier passwords",
+        "description": "the password and current verification code; `history=1` adds earlier passwords.\n\nGenerated from the route definition (POST api/v1/passwords/{id}/reveal). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerReveal",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
     }
   },
   "components": {

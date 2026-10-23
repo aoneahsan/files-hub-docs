@@ -60,6 +60,12 @@ const sidebars: SidebarsConfig = {
           collapsed: true,
           items: ['api/turnstile'],
         },
+        {
+          type: 'category',
+          label: 'Password manager',
+          collapsed: true,
+          items: ['api/passwords'],
+        },
         'api/pagination',
         'api/errors-and-limits',
         'api/utilities-index',
