@@ -4,13 +4,19 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-10-22
+  date: 2026-10-23
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-10-23 — plan limits, and yesterday's send totals
+
+- **Not yet live** until backend `2026.10.23.2` is deployed; check `GET /api/version`.
+- A service plan can cap an external project's calls per minute or per day. Over the cap the API answers **429** naming the plan and the limit, with `Retry-After` ([status codes](api/errors-and-limits#status-codes)). The cap can be raised, lowered or lifted for one project on its own subscription.
+- The deliverability report gains `sent_yesterday` and `last_resort_sent_yesterday` per mailbox, so the last-resort mix stays checkable after the midnight reset.
 
 ## 2026-10-22 — per-service plans, database backups, and the HTTP 402
 

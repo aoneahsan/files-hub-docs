@@ -4,7 +4,7 @@ title: Errors & limits
 description: FilesHub returns a consistent JSON error envelope with an HTTP status code, and applies per-key rate limits and an upload size cap. This page lists every status code and limit.
 keywords: [fileshub errors, api error codes, rate limit, 429, upload size limit, http status codes, error envelope]
 last_update:
-  date: 2026-08-04
+  date: 2026-10-23
   author: Ahsan Mahmood
 ---
 
@@ -60,12 +60,12 @@ code table lives with the endpoints it belongs to:
 | `403 Forbidden` | Authenticated but not allowed. | Key lacks `read`/`write`, or origin/app-id not allowed. |
 | `404 Not Found` | Resource absent. | Unknown/expired `public_id`, cross-project access, or stored file missing. |
 | `422 Unprocessable Entity` | Validation failed. | No file, file too large, bad `visibility`, disallowed MIME, bad query param. |
-| `429 Too Many Requests` | Rate limit exceeded. | Too many requests on one key. |
+| `429 Too Many Requests` | Rate limit exceeded. | Too many requests on one key, or (since backend `2026.10.23.2`) an external project over its plan's `requests_per_minute` or `requests_per_day` for that service; the message names the plan and the limit, and `Retry-After` says when to try again. |
 | `500 Internal Server Error` | Server-side failure. | Storage/IO error. |
 
 ## Rate limiting
 
-Each API key has a configurable per-minute request limit. Exceeding it returns `429`. Build a small retry/backoff into batch jobs and avoid hammering the upload endpoint in tight loops. (Exact limits depend on the deployment's configuration.)
+Each API key has a configurable per-minute request limit. Exceeding it returns `429`. Build a small retry/backoff into batch jobs and avoid hammering the upload endpoint in tight loops. (Exact limits depend on the deployment's configuration.) An external project's plan may also cap each service per minute or per day; that limit can be set for one project on its own subscription.
 
 The Management plane is different: a flat **120 requests/minute** per access token, not configurable per key.
 
