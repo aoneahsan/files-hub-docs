@@ -68,8 +68,15 @@ Warm-up placement always means where a mailbox's **own** notes landed, which is 
 
 **Transactional mailboxes never have their limit cut or their sending paused.** Only their warm-up volume
 moves. A rate with too little evidence behind it is `null` and never triggers anything. Every change, from
-the tuner, the API or Nova, is stored with its reason. The owner gets a notification only when a mailbox
-needs attention, and a reminder once a week has passed without a recorded review.
+the tuner, the API or Nova, is stored with its reason.
+
+Since `2026.10.23.4` the server also runs the **weekly review** itself, once the newest review is seven days
+old. It reads the same numbers as `GET /email-marketing/deliverability`, takes one bounded policy step (the
+share of unconfirmed people per send is halved while a campaign mailbox bounces above 2%, and restored once
+every mailbox is under 1%), writes a summary and records the review. The owner is emailed only with what a
+person must do: failing DNS, a mailbox that cannot send, a notice that never arrived, the mailbox-check agent
+silent for a day, a project that will not resume by itself, or a ready mailbox no product uses. Fixes the
+system makes by itself are logged, never emailed.
 
 ## API
 
@@ -84,6 +91,8 @@ mailboxes serve every product; otherwise they answer 403. An unknown id answers 
 | `GET /email-marketing/deliverability/policy` | The rules in force, the defaults and each rule's bounds. |
 | `PUT /email-marketing/deliverability/policy` | `{"rules": {…}, "notes": "…"}` — change some or all rules. One bad rule refuses the whole request (`INVALID_RULES`, each problem in `error.details.rules`). The version goes up by one. |
 | `POST /email-marketing/deliverability/reviews` | `{"summary": "…", "model": "…", "changes_applied": […]}` records a review → 201 with `next_review_due`. |
+| `GET /email-marketing/deliverability/reviews` | The latest reviews, newest first: `id`, `at`, `summary`, `changes_applied`, `model`, `reviewed_by`. `?limit=` 1–50 (default 10). Since `2026.10.23.4`. |
+| `POST /email-marketing/deliverability/reviews/run` | Runs the server's own weekly review now. `{"dry_run": true}` answers what it would find and change (200) and saves and sends nothing; otherwise 201 with `review_id`, `summary`, `model`, `changes`, `owner_actions` and `notified`. Since `2026.10.23.4`. |
 | `GET /email-marketing/warmup/personas` | Personas, relationships (kind, chapter, story so far), and the available kinds and life arcs. |
 | `PATCH /email-marketing/warmup/personas/{id}` | `display_name`, `bio`, `voice`, `interests` (up to 5), `timezone`. Plain text only. |
 | `PATCH /email-marketing/warmup/relationships/{id}` | `kind`, `chapter`, `story_summary`. Plain text only. |
