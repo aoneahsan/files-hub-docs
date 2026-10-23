@@ -20,7 +20,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-22 — per-service plans, database backups, and the HTTP 402
 
-- **Not yet live** until backend `2026.10.22.4` is deployed; check `GET /api/version`.
+- **Live since backend `2026.10.22.4`** (deployed 2026-10-22).
 - FilesHub is priced per service: each API has its own monthly price, listed at [fileshub.zaions.com/pricing](https://fileshub.zaions.com/pricing). A project that calls a service it has no plan for gets **402** naming the service ([status codes](api/errors-and-limits#status-codes)). The owner's own projects are internal and never refused.
 - **Two new Management routes**, `GET /backups` and `GET /backups/{name}`, behind the new token scope `can_read_backups` ([endpoints](management-api/endpoints#database-backups)).
 
