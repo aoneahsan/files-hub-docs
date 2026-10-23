@@ -217,6 +217,9 @@ Both are flat now, matching every other key endpoint. Omitted booleans also stor
 they are real `false` values now.
 :::
 
+### `POST /projects/{project}/billing/checkout`
+Since `2026.10.23.6`: a Polar checkout URL for one service plan of the project — body `service` (required), `email`. See [Billing](../api/billing.md).
+
 ### `GET /projects/{project}/api-keys/{apiKey}`
 Fetch one key (safe representation).
 

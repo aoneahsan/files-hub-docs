@@ -12,6 +12,12 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-23 — billing by card, and supporting FilesHub
+
+- **Not yet live** until backend `2026.10.23.6` is deployed; check `GET /api/version`.
+- [Billing and support](api/billing.md): buy a service plan by card with `POST /api/v1/billing/checkout` (or the Management
+  plane's `…/projects/{project}/billing/checkout`); how the plan switches on, renews, cancels and ends; the support page.
+
 ## 2026-10-23 — password manager, and the weekly deliverability review on the server
 
 - **Not yet live** until backends `2026.10.23.4` and `2026.10.23.5` are deployed; check `GET /api/version`.

@@ -72,6 +72,7 @@ const sidebars: SidebarsConfig = {
             'api/passwords/dashboard',
           ],
         },
+        'api/billing',
         'api/pagination',
         'api/errors-and-limits',
         'api/utilities-index',

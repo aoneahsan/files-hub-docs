@@ -66,6 +66,12 @@ Since backend `2026.10.23.5`. Needs a key with a password scope; reach and abili
 | `POST` | `/passwords/{id}/restore` | `delete` | [Restore from Recently Deleted](passwords/endpoints.md#restore). |
 | `POST` | `/passwords/generate` | `create` / `update` | [A strong password](passwords/endpoints.md#generate). |
 
+## Billing
+
+| Method | Path | Permission | Purpose |
+|---|---|---|---|
+| `POST` | `/billing/checkout` | any active key | [A Polar checkout for one service plan](billing.md) of the key's project. |
+
 ## Jobs & status
 
 | Method | Path | Permission | Purpose |

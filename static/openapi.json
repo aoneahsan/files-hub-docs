@@ -54,6 +54,10 @@
     {
       "name": "Passwords",
       "description": "The password manager: logins per project behind own and admin key scopes. https://fileshub-docs.zaions.com/api/passwords"
+    },
+    {
+      "name": "Billing",
+      "description": "Buy service plans by card through Polar. https://fileshub-docs.zaions.com/api/billing"
     }
   ],
   "paths": {
@@ -28563,6 +28567,154 @@
             "$ref": "#/components/responses/NotFound"
           }
         }
+      }
+    },
+    "/billing/checkout": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "operationId": "billingCheckout",
+        "summary": "Open a Polar checkout for one service plan",
+        "description": "Any active API key; buys one service plan for the key's own project. The plan switches on from Polar's signed webhook, not from the redirect. Guide: https://fileshub-docs.zaions.com/api/billing",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "service"
+                ],
+                "properties": {
+                  "service": {
+                    "type": "string",
+                    "description": "A service key from /pricing.md"
+                  },
+                  "email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checkout ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "checkout_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "service": {
+                          "type": "string"
+                        },
+                        "monthly_price_usd": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "503": {
+            "description": "Polar could not open the checkout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/billing/checkout": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Create a Project",
+        "description": "Generated from the route definition (POST api/public/v1/projects/{project}/billing/checkout). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicPlanCheckoutControllerStore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     }
   },
