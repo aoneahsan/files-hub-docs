@@ -1,10 +1,10 @@
 ---
 sidebar_position: 3
 title: Management API endpoints
-description: Full endpoint reference for the FilesHub Public Management API — projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
-keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token]
+description: Full endpoint reference for the FilesHub Public Management API — access tokens, projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
+keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token, create access token api, rotate access token]
 last_update:
-  date: 2026-10-22
+  date: 2026-10-23
   author: Ahsan Mahmood
 ---
 
@@ -23,13 +23,69 @@ not generated**, so where it and the running API disagree the API is right — p
 ## Token
 
 ### `GET /token`
-Introspect the current token — name, `token_prefix`, expiry, last use, and the six capability booleans
-(`can_manage_supabase`, `can_read_vault`, `can_reveal_vault`, `can_write_vault`,
-`can_read_supabase_tokens`, `can_read_ai_accounts`), **all off by default**. The intended first call: it turns a later `403` into something you predicted.
+Introspect the current token — name, `token_prefix`, expiry, last use, `all_projects`, and every capability
+boolean (eleven since `2026.10.23.3`, the newest being `can_manage_access_tokens`), **all off by default**.
+Count them off the response, never off a written list. The table is in [Authentication](./authentication.md#introspect-first). The intended first call: it turns a later `403` into something you predicted.
 
 `projects[]` appears **only when `all_projects` is `false`**. On an all-projects token the key is absent
 entirely — not `null`, not `[]` — because such a token also covers projects that do not exist yet, so no
 list could describe it. Test with `'projects' in data`. Full detail: [Authentication](./authentication.md).
+
+## Access tokens
+
+Since `2026.10.23.3`. Every route needs **`can_manage_access_tokens`** (otherwise `403
+TOKEN_PERMISSION_DENIED`, `details.required_scope: can_manage_access_tokens`). `{accessToken}` is the numeric
+`id`.
+
+🔴 **A caller only ever reaches tokens no wider than itself** — of the same owner, holding no scope the caller
+lacks, reaching no project the caller cannot reach, and (if the caller expires) expiring no later. Anything
+wider is `404`, so a token limited to two projects can never rotate the owner's all-projects token and take
+its new value. The same rule refuses a **grant**: asking for a scope, `all_projects: true` or a later expiry
+the caller does not hold is `403 SCOPE_ESCALATION_REFUSED` with `details.scopes` naming each one.
+`can_write_vault` and `can_reveal_vault` count as holding `can_read_vault`.
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/access-tokens` | `?q=` (name), `?is_active=`, `page`, `per_page` | Paginated list (default 20, max 50) |
+| `POST` | `/access-tokens` | `name` (required), any scope booleans, `all_projects`, `project_ids`, `expires_at`, `is_active` | `201`, the token **plus `plaintext_token`, once** |
+| `GET` | `/access-tokens/{accessToken}` | — | The token |
+| `PATCH` | `/access-tokens/{accessToken}` | Any of the create fields; absent keys stay as they are | The token |
+| `DELETE` | `/access-tokens/{accessToken}` | — | `{"deleted": true, "cascade": {"project_links": n}}` |
+| `POST` | `/access-tokens/{accessToken}/rotate` | — | The token **plus `plaintext_token`, once**; the old value stops working at once |
+
+**Projects.** `project_ids` takes ids, public ids or slugs, and **replaces** the list. It needs
+`all_projects: false` (sending both `project_ids` and `all_projects: true` is `422`); switching a token to
+`all_projects: false` needs `project_ids` in the same call. A project outside the caller's reach answers like
+one that does not exist (`422 VALIDATION_FAILED`). On create, `all_projects` defaults to `true` only when no
+`project_ids` are sent — and that default is checked like any other grant, so a scoped caller must send
+`project_ids`.
+
+**Self-protection.** A token cannot lock itself out: removing its own `can_manage_access_tokens` is `409
+SELF_DEMOTION_REFUSED`, switching itself off is `409 SELF_REVOKE_REFUSED`, deleting itself is `409
+SELF_DELETE_REFUSED`. Use another managing token, or the admin. Rotating itself is allowed — the response is
+then the only copy of its new value, so store it before anything else.
+
+```bash
+curl -X POST https://fileshub.zaions.com/api/public/v1/access-tokens \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"name":"ci-reader","all_projects":false,"project_ids":["lifewell"],"can_read_vault":true,
+       "expires_at":"2027-01-01T00:00:00Z"}'
+```
+
+```json
+{ "data": { "id": 14, "name": "ci-reader", "token_prefix": "fh_pat_Q8yv2LcA", "is_self": false,
+  "all_projects": false, "can_manage_supabase": false, "can_manage_email_marketing": false,
+  "can_read_vault": true, "can_reveal_vault": false, "can_write_vault": false,
+  "can_read_supabase_tokens": false, "can_read_ai_accounts": false, "can_read_developer_accounts": false,
+  "can_read_payment_accounts": false, "can_read_backups": false, "can_manage_access_tokens": false,
+  "is_active": true, "expires_at": "2027-01-01T00:00:00+00:00", "last_used_at": null,
+  "created_at": "2026-10-23T10:00:00+00:00", "updated_at": "2026-10-23T10:00:00+00:00",
+  "projects": [{ "id": 24, "public_id": "01J…", "name": "LifeWell", "slug": "lifewell" }],
+  "plaintext_token": "fh_pat_…" } }
+```
+
+`projects` is present only when `all_projects` is `false`. The hash and the stored plaintext are never in a
+response. Every write is in the audit log (account-level, naming the acting token), never with a secret.
 
 ## Projects
 
@@ -458,7 +514,9 @@ code — see [Errors & limits](../api/errors-and-limits.md).)
 | 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope**; `details.required_scope` names it (values below). Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
 | 403 | `FORBIDDEN` | The action is not allowed for this token |
 | 404 | `NOT_FOUND` | Project / key / origin / account / service unknown **or** outside the token's scope |
+| 403 | `SCOPE_ESCALATION_REFUSED` | An access-token create or change would grant a scope, every project or a later expiry the caller lacks; `details.scopes` lists them |
 | 409 | `SLUG_ALREADY_EXISTS` | A project slug you supplied is taken |
+| 409 | `SELF_DEMOTION_REFUSED`, `SELF_REVOKE_REFUSED`, `SELF_DELETE_REFUSED` | A token tried to remove its own `can_manage_access_tokens`, switch itself off, or delete itself |
 | 409 | `ORIGIN_ALREADY_EXISTS` | That key already has an origin with the same type and value |
 | 409 | `PLAINTEXT_UNAVAILABLE` | A secret cannot be handed back; `details.reason` is `not_retained` or `undecryptable` |
 | 409 | `CLIENT_PROJECT` | A `send` credential check or a Google OAuth keep-alive run on a client project (`is_client_project: true`). Checked before either switch; `details` is `{"is_client_project": true}` |
@@ -479,6 +537,7 @@ The value is not uniform yet, so read it defensively:
 | Project vault reveal | `can_reveal_vault` |
 | Supabase **project** vault | `can_manage_supabase` |
 | Supabase **account** token | `can_read_supabase_tokens` |
+| Access tokens | `can_manage_access_tokens` |
 
 All four now report the token's own column name, so the 403 names the switch to enable in Nova.
 

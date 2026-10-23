@@ -4,7 +4,7 @@ title: Management API authentication
 description: Authenticate the FilesHub Management API with an fh_pat_ access token via the Authorization Bearer header, and understand token scope, expiry, and revocation.
 keywords: [fileshub access token, fh_pat, bearer token, authorization header, X-Access-Token, token expiry, revoke token, management api auth]
 last_update:
-  date: 2026-08-04
+  date: 2026-10-23
   author: Ahsan Mahmood
 ---
 
@@ -26,6 +26,10 @@ Create one in the FilesHub admin under **Access Tokens**: give it a name, decide
 **all projects** or a chosen set, and optionally set an expiry. The full token is shown on the token's
 detail page (owner only) and is stored encrypted, so you can re-read it later — but treat it like a
 password.
+
+A token holding `can_manage_access_tokens` can also create, change, rotate and delete tokens over the API —
+[`/access-tokens`](./endpoints.md#access-tokens) — never one wider than itself. Over the API the plaintext is
+returned **once**, by create and rotate; there is no reveal route.
 
 ## Introspect first
 
@@ -49,6 +53,8 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "can_read_ai_accounts": false,
     "can_read_developer_accounts": false,
     "can_read_payment_accounts": false,
+    "can_read_backups": false,
+    "can_manage_access_tokens": false,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -78,6 +84,9 @@ These booleans are **separate, off-by-default axes**, independent of the project
 | `can_write_vault` | Writing project credentials, and assigning accounts to projects. Implies read, **not** reveal — a caller populating a vault needs to see which fields are already set, and does not need every secret handed back |
 | `can_read_ai_accounts` | An [AI provider account's](./project-vault.md) key — account-wide, so it spends that account's balance and reaches every model on it |
 | `can_read_payment_accounts` | [Payment accounts](./payment-accounts.md) — Stripe, PayPal, Polar.sh and other payment-provider keys. They move money, so **no other flag grants it** |
+| `can_manage_email_marketing` | The [email-marketing](../email-marketing/api.md) lists, contacts, suppressions and sequences of the projects in scope |
+| `can_read_backups` | The [database backups](./endpoints.md#database-backups) — the whole database. Also needs an all-projects token |
+| `can_manage_access_tokens` | [Other access tokens](./endpoints.md#access-tokens): list, create, change, rotate, delete — only ever up to the caller's own scopes, projects and expiry. **No other flag grants it** |
 
 **Two imply `can_read_vault`: `can_reveal_vault` and `can_write_vault`.** Nothing else implies anything —
 each remaining flag grants only itself. In particular:
@@ -110,8 +119,10 @@ Every failure is `401` with a machine-readable `code`:
 
 ## Revoke
 
-Turn a token **inactive** (or delete it) in the admin. The next request with it returns
-`TOKEN_REVOKED` immediately — there is no cache to wait out.
+Turn a token **inactive** (or delete it) in the admin, or over the API with
+`PATCH /access-tokens/{id} {"is_active": false}` / `DELETE /access-tokens/{id}` from another token holding
+`can_manage_access_tokens`. The next request with it returns `TOKEN_REVOKED` (or `INVALID_ACCESS_TOKEN` once
+deleted) immediately — there is no cache to wait out. A token cannot switch itself off or delete itself.
 
 ## Rate limit
 

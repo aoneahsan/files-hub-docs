@@ -5,7 +5,7 @@ description: Endpoints for FilesHub email marketing — lists, contacts, paste a
 keywords: [email marketing api, POST /email-lists, contact import api, paste import, csv import api, sequences api, enroll contacts, email events api, subscribe endpoint, suppression api]
 tags: [email-marketing]
 last_update:
-  date: 2026-10-03
+  date: 2026-10-23
   author: Ahsan Mahmood
 ---
 
@@ -44,6 +44,8 @@ before a double opt-in form can accept sign-ups.
 | `POST` | `/email-lists/{list}/contacts` | One contact through the pipeline: 201 created · 200 `{duplicate: true}` · 422 with a `code` (`invalid_syntax`, `no_mx`, `missing_consent`, `suppressed`) |
 | `GET` · `PATCH` | `/email-contacts/{contact}` | Names, tags, custom fields, source, reason — never `status` |
 | `POST` | `/email-contacts/{contact}/unsubscribe` | Suppress across the project |
+| `POST` | `/email-contacts/{contact}/resubscribe` | `{reason}` (8+ characters: how the person re-consented). An `unsubscribed` contact becomes `active` and the project suppression is lifted, so the address's other unsubscribed contacts in this project come back too. Refused with 409: `contact_complained`, `contact_bounced`, `contact_erased`, `contact_not_unsubscribed`, `suppression_not_liftable`, and `global_stop` for an account-wide stop |
+| `POST` | `/email-contacts/{contact}/erase` | `{"confirm": "ERASE", reason?}` — GDPR erasure, the same as the dashboard action. The person is erased in **every** project: personal fields blanked, clicks and events deleted, marketing-log recipient blanked. The address **hash is kept** as an `erased` suppression, so a re-import is refused and nobody mails them again. Answers `{erased, contact, rows_erased, email_hash, suppressed_in_projects}`; an erased contact is 409 `contact_erased`. Irreversible |
 | `POST` | `/email-lists/{list}/contacts/bulk-tag` | `{contact_ids? or filter?, add?, remove?}` |
 | `GET` | `/email-contacts/{contact}/history` | The person's timeline, limited to this project. See [the people pool](./people-pool.md) |
 | `POST` | `/email-lists/{list}/imports` | Paste, CSV, or `method: "pool"` to fill the list [from the pool](./people-pool.md#fill-a-list-from-the-pool) with no upload |
@@ -80,8 +82,15 @@ The counters always add up to `total_rows`, and importing the same rows again ac
 |---|---|---|
 | `GET` | `/email-suppressions` | Hashes only; `?email=` looks one address up |
 | `POST` | `/email-suppressions` | `{email}` → a `manual` suppression |
+| `DELETE` | `/email-suppressions/{email_hash}` | `{reason}` (8+ characters). Lifts an `unsubscribed` or `manual` suppression; its unsubscribed contacts become active. Answers `{lifted, email_hash, was, reactivated}` |
 
-Removing a suppression is an admin action in the dashboard, with a written reason.
+All three since `2026.10.23.3`, on both planes, need `can_manage_email_marketing` and are audited with the
+reason. 🔴 **An account-wide stop is never lifted here.** When the person's `global_status` is not `active`
+(stopped everywhere, bounced, complained, invalid, erased) both routes answer 409 `global_stop` with
+`details.global_status`: lifting one reopens the person to every project, so it stays an owner action in the
+dashboard (Email People → Allow mail again). A `bounced_hard`, `complained` or `erased` project suppression is
+409 `suppression_not_liftable` for the same reason. On the management plane codes are upper-case
+(`GLOBAL_STOP`); on the data plane lower-case.
 
 ## Sequences
 
@@ -157,7 +166,11 @@ day keep updating for 7 days.
 `timezone`, `bounce_pause_threshold_percent`, and the pacing fields `send_gap_min_seconds` (default 300),
 `send_gap_max_seconds` (default 900, never below the minimum) and `spread_sends` (default true). The response
 carries a `pacing` block: `{min_gap_seconds, max_gap_seconds, spread, next_send_at, max_per_day}`. Since `2026.10.03.2` a project also warms up: `warmup_start` (default 10) is its cap on the first sending day and `warmup_step_per_day` (default 3) is added each day until `daily_cap` is reached (`warmup_start: 0` turns it off); the response reports today's cap as `daily_cap_today` beside a `warmup` block. A sequence step accepts `track_clicks` (default true); with false the email keeps its real links and that step records no clicks. On the management plane, `accounts: ["apps@…"]` chooses the
-project's marketing mailboxes (empty = every active marketing mailbox). `?dns=1` adds each mailbox's
+project's marketing mailboxes (empty = every active marketing mailbox). A mailbox already assigned to
+another project is refused (422) unless the body also sends `"move_accounts": true` **and** the token reaches
+both projects; then it is taken from the other project in the same transaction and the response adds
+`moved: [{email, from: {id, slug, name}}]` (since `2026.10.23.3`). A mailbox held by a project the token cannot
+reach is refused without naming that project. `?dns=1` adds each mailbox's
 SPF/DKIM/DMARC check.
 
 ## Public subscribe (browser)

@@ -12,6 +12,13 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-23 — access tokens over the API, mailbox moves, resubscribe, lift and erase
+
+- **Not yet live** until backend `2026.10.23.3` is deployed; check `GET /api/version`.
+- [Access tokens](management-api/endpoints#access-tokens) can be listed, created, changed, rotated and deleted over the Management API with the new `can_manage_access_tokens` scope — never one wider than the calling token, and never the calling token's own lockout (`SELF_DEMOTION_REFUSED`, `SELF_REVOKE_REFUSED`, `SELF_DELETE_REFUSED`). The plaintext is returned once, from create and rotate.
+- `PATCH …/email-marketing/settings` accepts `move_accounts: true` to take a mailbox from another project the token also reaches; the response lists what `moved` from where.
+- New contact routes: [`resubscribe`, `erase`, and lifting a project suppression](email-marketing/api#suppressions). An account-wide stop still needs the dashboard.
+
 ## 2026-10-23 — plan limits, and yesterday's send totals
 
 - **Not yet live** until backend `2026.10.23.2` is deployed; check `GET /api/version`.
