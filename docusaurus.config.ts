@@ -33,10 +33,6 @@ const config: Config = {
   headTags: [
     {
       tagName: 'link',
-      attributes: { rel: 'canonical', href: `${SITE_URL}/` },
-    },
-    {
-      tagName: 'link',
       attributes: {
         rel: 'alternate',
         type: 'application/xml',
