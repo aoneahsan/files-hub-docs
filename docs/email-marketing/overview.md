@@ -64,8 +64,9 @@ carries their meaning. The panel tint is your brand colour mixed 8% over white.
 
 A scheduled job runs every minute and sends the steps that are due, inside the project's sending window and
 under its daily cap. Each email leaves from one of the project's **marketing mailboxes** (least-used first)
-and never from a transactional one. New mailboxes start at a low daily limit and are raised by hand as the
-numbers stay healthy.
+and never from a transactional one. New mailboxes start at a low daily limit and warm up; since `2026.10.20.1` the server
+tunes each mailbox's limit every night from its bounces, complaints and inbox placement
+([deliverability](./deliverability.md)).
 
 **Sends are paced** (from `2026.10.03.1`). A project sends one marketing email at a time and waits a random gap
 before the next: 5 to 15 minutes by default. With "spread sends" on, the gaps stretch so the daily cap covers the
