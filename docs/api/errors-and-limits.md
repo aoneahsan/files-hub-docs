@@ -60,7 +60,7 @@ code table lives with the endpoints it belongs to:
 | `403 Forbidden` | Authenticated but not allowed. | Key lacks `read`/`write`, or origin/app-id not allowed. |
 | `404 Not Found` | Resource absent. | Unknown/expired `public_id`, cross-project access, or stored file missing. |
 | `422 Unprocessable Entity` | Validation failed. | No file, file too large, bad `visibility`, disallowed MIME, bad query param. |
-| `429 Too Many Requests` | Rate limit exceeded. | Too many requests on one key, or (since backend `2026.10.23.2`) an external project over its plan's `requests_per_minute` or `requests_per_day` for that service; the message names the plan and the limit, and `Retry-After` says when to try again. |
+| `429 Too Many Requests` | Rate limit exceeded, or (since `2026.10.24.1`) 30 invalid API keys from one address within a minute, which refuses that address for 10 minutes. A valid key is never counted. | Too many requests on one key, or (since backend `2026.10.23.2`) an external project over its plan's `requests_per_minute` or `requests_per_day` for that service; the message names the plan and the limit, and `Retry-After` says when to try again. |
 | `500 Internal Server Error` | Server-side failure. | Storage/IO error. |
 
 ## Rate limiting

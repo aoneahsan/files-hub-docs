@@ -33,8 +33,8 @@ Every utility takes `X-API-Key`. Write operations (`POST`) need the `write` perm
 | Language | `/language` | Detect the language of text. |
 | Spam | `/spam` | Score text for spam signals. |
 | Barcodes | `/barcodes/*` | Generate barcodes. |
-| JWT | `/jwt/*` | Encode, decode, and verify JSON Web Tokens. |
-| SVG | `/svg/*` | Generate/transform SVG. |
+| JWT | `/jwt/*` | Encode, decode, and verify JSON Web Tokens. Since `2026.10.24.1` each project signs with its own key, so a token from one project never verifies in another; `expires_in` is at most 30 days. |
+| SVG | `/svg/*` | SVG to PNG/JPG is **not available yet**: the server cannot read SVG, so both routes answer `501`. |
 | Sitemaps | `/sitemaps/*` | Build sitemap XML. |
 | Feeds | `/feeds/*` | Build RSS/Atom feeds. |
 | Meta tags | `/meta-tags`, `/metadata/*` | Generate and read page meta tags. |

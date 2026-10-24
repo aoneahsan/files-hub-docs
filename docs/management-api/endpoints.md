@@ -162,6 +162,15 @@ Credential **values** are written through the vault endpoints, not here — see
 
 ### `DELETE /projects/{project}`
 
+Since backend `2026.10.24.1` this needs the token scope [`can_delete_projects`](./authentication.md) (403
+`TOKEN_PERMISSION_DENIED` without it) **and** the project's slug typed back in the body, or it answers 422
+`CONFIRMATION_REQUIRED` and deletes nothing:
+
+```bash
+curl -X DELETE "$B/projects/my-app" -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"confirm": "my-app"}'
+```
+
 :::danger This destroys the project's entire credential vault
 
 The cascade is wider than it looks: API keys, origins, stored objects and audit logs — **and** every stored

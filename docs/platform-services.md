@@ -31,7 +31,7 @@ These utility endpoints are documented in detail inside the FilesHub app itself;
 |---|---|
 | **Short URLs** | Create short links and track clicks. |
 | **QR codes** | Generate QR codes (with a download endpoint). |
-| **Link preview** | Fetch title/description/image metadata for a URL. |
+| **Link preview** | Fetch title/description/image metadata for a public `http`/`https` URL (private and internal addresses are refused; see [Security](api/security.md)). |
 | **Pastes** | A pastebin-style store for text snippets. |
 | **Sitemap / feed** | Generate XML sitemaps and RSS feeds. |
 
@@ -43,7 +43,7 @@ These utility endpoints are documented in detail inside the FilesHub app itself;
 | **Encoding** | Base64 and URL encode/decode. |
 | **Converters** | JSON ↔ CSV ↔ XML ↔ YAML, Markdown ↔ HTML, and more. |
 | **Generators** | UUID / ULID / NanoID, random data, slugs, lorem ipsum. |
-| **Encryption vault** | Store, retrieve, and encrypt/decrypt secrets by key. |
+| **Encryption vault** | Store, retrieve, and encrypt/decrypt secrets by key. Since `2026.10.24.1` the stateless encrypt/decrypt routes are **off for every key until switched on** (the key's `encryption_vault` permission) and use their own key, which cannot read anything else FilesHub stores. |
 
 ## Media processing
 

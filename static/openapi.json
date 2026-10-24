@@ -1387,7 +1387,7 @@
           "Management API"
         ],
         "summary": "Delete a project",
-        "description": "Delete a project. \ud83d\udd34 IRREVERSIBLE, and it destroys the project's ENTIRE CREDENTIAL VAULT: at the database level it cascades api keys, origins, stored objects and audit logs AND project_credentials, project_files, project_links and project_vault_reveals. Since 2026.08.19.1 the response reports all six counts and the call is audited as public_api.project.deleted with those counts in its metadata; before that release `cascade` named only api_keys and stored_objects, so the credentials went unmentioned, and the call left no audit row at all.",
+        "description": "Since 2026.10.24.1: needs the token scope can_delete_projects (403 TOKEN_PERMISSION_DENIED without it) and the body {\"confirm\": \"<project slug>\"} (422 CONFIRMATION_REQUIRED otherwise). Delete a project. \ud83d\udd34 IRREVERSIBLE, and it destroys the project's ENTIRE CREDENTIAL VAULT: at the database level it cascades api keys, origins, stored objects and audit logs AND project_credentials, project_files, project_links and project_vault_reveals. Since 2026.08.19.1 the response reports all six counts and the call is audited as public_api.project.deleted with those counts in its metadata; before that release `cascade` named only api_keys and stored_objects, so the credentials went unmentioned, and the call left no audit row at all.",
         "operationId": "deleteProject",
         "servers": [
           {
@@ -1468,7 +1468,26 @@
             },
             "description": "Project id, ULID public_id, or slug."
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "confirm"
+                ],
+                "properties": {
+                  "confirm": {
+                    "type": "string",
+                    "description": "The project's slug, typed back."
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/projects/{project}/api-keys": {
@@ -25795,7 +25814,7 @@
           "Svg"
         ],
         "summary": "Svg To Jpg (svgs)",
-        "description": "Generated from the route definition (POST api/v1/svg/to-jpg). Data plane: authenticate with X-API-Key.",
+        "description": "Not available yet: the server cannot read SVG, so this answers 501. Generated from the route definition (POST api/v1/svg/to-jpg). Data plane: authenticate with X-API-Key.",
         "operationId": "tier3ControllerSvgToJpg",
         "servers": [
           {
@@ -25860,6 +25879,9 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationError"
+          },
+          "501": {
+            "description": "SVG conversion is not available on this server yet."
           }
         },
         "security": [
@@ -25875,7 +25897,7 @@
           "Svg"
         ],
         "summary": "Svg To Png (svgs)",
-        "description": "Generated from the route definition (POST api/v1/svg/to-png). Data plane: authenticate with X-API-Key.",
+        "description": "Not available yet: the server cannot read SVG, so this answers 501. Generated from the route definition (POST api/v1/svg/to-png). Data plane: authenticate with X-API-Key.",
         "operationId": "tier3ControllerSvgToPng",
         "servers": [
           {
@@ -25932,6 +25954,9 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationError"
+          },
+          "501": {
+            "description": "SVG conversion is not available on this server yet."
           }
         },
         "security": [
@@ -26664,7 +26689,7 @@
           "Vault"
         ],
         "summary": "Decrypt (vaults)",
-        "description": "Generated from the route definition (POST api/v1/vault/decrypt). Data plane: authenticate with X-API-Key.",
+        "description": "Off until the key's encryption_vault permission is switched on (403 otherwise). Uses its own key, which cannot read anything else FilesHub stores (since 2026.10.24.1). Generated from the route definition (POST api/v1/vault/decrypt). Data plane: authenticate with X-API-Key.",
         "operationId": "encryptionVaultControllerDecrypt",
         "servers": [
           {
@@ -26724,7 +26749,7 @@
           "Vault"
         ],
         "summary": "Encrypt (vaults)",
-        "description": "Generated from the route definition (POST api/v1/vault/encrypt). Data plane: authenticate with X-API-Key.",
+        "description": "Off until the key's encryption_vault permission is switched on (403 otherwise). Uses its own key, which cannot read anything else FilesHub stores (since 2026.10.24.1). Generated from the route definition (POST api/v1/vault/encrypt). Data plane: authenticate with X-API-Key.",
         "operationId": "encryptionVaultControllerEncrypt",
         "servers": [
           {

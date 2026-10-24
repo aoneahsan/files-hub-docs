@@ -56,6 +56,7 @@ curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $
     "can_read_backups": false,
     "can_manage_access_tokens": false,
     "can_manage_passwords": false,
+    "can_delete_projects": false,
     "expires_at": null,
     "last_used_at": "2026-07-18T09:12:44+00:00",
     "created_at": "2026-07-18T09:00:00+00:00"
@@ -89,6 +90,7 @@ These booleans are **separate, off-by-default axes**, independent of the project
 | `can_read_backups` | The [database backups](./endpoints.md#database-backups) — the whole database. Also needs an all-projects token |
 | `can_manage_access_tokens` | [Other access tokens](./endpoints.md#access-tokens): list, create, change, rotate, delete — only ever up to the caller's own scopes, projects and expiry. **No other flag grants it** |
 | `can_manage_passwords` | Since `2026.10.23.5`: setting an API key's [password-manager scope](../api/passwords/access-and-scopes.md) (`password_scope`, `password_all_projects`, `password_abilities`) on the api-keys endpoints. Every-project reach also needs `all_projects`. **No other flag grants it** |
+| `can_delete_projects` | Since `2026.10.24.1`: [deleting a project](./endpoints.md#delete-projectsproject), which removes its whole vault, keys and files. The call also needs `{"confirm": "<slug>"}`. **No other flag grants it** |
 
 **Two imply `can_read_vault`: `can_reveal_vault` and `can_write_vault`.** Nothing else implies anything —
 each remaining flag grants only itself. In particular:

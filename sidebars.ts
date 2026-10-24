@@ -75,6 +75,7 @@ const sidebars: SidebarsConfig = {
         'api/billing',
         'api/pagination',
         'api/errors-and-limits',
+        'api/security',
         'api/utilities-index',
         'api/openapi',
       ],

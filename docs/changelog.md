@@ -4,13 +4,23 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-10-23
+  date: 2026-10-24
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-10-24 — security hardening
+
+- **Not yet live** until backend `2026.10.24.1` is deployed; check `GET /api/version`.
+- New [Security](api/security.md) page: stored secrets under their own key, the URLs FilesHub will fetch for you,
+  invalid-key limits, files and images, two-step sign-in for the dashboard, and the browser security headers.
+- [Deleting a project](management-api/endpoints.md#delete-projectsproject) needs the new token scope
+  [`can_delete_projects`](management-api/authentication.md) and `{"confirm": "<slug>"}`.
+- The encryption vault's encrypt/decrypt routes are off until a key's `encryption_vault` permission is switched
+  on; JWTs are signed per project; SVG conversion answers `501` ([utilities](api/utilities-index.md)).
 
 ## 2026-10-23 — billing by card, and supporting FilesHub
 
