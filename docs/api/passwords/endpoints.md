@@ -26,6 +26,9 @@ is explained in [Access and scopes](./access-and-scopes.md). The machine-readabl
 | `DELETE` | [`/passwords/{id}`](#delete) | `delete` | To Recently Deleted, or remove for good |
 | `POST` | [`/passwords/{id}/restore`](#restore) | `delete` | Back from Recently Deleted |
 | `POST` | [`/passwords/generate`](#generate) | `create` or `update` | A strong password (stores nothing) |
+| `GET` | [`/passwords/security`](#security) | `list` | Weak, reused, compromised and old passwords |
+| `POST` | [`/passwords/import`](#import) | `create` | Import a CSV from iCloud Passwords, Chrome, Bitwarden or 1Password |
+| `GET` | [`/passwords/{id}/activity`](#activity) | `list` | Who changed or revealed an entry, and when |
 
 ## The entry object
 
@@ -91,8 +94,10 @@ curl -s "https://fileshub.zaions.com/api/v1/passwords?q=registrar&per_page=20" -
 
 | Body field | Rules |
 |---|---|
-| `title` | **Required.** String, ≤ 191. |
-| `password` | **Required.** String, ≤ 1,024. |
+| `kind` | `login` (default), `wifi` or `note`. |
+| `title` | **Required.** String, ≤ 191. For a Wi-Fi network, its name. |
+| `password` | **Required** unless `kind` is `note`. String, ≤ 1,024. |
+| `wifi_security` | `wpa3`, `wpa2`, `wpa`, `wep` or `open` (Wi-Fi networks). |
 | `websites` | List of up to 20 strings (`example.com`, `https://example.com/login`). |
 | `username` | String, ≤ 191. |
 | `totp_secret` | Base32 setup key (at least 16 characters, spaces allowed) or an `otpauth://totp/…?secret=…` link. |
@@ -148,8 +153,10 @@ Sets `last_revealed_at` and writes an audit-log row.
 }
 ```
 
-- `verification_code` is `null` when no setup key is stored. Codes are the standard 30-second, 6-digit
-  (RFC 6238, SHA-1) codes; `expires_in` is the seconds left. Ask again for the next one.
+- `verification_code` is `null` when no setup key is stored. Codes are RFC 6238 codes: 6 digits every 30
+  seconds with SHA-1 unless the `otpauth://` link named other `digits`, `period` or `algorithm`; `expires_in`
+  is the seconds left. Ask again for the next one.
+- At most 30 reveals a minute per key; the 31st answers `429` with `Retry-After`.
 - `password_history` is `null` unless `history` was requested; newest first.
 - `unreadable: true` with `password: null` means the stored value can no longer be decrypted.
 
@@ -168,6 +175,59 @@ it disappears from lists and lookups, and `GET /passwords?trashed=only` shows it
 ## Restore {#restore}
 
 `POST /passwords/{id}/restore` → `200` with the entry, back in place. Restoring a live entry is a no-op.
+
+## Security recommendations {#security}
+
+`GET /passwords/security` → `200`. Counts the entries the key can reach (logins and Wi-Fi networks, never
+notes) in five groups, each with up to 50 ids. Every-project admin keys may add `?project_id=`.
+
+```json
+{
+  "data": {
+    "weak":        { "count": 1, "ids": ["01m5…"] },
+    "reused":      { "count": 2, "ids": ["01m6…", "01m7…"] },
+    "compromised": { "count": 1, "ids": ["01m6…"] },
+    "old":         { "count": 0, "ids": [] },
+    "not_checked": { "count": 3, "ids": ["01m5…", "01m7…", "01m8…"] }
+  }
+}
+```
+
+`weak` is a strength score of 0–1, `reused` shares a password with another entry in the same project,
+`compromised` appears in a known breach, `old` has not changed for a year, `not_checked` has not been checked
+for breaches yet (imports are checked by the nightly sweep).
+
+## Import {#import}
+
+`POST /passwords/import` → `201`. Send the CSV your password app exports, as `csv` (text) or `file`
+(multipart, ≤ 2 MB). FilesHub reads the columns by name, so exports from **iCloud Passwords, Chrome,
+Bitwarden and 1Password** all work: title or name, URL, username, password, notes, OTPAuth or TOTP, tags or
+folder, favorite. Up to 1,000 rows. At most 10 imports a minute.
+
+```bash
+curl -X POST "$B/passwords/import" -H "X-API-Key: $KEY" -F "file=@Passwords.csv"
+```
+
+```json
+{ "data": { "created": 41, "skipped": 3, "invalid": 1, "ids": ["01m5…", "…"] } }
+```
+
+Entries are created exactly as `POST /passwords` would (owned by this key's scope, in its project). A row
+whose website and username already exist among the entries the key can reach is `skipped`; a row without a
+title (or website) or password is `invalid`. A CSV with no password column answers `422`. 🔴 The export file
+holds every password in plain text: delete it from your computer once the import is done.
+
+## Activity {#activity}
+
+`GET /passwords/{id}/activity` → `200`, newest first, paginated (default 20, maximum 50). Every create,
+change, reveal, delete, restore and import that touched the entry, from the audit log:
+
+```json
+{ "data": [ { "action": "password.revealed", "api_key_id": 77, "ip_address": "203.0.113.7",
+              "details": { "scope": "admin", "history": false }, "at": "2026-10-24T09:12:03+00:00" } ] }
+```
+
+Entries in Recently Deleted keep their activity.
 
 ## Generate {#generate}
 

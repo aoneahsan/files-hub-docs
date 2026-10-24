@@ -75,6 +75,15 @@ Examples:
 | Signup service | `own` | `create`, `list`, `reveal`, `update` | Stores the accounts it creates; cannot delete |
 | Your admin script | `admin` + every project | all | Manages every project's shared logins |
 
+## Limit a key to your servers' addresses
+
+Since `2026.10.24.2` any API key can carry `allowed_ips`: a list of IP addresses or CIDR ranges
+(`203.0.113.7`, `203.0.113.0/24`, `2001:db8::/32`). When it is set, the key answers `403 This API key is not
+allowed from this address.` from anywhere else, so a copied key is useless. Recommended for every key with a
+password scope. Set it in the dashboard (API key → **Allowed IP Addresses**, one per line) or on the
+Management API (`"allowed_ips": ["203.0.113.7"]`; `null` or `[]` removes it). Do not set it on a key your
+app calls from browsers or phones: their addresses change.
+
 ## Granting in the dashboard
 
 Nova → Projects & API → **API Keys** → the key → **Edit**:

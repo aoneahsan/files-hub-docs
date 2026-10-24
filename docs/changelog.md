@@ -12,6 +12,17 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-24 — password manager v2
+
+- **Not yet live** until backend `2026.10.24.2` is deployed; check `GET /api/version`.
+- [Password manager](api/passwords/overview.md): Wi-Fi networks and secure notes beside logins; a breach check
+  against Have I Been Pwned (`compromised`); any `otpauth://` code (8 digits, 60 seconds, SHA-256/512);
+  Recently Deleted empties after 30 days; 30 reveals a minute per key; answers never cached.
+- New endpoints: [security recommendations](api/passwords/endpoints.md#security),
+  [CSV import](api/passwords/endpoints.md#import) and [activity](api/passwords/endpoints.md#activity).
+- Any API key can be [limited to your servers' addresses](api/passwords/access-and-scopes.md#limit-a-key-to-your-servers-addresses) with `allowed_ips`.
+- [Dashboard](api/passwords/dashboard.md): kinds, a Security filter, a breach badge, CSV import and export.
+
 ## 2026-10-24 — security hardening
 
 - **Not yet live** until backend `2026.10.24.1` is deployed; check `GET /api/version`.

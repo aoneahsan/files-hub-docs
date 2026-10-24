@@ -28741,6 +28741,166 @@
           }
         ]
       }
+    },
+    "/passwords/security": {
+      "get": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "Weak, reused, compromised, old and not-yet-checked entries (counts and up to 50 ids each)",
+        "description": "weak, reused, compromised, old and not-yet-checked entries (counts and up to 50 ids each).\n\nGenerated from the route definition (GET api/v1/passwords/security). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerSecurity",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/passwords/{id}/activity": {
+      "get": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "Who changed or revealed the entry, newest first (paginated)",
+        "description": "who changed or revealed the entry, newest first (paginated).\n\nGenerated from the route definition (GET api/v1/passwords/{id}/activity). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerActivity",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/passwords/import": {
+      "post": {
+        "tags": [
+          "Passwords"
+        ],
+        "summary": "`csv` (text) or `file` (an upload), exported from iCloud Passwords, Chrome, Bitwarden or 1Password",
+        "description": "`csv` (text) or `file` (an upload), exported from iCloud Passwords, Chrome, Bitwarden or 1Password.\n\nGenerated from the route definition (POST api/v1/passwords/import). Data plane: authenticate with X-API-Key.",
+        "operationId": "passwordControllerImport",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csv": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 2000000
+                  },
+                  "file": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "binary",
+                    "maxLength": 2048
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
     }
   },
   "components": {

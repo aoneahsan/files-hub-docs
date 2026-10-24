@@ -19,8 +19,12 @@ Password (a strong one is already filled in; replace it if you have your own), t
 Key (paste the base32 key or the `otpauth://` link from the site's two-factor screen), Notes, Tags (separated
 by commas), Favorite and the Project.
 
+**Kinds.** Choose *Login*, *Wi-Fi network* (its name as Title, its password, and the security type) or
+*Secure note* (a title and notes, no password).
+
 **See a password.** Open the entry. The detail page shows the password and the current verification code with
-a copy button. Only the owner account sees these two fields. The list shows each entry's strength, and the
+a copy button. Only the owner account sees these two fields, and each view is recorded as a reveal in the
+audit log (and in *Last Revealed*). The list shows each entry's strength, and the
 detail page says whether the password is reused in the project.
 
 **Edit.** Leave Password or the setup key empty to keep the current one. A new password moves the old one into
@@ -28,6 +32,15 @@ the history (the last 10 are kept; the API returns them on reveal).
 
 **Delete and restore.** Deleting moves an entry to Recently Deleted: choose *With Trashed* or *Only Trashed* in
 the list's filter to see it, then *Restore* or *Force Delete*.
+
+**Security.** The *Breach Check* badge says whether the password appears in a known data breach. The list's
+**Security** filter shows the compromised, reused, weak or year-old passwords.
+
+**Import and export** (owner only). *Import Passwords (CSV)* reads an export from iCloud Passwords, Chrome,
+Bitwarden or 1Password into the project you pick; duplicates by website and username are skipped. Select
+entries and run *Export Passwords (CSV)* for an iCloud-format file; the download link works once, within 5
+minutes, and the export is recorded in the audit log. Both files hold passwords in plain text: delete them
+when you are done.
 
 **Who made it.** The Ownership panel shows whether an entry is own- or admin-owned, whether it came from the
 API or the dashboard, which key created it, and when the password last changed and was last revealed.

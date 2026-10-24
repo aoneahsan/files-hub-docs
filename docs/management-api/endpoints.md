@@ -215,7 +215,9 @@ Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_
 `restricted`, `allow_no_origin`, `email_daily_limit`, `rate_limit_per_minute`, `permissions`
 object, `is_test`, and (since `2026.10.23.5`, needing `can_manage_passwords`) the password-manager fields
 `password_scope`, `password_all_projects`, `password_abilities` — see
-[Password manager → Access and scopes](../api/passwords/access-and-scopes.md). **Every omitted boolean defaults to `false`** — ask for the capabilities you
+[Password manager → Access and scopes](../api/passwords/access-and-scopes.md), and (since `2026.10.24.2`)
+`allowed_ips`: IP addresses or CIDR ranges the key works from, as a list or newline/comma text (`null` = anywhere;
+[details](../api/passwords/access-and-scopes.md#limit-a-key-to-your-servers-addresses)). **Every omitted boolean defaults to `false`** — ask for the capabilities you
 want. **Returns the plaintext once, flat under `data`** alongside the key's fields:
 ```json
 { "data": { "id": 7, "key_prefix": "fh_live_ab12", "can_read": true, "restricted": false, "plaintext_key": "fh_live_ab12..." } }
@@ -235,7 +237,7 @@ Fetch one key (safe representation).
 ### `PATCH /projects/{project}/api-keys/{apiKey}`
 Update `name`, the `can_*` flags, `restricted`, `allow_no_origin`, limits, `permissions`,
 `is_active`, or the password-manager fields (`password_scope`, `password_all_projects`,
-`password_abilities`; the token needs `can_manage_passwords`). Turning `restricted` on with no origins denies every request — add origins first
+`password_abilities`; the token needs `can_manage_passwords`), or `allowed_ips`. Turning `restricted` on with no origins denies every request — add origins first
 (below), or rely on the platform-wide [global origins](#global-origins) an administrator has
 configured (check those first; a key does not need its own copy of one).
 
