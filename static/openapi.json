@@ -13090,11 +13090,80 @@
                                 "null"
                               ],
                               "format": "date-time"
+                            },
+                            "next_expiry_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            },
+                            "final_expiry_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            },
+                            "final_hours_left": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "expiring_soon": {
+                              "type": "boolean",
+                              "description": "Inside the account's economy window (default 24 h before the final expiry): max_tier is economy."
+                            },
+                            "economy_reason": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "enum": [
+                                "expiring",
+                                "low_balance",
+                                null
+                              ]
                             }
-                          }
+                          },
+                          "description": "Present on a refusal too, for the account behind it (backend 2026.10.25.1)."
                         },
                         "note": {
                           "type": "string"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "credit_expired",
+                            "no_credits",
+                            "low_balance",
+                            "no_account",
+                            "not_eligible",
+                            null
+                          ],
+                          "description": "Why `available` is false (backend 2026.10.25.1); null when available."
+                        },
+                        "fallback": {
+                          "type": "object",
+                          "description": "The cheapest paid model per provider, to use on the product's own key while FilesHub refuses (backend 2026.10.25.1).",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "model": {
+                                "type": "string"
+                              },
+                              "price_per_mtok_usd": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "number"
+                                }
+                              }
+                            }
+                          }
                         }
                       }
                     }
@@ -13286,6 +13355,51 @@
                         "refresh_after": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "credit_expired",
+                            "no_credits",
+                            "low_balance",
+                            "no_account",
+                            "not_eligible",
+                            null
+                          ],
+                          "description": "Why `available` is false (backend 2026.10.25.1); null when available."
+                        },
+                        "credits": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "description": "Dates and flags only, never a balance (backend 2026.10.25.1).",
+                          "properties": {
+                            "final_expiry_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            },
+                            "expiring_soon": {
+                              "type": "boolean"
+                            },
+                            "economy_reason": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "enum": [
+                                "expiring",
+                                "low_balance",
+                                null
+                              ]
+                            }
+                          }
                         }
                       }
                     }

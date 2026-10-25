@@ -4,13 +4,21 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-10-24
+  date: 2026-10-25
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-10-25 — AI credit: refusal reasons, end dates, the last-day economy tier, the cheapest fallback
+
+- **Not yet live** until backend `2026.10.25.1` is deployed; check `GET /api/version`.
+- [AI credit routing](management-api/endpoints.md#ai-credit-routing): every refusal names its `reason`
+  (`credit_expired`, `no_credits`, …); `credits` adds `final_expiry_at`, `expiring_soon` and `economy_reason`; the
+  last 24 hours of a credit run at `economy`; `fallback` names the cheapest paid model per provider.
+- `GET /ai-accounts/{account}` lists the credit grants with their dates; `notes` moved to the reveal.
 
 ## 2026-10-24 — password manager v2
 

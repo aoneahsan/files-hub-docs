@@ -448,14 +448,16 @@ for reading one project's configuration, while an AI key authorises a whole prov
 
 ### AI credit routing
 
-**Not yet live** — backend `2026.10.10.1`. A product never hardcodes an AI model or key. Its **server** asks
-FilesHub which account and tier to use, calls the provider itself, then reports what it spent:
+Live since backend `2026.10.10.1` (route and usage) and `2026.10.22.3` (the hourly lease). A product never
+hardcodes an AI model or key. Its **server** asks FilesHub which account and tier to use, calls the provider
+itself, then reports what it spent:
 
 | Route | Plane / scope | Returns |
 |---|---|---|
 | `GET /projects/{project}/ai/route?capability=chat` | Management, `can_read_ai_accounts` | `available`, `account`, `api_key`, `max_tier`, `tiers` (model + effort per tier), `credits`, `refresh_after` |
-| `POST /projects/{project}/ai/usage` | Management, `can_read_ai_accounts` | `202 {recorded}`; batches of up to 100 items |
-| `GET /api/v1/ai/status` | data plane, `X-API-Key` | `available`, `max_tier`, `refresh_after` only. Safe in a browser bundle |
+| `POST /projects/{project}/ai/lease?capability=chat` | Management, `can_read_ai_accounts` | This hour's allowance: `lease` (`id`, `allowance_usd`, `reported_usd`, `remaining_usd`, `expires_at`), `account`, `api_key`, `max_tier`, `tiers` with `price_per_mtok_usd`, `credits`, `refresh_after`. Asking again in the same hour returns the same lease; a refusal is `409` with a typed code |
+| `POST /projects/{project}/ai/usage` | Management, `can_read_ai_accounts` | `202 {recorded}`; batches of up to 100 items. With a lease, each item carries `lease_id` and a unique `idempotency_key` (a retry counts once); an unproven cost is sent as `usage_basis: estimated` and corrected later with `corrects_idempotency_key` |
+| `GET /api/v1/ai/status` | data plane, `X-API-Key` | `available`, `max_tier`, `refresh_after` only. Safe in a browser bundle. From `2026.10.25.1` also `reason` and `credits` (`final_expiry_at`, `expiring_soon`, `economy_reason`; never a balance) |
 
 - **Which account.** Projects assigned to an account reserve it. Other projects borrow it only when *Allow
   Other Projects* is on, and only while its balance is above its reserve. Projects with no assigned account use
@@ -463,12 +465,34 @@ FilesHub which account and tier to use, calls the provider itself, then reports 
   marked `paid` are never routed.
 - **Which tier.** `economy` < `standard` < `enhanced`. Use the highest tier at or below **both** `max_tier` and
   the user's own plan. When the balance is low, `max_tier` drops to `economy`.
+- **Leases (recommended for new consumers).** Ask for a lease once an hour, price each call with
+  `tiers.*.price_per_mtok_usd`, spend at most `lease.remaining_usd` before `lease.expires_at`, and report every call.
 - **When to ask again.** The answer changes at most hourly. Cache it until `refresh_after`, which is also sent
   as `Cache-Control`, and do not poll.
 - `available: false` means no account has usable credit. Pause the AI features until `refresh_after`; nothing
   is billed.
 - 🔴 The `route` response contains a live provider key. Call it from a server, never a browser. Every read is
   recorded as a reveal.
+
+#### From backend `2026.10.25.1` (built, deploy pending)
+
+- **Why it is refused.** `ai/route`, `ai/status` and every lease `409` carry `reason`: `credit_expired` (every
+  grant has passed its expiry or is inside the account's `expiry_buffer_hours`, 15 by default), `no_credits`,
+  `low_balance` (a shared account is under its reserve), `no_account` (nothing serves the capability) or
+  `not_eligible`. A `409` also carries `error.details.credits` for the account behind it, when there is one.
+- **When the credit ends.** `credits` gains `next_expiry_at` (the soonest grant still holding money; `expires_at`
+  and `hours_left` keep meaning this), `final_expiry_at` and `final_hours_left` (the last usable grant),
+  `expiring_soon` and `economy_reason` (`expiring` | `low_balance` | null).
+- **The last day runs at economy.** Inside an account's `economy_within_hours` (default 24, 0 turns it off) of
+  its final expiry, `max_tier` is `economy` whatever the balance, so the cheapest model uses what is left.
+- **The cheapest paid fallback.** The route, the lease and every `409` carry `fallback`, for example
+  `{"openai": {"model": "gpt-6-luna", "price_per_mtok_usd": {…}}, "anthropic": {"model": "claude-haiku-5-5", …}}`.
+  Use it on your own paid key while FilesHub refuses, instead of a model you picked.
+- **The account read shows the grants.** `GET /ai-accounts/{account}` → `credits.final_expiry_at`,
+  `usable_until`, `hours_left`, `expiry_buffer_hours`, `economy_within_hours` and `grants[]` (`amount_usd`,
+  `granted_at`, `expires_at`, `usable`; the latest 20). 🔴 `notes` is no longer in the plain read or the list
+  (`has_notes` says whether notes exist). It comes back only from `POST /ai-accounts/{account}/reveal`, and a note
+  that contains a key-shaped string is refused with `422`.
 
 :::warning These endpoints are live; the data is thin
 Probed 2026-08-19: **7 of 55 projects hold a stored credential**, so most reveals return the empty skeleton.
