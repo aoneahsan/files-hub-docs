@@ -166,12 +166,36 @@ day keep updating for 7 days.
 `timezone`, `bounce_pause_threshold_percent`, and the pacing fields `send_gap_min_seconds` (default 300),
 `send_gap_max_seconds` (default 900, never below the minimum) and `spread_sends` (default true). The response
 carries a `pacing` block: `{min_gap_seconds, max_gap_seconds, spread, next_send_at, max_per_day}`. Since `2026.10.03.2` a project also warms up: `warmup_start` (default 10) is its cap on the first sending day and `warmup_step_per_day` (default 3) is added each day until `daily_cap` is reached (`warmup_start: 0` turns it off); the response reports today's cap as `daily_cap_today` beside a `warmup` block. A sequence step accepts `track_clicks` (default true); with false the email keeps its real links and that step records no clicks. On the management plane, `accounts: ["apps@…"]` chooses the
-project's marketing mailboxes (empty = every active marketing mailbox). A mailbox already assigned to
-another project is refused (422) unless the body also sends `"move_accounts": true` **and** the token reaches
-both projects; then it is taken from the other project in the same transaction and the response adds
-`moved: [{email, from: {id, slug, name}}]` (since `2026.10.23.3`). A mailbox held by a project the token cannot
-reach is refused without naming that project. `?dns=1` adds each mailbox's
-SPF/DKIM/DMARC check.
+project's marketing mailboxes (an empty list sends nothing).
+
+### Shared mailboxes
+
+Since `2026.10.25.2` one mailbox can serve several projects. A mailbox already assigned to another project is
+**shared**: this project is added beside the others, nothing is taken away, and the response adds
+`shared: ["apps@…"]`. Each project on the mailbox gets an audit row `email_marketing.accounts_shared`.
+
+- **An equal share of the day.** Each project with work due on the mailbox (marketing on, not paused, an active
+  campaign with someone due) gets an equal part of the mailbox's `daily_limit`. In the last two hours of a
+  project's send window the shares are lifted, so the unused part goes to whoever still has work. The mailbox's
+  own limit always holds, and the 120-second rest between two campaign sends counts across all projects.
+- **A used share waits.** When every mailbox of the project has used its share, the engine tries again 15 minutes
+  later; a direct send answers `429` with code `share_used`.
+- **Test sends** (`[TEST]`) ignore the share and need only room in the mailbox.
+- **Pauses are per mailbox.** When the nightly check pauses a mailbox, it stops every project on it.
+- `"move_accounts": true` still takes a mailbox **exclusively**: the token must reach both projects, the other
+  assignment is removed in the same transaction, and the response adds
+  `moved: [{email, from: {id, slug, name}}]` (since `2026.10.23.3`). A mailbox held by a project the token cannot
+  reach is refused without naming that project. Leave it off unless you mean to take the mailbox away.
+
+Each entry of `accounts.list` carries `email`, `active`, `daily_limit`, `sent_today` (all projects),
+`sent_today_by_project`, `share_today`, `remaining_for_project`, `shared_with` (the other projects your token
+reaches: `{id, slug, name}`), `shared_with_count` (all of them), and, while paused, `paused_until`,
+`paused_reason` and `paused_after_sends_of` (the project whose sends failed most in the week before the pause:
+`this project`, a slug you can reach, or `another project`). `accounts.remaining_today` is this project's
+remaining sends across its mailboxes. `?dns=1` adds each mailbox's SPF/DKIM/DMARC check.
+
+`{project}` in these routes accepts the numeric id, the ULID or the slug, like every other management route
+(fixed in `2026.10.25.2`).
 
 ## Public subscribe (browser)
 

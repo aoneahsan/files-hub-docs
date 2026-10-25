@@ -12,6 +12,15 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-25 — Shared marketing mailboxes
+
+- **Not yet live** until backend `2026.10.25.2` is deployed; check `GET /api/version`.
+- [Email marketing settings](email-marketing/api.md#shared-mailboxes): a mailbox can serve several projects. Assigning
+  one held elsewhere shares it instead of refusing; each project gets an equal share of its day, the rest rolls over
+  in the last two hours of the window, `share_used` names a used share, and pauses apply to every project on the box.
+- The email-marketing routes accept a numeric project id.
+- OpenAI's economy tier now runs on `gpt-6-luna` (`gpt-5-nano` shuts down 2026-12-11).
+
 ## 2026-10-25 — AI credit: refusal reasons, end dates, the last-day economy tier, the cheapest fallback
 
 - **Not yet live** until backend `2026.10.25.1` is deployed; check `GET /api/version`.

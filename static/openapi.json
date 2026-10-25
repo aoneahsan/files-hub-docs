@@ -33194,7 +33194,7 @@
           },
           "accounts": {
             "type": "object",
-            "description": "mode (assigned | all_marketing_accounts), list of mailboxes with daily limits and optional DNS checks, remaining_today"
+            "description": "mode (assigned | unassigned); list of mailboxes, each with daily_limit, sent_today (all projects), sent_today_by_project, share_today, remaining_for_project, shared_with [{id, slug, name}] (projects the token reaches), shared_with_count, and while paused paused_until, paused_reason, paused_after_sends_of; optional DNS checks; remaining_today (this project). A mailbox may serve several projects since 2026.10.25.2."
           }
         }
       },
