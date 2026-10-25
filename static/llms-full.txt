@@ -100,6 +100,13 @@ Query params: `page` (default 1), `per_page` (default 20, max 100), `visibility`
 }
 ```
 
+### Change expiry — PATCH /api/v1/objects/{public_id} (write)
+
+Send exactly one of `expires_at` (an ISO date in the future, or `null` to keep the object until it is deleted) or
+`expires_in_days` (1–3650, from now). Returns `200 { "data": { public_id, project_id, original_filename, visibility,
+mime_type, size_bytes, url, expires_at }, "message": "Updated" }`. Only the key's own project's objects; `422` when
+neither or both are sent or the date is past. Since backend `2026.10.25.3`.
+
 ### Delete — DELETE /api/v1/objects/{public_id} (write)
 
 Permanently deletes the database record and the stored file (a model event removes the file).

@@ -287,6 +287,55 @@
             "$ref": "#/components/responses/NotFound"
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "Objects"
+        ],
+        "summary": "Change an object's expiry",
+        "description": "Send exactly one of expires_at (future ISO date, or null to clear) or expires_in_days (1-3650). Write key of the object's own project. Since 2026.10.25.3.",
+        "operationId": "updateObjectExpiry",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expires_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "expires_in_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3650
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated; data carries the object with its new expires_at."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "description": "Neither or both fields, a past date, or days out of range."
+          }
+        }
       }
     },
     "/emails/send": {

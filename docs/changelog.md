@@ -12,6 +12,16 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-25 — Object expiry after upload, vault digest behind reveal
+
+- **Not yet live** until backend `2026.10.25.3` is deployed; check `GET /api/version`.
+- New [Change an object's expiry](api/update-object.md): `PATCH /api/v1/objects/{public_id}` with `expires_at`
+  (or `null`) or `expires_in_days`.
+- **Breaking:** the [project vault](management-api/project-vault.md) plain read no longer returns a file's `checksum`;
+  the reveal still does.
+- Vault writes over the Management API now check each field's declared format, as Nova does; `native_update.api_key`
+  accepts only an `nu_app_…` key (`INVALID_VAULT_VALUE` otherwise).
+
 ## 2026-10-25 — Shared marketing mailboxes
 
 - **Not yet live** until backend `2026.10.25.2` is deployed; check `GET /api/version`.

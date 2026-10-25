@@ -40,6 +40,8 @@
   objects; a `read` key for private ones.
 - List: `GET /api/v1/objects` (read) — paginated (`page`, `per_page` max 100, optional
   `visibility` filter).
+- Change expiry: `PATCH /api/v1/objects/{public_id}` (write) — `expires_at` (future date or `null` to clear) or
+  `expires_in_days`; returns `{ data: {…, expires_at}, message }`.
 - Delete: `DELETE /api/v1/objects/{public_id}` (write).
 
 ## Email API

@@ -279,11 +279,13 @@ the slug.
   },
   "files": [ { "service": "firebase", "key": "google_services_json",
                "filename": "google-services.json", "size_bytes": 2481,
-               "checksum": "9f2c…", "mime_type": "application/json" } ]
+               "mime_type": "application/json" } ]
 } }
 ```
 
-`has` tells you what a reveal **would** return; `values` carries only the non-secret ones. Note
+`has` tells you what a reveal **would** return; `values` carries only the non-secret ones. A file's `checksum`
+(the SHA-256 of its content) is only in the reveal's `files` since backend `2026.10.25.3`: a digest can confirm a
+guess, so a read-only token is not shown it. Note
 `google_cloud.values` is empty while `has.oauth_web_client_secret` is `true` — that is the contract
 working.
 

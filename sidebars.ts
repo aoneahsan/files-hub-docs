@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
             'api/upload-object',
             'api/get-object',
             'api/list-objects',
+            'api/update-object',
             'api/delete-object',
           ],
         },

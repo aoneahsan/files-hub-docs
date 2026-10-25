@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Delete an object
 description: DELETE /api/v1/objects/{public_id} permanently removes a FilesHub object — both the database record and the stored file. Requires a write-permission API key.
 keywords: [fileshub delete, DELETE object, remove file api, delete file curl, write permission]
