@@ -12,6 +12,12 @@ last_update:
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
 
+## 2026-10-25 — Backend on Laravel 13
+
+- **Not yet live** until backend `2026.10.25.4` is deployed; check `GET /api/version`.
+- No API change. The backend moves to Laravel 13 (PHP 8.3+), and `POST /api/v1/favicons/generate` works again: it had
+  depended on an image package that was never installed.
+
 ## 2026-10-25 — Object expiry after upload, vault digest behind reveal
 
 - **Not yet live** until backend `2026.10.25.3` is deployed; check `GET /api/version`.
