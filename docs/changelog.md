@@ -14,13 +14,13 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-25 — Backend on Laravel 13
 
-- **Not yet live** until backend `2026.10.25.4` is deployed; check `GET /api/version`.
+- Live since 2026-10-26 (backend `2026.10.25.4`, deployed with `2026.10.25.5`).
 - No API change. The backend moves to Laravel 13 (PHP 8.3+), and `POST /api/v1/favicons/generate` works again: it had
   depended on an image package that was never installed.
 
 ## 2026-10-25 — Object expiry after upload, vault digest behind reveal
 
-- **Not yet live** until backend `2026.10.25.3` is deployed; check `GET /api/version`.
+- Live since 2026-10-26 (backend `2026.10.25.3`, deployed with `2026.10.25.5`).
 - New [Change an object's expiry](api/update-object.md): `PATCH /api/v1/objects/{public_id}` with `expires_at`
   (or `null`) or `expires_in_days`.
 - **Breaking:** the [project vault](management-api/project-vault.md) plain read no longer returns a file's `checksum`;
@@ -30,7 +30,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-25 — Shared marketing mailboxes
 
-- **Not yet live** until backend `2026.10.25.2` is deployed; check `GET /api/version`.
+- Live since 2026-10-26 (backend `2026.10.25.2`, deployed with `2026.10.25.5`).
 - [Email marketing settings](email-marketing/api.md#shared-mailboxes): a mailbox can serve several projects. Assigning
   one held elsewhere shares it instead of refusing; each project gets an equal share of its day, the rest rolls over
   in the last two hours of the window, `share_used` names a used share, and pauses apply to every project on the box.
@@ -39,7 +39,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-25 — AI credit: refusal reasons, end dates, the last-day economy tier, the cheapest fallback
 
-- **Not yet live** until backend `2026.10.25.1` is deployed; check `GET /api/version`.
+- Live since 2026-10-25 (backend `2026.10.25.1`).
 - [AI credit routing](management-api/endpoints.md#ai-credit-routing): every refusal names its `reason`
   (`credit_expired`, `no_credits`, …); `credits` adds `final_expiry_at`, `expiring_soon` and `economy_reason`; the
   last 24 hours of a credit run at `economy`; `fallback` names the cheapest paid model per provider.
@@ -47,7 +47,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-24 — password manager v2
 
-- **Not yet live** until backend `2026.10.24.2` is deployed; check `GET /api/version`.
+- Live (backend `2026.10.24.2`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - [Password manager](api/passwords/overview.md): Wi-Fi networks and secure notes beside logins; a breach check
   against Have I Been Pwned (`compromised`); any `otpauth://` code (8 digits, 60 seconds, SHA-256/512);
   Recently Deleted empties after 30 days; 30 reveals a minute per key; answers never cached.
@@ -58,7 +58,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-24 — security hardening
 
-- **Not yet live** until backend `2026.10.24.1` is deployed; check `GET /api/version`.
+- Live (backend `2026.10.24.1`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - New [Security](api/security.md) page: stored secrets under their own key, the URLs FilesHub will fetch for you,
   invalid-key limits, files and images, two-step sign-in for the dashboard, and the browser security headers.
 - [Deleting a project](management-api/endpoints.md#delete-projectsproject) needs the new token scope
@@ -68,13 +68,13 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-23 — billing by card, and supporting FilesHub
 
-- **Not yet live** until backend `2026.10.23.6` is deployed; check `GET /api/version`.
+- Live (backend `2026.10.23.6`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - [Billing and support](api/billing.md): buy a service plan by card with `POST /api/v1/billing/checkout` (or the Management
   plane's `…/projects/{project}/billing/checkout`); how the plan switches on, renews, cancels and ends; the support page.
 
 ## 2026-10-23 — password manager, and the weekly deliverability review on the server
 
-- **Not yet live** until backends `2026.10.23.4` and `2026.10.23.5` are deployed; check `GET /api/version`.
+- Live (backend `2026.10.23.4` and `2026.10.23.5`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - New [password manager](api/passwords/overview.md): logins per project with websites, username, encrypted password,
   verification codes, notes, tags and Recently Deleted. A [quick start](api/passwords/quick-start.md), the
   [access and scopes](api/passwords/access-and-scopes.md) rules (own and admin key scopes, every-project reach,
@@ -85,14 +85,14 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-23 — access tokens over the API, mailbox moves, resubscribe, lift and erase
 
-- **Not yet live** until backend `2026.10.23.3` is deployed; check `GET /api/version`.
+- Live (backend `2026.10.23.3`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - [Access tokens](management-api/endpoints#access-tokens) can be listed, created, changed, rotated and deleted over the Management API with the new `can_manage_access_tokens` scope — never one wider than the calling token, and never the calling token's own lockout (`SELF_DEMOTION_REFUSED`, `SELF_REVOKE_REFUSED`, `SELF_DELETE_REFUSED`). The plaintext is returned once, from create and rotate.
 - `PATCH …/email-marketing/settings` accepts `move_accounts: true` to take a mailbox from another project the token also reaches; the response lists what `moved` from where.
 - New contact routes: [`resubscribe`, `erase`, and lifting a project suppression](email-marketing/api#suppressions). An account-wide stop still needs the dashboard.
 
 ## 2026-10-23 — plan limits, and yesterday's send totals
 
-- **Not yet live** until backend `2026.10.23.2` is deployed; check `GET /api/version`.
+- Live (backend `2026.10.23.2`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - A service plan can cap an external project's calls per minute or per day. Over the cap the API answers **429** naming the plan and the limit, with `Retry-After` ([status codes](api/errors-and-limits#status-codes)). The cap can be raised, lowered or lifted for one project on its own subscription.
 - The deliverability report gains `sent_yesterday` and `last_resort_sent_yesterday` per mailbox, so the last-resort mix stays checkable after the midnight reset.
 
@@ -109,7 +109,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-10-10 — AI credit routing: which AI account and tier a project uses
 
-- **Not yet live.** The backend release that carries it (`2026.10.10.1`) is built and committed; check `GET /api/version`.
+- Live (backend `2026.10.10.1`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - **Three new routes**, described in [Management API endpoints](management-api/endpoints#ai-credit-routing): `GET /projects/{project}/ai/route` and `POST /projects/{project}/ai/usage` on the Management plane (`can_read_ai_accounts`), and the browser-safe `GET /api/v1/ai/status`.
 - AI accounts gain credit grants with expiry dates, reserved and shared accounts, and a balance-capped tier. The account records in `GET /ai-accounts` now carry a `credits` block.
 - `openapi.json` gains the 3 paths.
@@ -123,7 +123,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-09-29 — email marketing: lists, imports, drip sequences, one-click unsubscribe
 
-- **Not yet live.** The backend release that carries it is built and committed; these endpoints behave as documented once it is deployed. Check `GET /api/version`.
+- Live (production runs `2026.10.25.5`, confirmed 2026-10-26).
 - 🔴 **A new section, [Email marketing](email-marketing/overview).** Per-project contact lists; imports by CSV (with a column map), by pasting addresses, or one at a time — all through one pipeline whose counters always add up; project-wide suppression; RFC 8058 one-click unsubscribe; double opt-in sign-up forms; drip sequences with tracks and conditions on clicks and product events; click tracking; and product events (`signed_up`, `activated`). [API reference](email-marketing/api) · [product integration recipe](email-marketing/product-integration).
 - **A new key flag, `can_manage_email_marketing`** (default off), on API keys and access tokens. It is a flag, not a service permission, because the endpoints return personal data — and every one of them except `subscribe` refuses a browser `Origin`.
 - **Email templates:** `is_marketing` and `layout` on [create](api/email-templates). A marketing template belongs to one project, is invisible to other projects' keys, and cannot be sent through `POST /emails/send`.
@@ -131,7 +131,7 @@ Notable changes to this documentation site, latest first. The FilesHub product's
 
 ## 2026-09-16 — the vault takes a file of any format, and the OTA signing key has a home
 
-- **Not yet live.** Backend `2026.09.16.1` is built and committed; these endpoints behave as documented once it is deployed.
+- Live (backend `2026.09.16.1`; production runs `2026.10.25.5`, confirmed 2026-10-26).
 - 🔴 **A new freeform service, [`general_files`](management-api/project-vault#services-covered) — it accepts any file, of any format, under a key you name.** There is no allow-list, no extension check and no content sniffing anywhere on the upload path. Previously a file could only be stored on a key the registry declared as a file field, so anything else — a `.pem`, a `.zip`, a recovery-codes `.txt` — had nowhere to go. It is deliberately separate from `general`, which holds freeform *text*: the two row kinds share a `(project, service, key)` identity in different tables, so one service accepting both would let them shadow each other.
 - **`mime_type` is documented** on both upload forms. It is what "pick the file type" means: recorded, handed back on read, optional, and never validated against a list.
 - **A new field, `native_update.signing_private_key`** (`type: file`, `secret: true`). The OTA platform stores a signing key's public half and fingerprint and never the private key, so a locally generated one has no second copy anywhere; this gives it one. It carries no `env_key`, so no generated `.env` block can ever contain it.
