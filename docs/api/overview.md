@@ -42,7 +42,7 @@ Keys can also be **restricted** to your own web origins or apps so you can ship 
 | `POST` | `/objects` | `write` | [Upload an object](upload-object) (multipart `file`). |
 | `GET` | `/objects/{public_id}` | none (public) / `read` (private) | [Download / view an object](get-object) (streams the file). |
 | `GET` | `/objects` | `read` | [List objects](list-objects) (paginated). |
-| `PATCH` | `/objects/{public_id}` | `write` | [Change an object's expiry](update-object): `expires_at`, `expires_in_days` or `null`. |
+| `PATCH` | `/objects/{public_id}` | `write` | [Change an object's expiry or visibility](update-object): `expires_at`, `expires_in_days` or `null`; `visibility`. |
 | `DELETE` | `/objects/{public_id}` | `write` | [Delete an object](delete-object). |
 
 ## Email endpoints
