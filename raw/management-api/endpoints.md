@@ -1,0 +1,590 @@
+---
+sidebar_position: 3
+title: Management API endpoints
+description: Full endpoint reference for the FilesHub Public Management API — access tokens, projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
+keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token, create access token api, rotate access token]
+last_update:
+  date: 2026-10-23
+  author: Ahsan Mahmood
+---
+
+# Endpoint reference
+
+Base URL `https://fileshub.zaions.com/api/public/v1`. Every request needs
+`Authorization: Bearer fh_pat_...` (see [Authentication](./authentication.md)).
+
+Success is always `{"data": ...}`; failure is always `{"error": {"code", "message", "details"?}}`. Most lists
+are paginated and add `meta` + `message` — see [Pagination](../api/pagination.md) for the full contract and
+the three deliberately unpaginated exceptions.
+
+The machine spec is [`openapi.json`](https://fileshub-docs.zaions.com/openapi.json). It is **hand-maintained,
+not generated**, so where it and the running API disagree the API is right — please report the divergence.
+
+## Token
+
+### `GET /token`
+Introspect the current token — name, `token_prefix`, expiry, last use, `all_projects`, and every capability
+boolean (twelve since `2026.10.23.5`, the newest being `can_manage_passwords`), **all off by default**.
+Count them off the response, never off a written list. The table is in [Authentication](./authentication.md#introspect-first). The intended first call: it turns a later `403` into something you predicted.
+
+`projects[]` appears **only when `all_projects` is `false`**. On an all-projects token the key is absent
+entirely — not `null`, not `[]` — because such a token also covers projects that do not exist yet, so no
+list could describe it. Test with `'projects' in data`. Full detail: [Authentication](./authentication.md).
+
+## Access tokens
+
+Since `2026.10.23.3`. Every route needs **`can_manage_access_tokens`** (otherwise `403
+TOKEN_PERMISSION_DENIED`, `details.required_scope: can_manage_access_tokens`). `{accessToken}` is the numeric
+`id`.
+
+🔴 **A caller only ever reaches tokens no wider than itself** — of the same owner, holding no scope the caller
+lacks, reaching no project the caller cannot reach, and (if the caller expires) expiring no later. Anything
+wider is `404`, so a token limited to two projects can never rotate the owner's all-projects token and take
+its new value. The same rule refuses a **grant**: asking for a scope, `all_projects: true` or a later expiry
+the caller does not hold is `403 SCOPE_ESCALATION_REFUSED` with `details.scopes` naming each one.
+`can_write_vault` and `can_reveal_vault` count as holding `can_read_vault`.
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/access-tokens` | `?q=` (name), `?is_active=`, `page`, `per_page` | Paginated list (default 20, max 50) |
+| `POST` | `/access-tokens` | `name` (required), any scope booleans, `all_projects`, `project_ids`, `expires_at`, `is_active` | `201`, the token **plus `plaintext_token`, once** |
+| `GET` | `/access-tokens/{accessToken}` | — | The token |
+| `PATCH` | `/access-tokens/{accessToken}` | Any of the create fields; absent keys stay as they are | The token |
+| `DELETE` | `/access-tokens/{accessToken}` | — | `{"deleted": true, "cascade": {"project_links": n}}` |
+| `POST` | `/access-tokens/{accessToken}/rotate` | — | The token **plus `plaintext_token`, once**; the old value stops working at once |
+
+**Projects.** `project_ids` takes ids, public ids or slugs, and **replaces** the list. It needs
+`all_projects: false` (sending both `project_ids` and `all_projects: true` is `422`); switching a token to
+`all_projects: false` needs `project_ids` in the same call. A project outside the caller's reach answers like
+one that does not exist (`422 VALIDATION_FAILED`). On create, `all_projects` defaults to `true` only when no
+`project_ids` are sent — and that default is checked like any other grant, so a scoped caller must send
+`project_ids`.
+
+**Self-protection.** A token cannot lock itself out: removing its own `can_manage_access_tokens` is `409
+SELF_DEMOTION_REFUSED`, switching itself off is `409 SELF_REVOKE_REFUSED`, deleting itself is `409
+SELF_DELETE_REFUSED`. Use another managing token, or the admin. Rotating itself is allowed — the response is
+then the only copy of its new value, so store it before anything else.
+
+```bash
+curl -X POST https://fileshub.zaions.com/api/public/v1/access-tokens \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"name":"ci-reader","all_projects":false,"project_ids":["lifewell"],"can_read_vault":true,
+       "expires_at":"2027-01-01T00:00:00Z"}'
+```
+
+```json
+{ "data": { "id": 14, "name": "ci-reader", "token_prefix": "fh_pat_Q8yv2LcA", "is_self": false,
+  "all_projects": false, "can_manage_supabase": false, "can_manage_email_marketing": false,
+  "can_read_vault": true, "can_reveal_vault": false, "can_write_vault": false,
+  "can_read_supabase_tokens": false, "can_read_ai_accounts": false, "can_read_developer_accounts": false,
+  "can_read_payment_accounts": false, "can_read_backups": false, "can_manage_access_tokens": false,
+  "is_active": true, "expires_at": "2027-01-01T00:00:00+00:00", "last_used_at": null,
+  "created_at": "2026-10-23T10:00:00+00:00", "updated_at": "2026-10-23T10:00:00+00:00",
+  "projects": [{ "id": 24, "public_id": "01J…", "name": "LifeWell", "slug": "lifewell" }],
+  "plaintext_token": "fh_pat_…" } }
+```
+
+`projects` is present only when `all_projects` is `false`. The hash and the stored plaintext are never in a
+response. Every write is in the audit log (account-level, naming the acting token), never with a secret.
+
+## Projects
+
+A project carries more than a name. Alongside `id` / `public_id` / `name` / `slug` / `status` / `notes` /
+`created_at`, every read returns **`description`**, **`app_identifier`**, **`primary_url`**, **`repo_url`**,
+**`repo_is_public`**, **`platforms[]`** and **`tech_stack[]`** — and all seven are writable on create and
+update. `platforms` and `tech_stack` are always arrays, empty rather than `null`. Every project payload also
+carries three booleans that only [`PATCH`](#patch-projectsproject) writes: `test_events_enabled`,
+`google_oauth_keepalive_enabled` and, since `2026.09.11.3`, `is_client_project`.
+
+:::note One field is not yours to change later
+`app_identifier` is the reverse-DNS app id. It is **immutable once the app is published to a store** —
+changing it orphans every existing install. The API will accept the write; the store will not forgive it.
+:::
+
+### `GET /projects`
+List the projects this token may manage. Query: `q` (substring match on name or slug), `status`
+(`active` / `inactive`), `per_page`, `page`. Each item includes `api_keys_count`.
+
+### `POST /projects`
+Create a project. Body: `name` (required, ≤255) plus any of `slug`, `status` (`active` default), `notes`,
+`description`, `app_identifier`, `primary_url`, `repo_url`, `repo_is_public`, `platforms[]`,
+`tech_stack[]`.
+
+`slug` accepts lowercase letters, digits and hyphens only. **Omit it and a unique one is generated from the
+name; supply one and it is used verbatim** — so a duplicate comes back as `409 SLUG_ALREADY_EXISTS` rather
+than being quietly de-duplicated for you.
+
+```bash
+curl -X POST .../projects -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"name":"My Web App"}'
+```
+```json
+{ "data": { "id": 42, "public_id": "01KX...", "name": "My Web App", "slug": "my-web-app",
+            "status": "active", "notes": null, "description": null, "app_identifier": null,
+            "primary_url": null, "repo_url": null, "repo_is_public": null,
+            "platforms": [], "tech_stack": [], "created_at": "2026-07-18T..." } }
+```
+
+A token scoped to specific projects is **attached to the project it just created**, so its next call to that
+project resolves instead of 404-ing.
+
+### `GET /projects/{project}`
+Fetch one project by **numeric id, ULID `public_id`, or slug**. Adds an abbreviated `api_keys` list —
+`id`, `name`, `key_prefix`, `restricted`, `is_active` per key, newest first. For the full key representation
+call the api-keys endpoints below.
+
+### `PATCH /projects/{project}`
+Update any of the project's own fields. Send only what you are changing; an omitted key is left alone.
+`platforms`, `tech_stack` and `permissions` **replace** rather than merge. Unlike on create, `slug` does not
+accept `null` here — omit it to leave the slug alone. A duplicate slug is `409 SLUG_ALREADY_EXISTS`.
+
+Since `2026.08.19.1` this also accepts **`supabase_project_id`** — the registered Supabase project this app
+uses. Worth writing back the first time you resolve it, so the next session reads a stored fact instead of
+re-deriving one from a committed `.env` and a name match. Two conditions: the token needs
+`can_manage_supabase`, and the target must be a Supabase project it could already see — linking widens what
+the token may read, so the write is gated by the same rule as the read (`422` otherwise).
+
+Since `2026.09.11.1` it also accepts the project's two opt-in switches, both **off by default** so a client
+project is never touched: **`test_events_enabled`** (FilesHub may send it "Test Analytics" events — see
+[Credential checks](./credential-checks.md)) and **`google_oauth_keepalive_enabled`** (FilesHub keeps its
+Google OAuth clients in use — see [Google OAuth clients](./google-oauth-keepalive.md)). Either needs
+`can_write_vault`; without it the field is refused with a `422`.
+
+Since `2026.09.11.3` it also accepts **`is_client_project`**, default `false`. It marks a
+client's project and **outranks both switches**: such a project is never sent a test event and never has its
+Google OAuth clients kept alive, whatever the switches say, and a Supabase project linked to it is never kept
+alive either. The switches already default off; this is a second, independent layer, so a switch turned on
+by mistake still cannot reach a client's analytics, OAuth clients or database. Clearing the flag re-exposes
+the project to its switches, so it needs the same `can_write_vault` scope (`422` without it).
+
+Credential **values** are written through the vault endpoints, not here — see
+[Project vault](./project-vault.md).
+
+### `DELETE /projects/{project}`
+
+Since backend `2026.10.24.1` this needs the token scope [`can_delete_projects`](./authentication.md) (403
+`TOKEN_PERMISSION_DENIED` without it) **and** the project's slug typed back in the body, or it answers 422
+`CONFIRMATION_REQUIRED` and deletes nothing:
+
+```bash
+curl -X DELETE "$B/projects/my-app" -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"confirm": "my-app"}'
+```
+
+:::danger This destroys the project's entire credential vault
+
+The cascade is wider than it looks: API keys, origins, stored objects and audit logs — **and** every stored
+credential, every stored config file, every project link and the whole reveal trail. Nothing here is
+recoverable, and the vault rows are the least recoverable part.
+
+Until `2026.08.19.1` the response named only `api_keys` and `stored_objects`, so the credentials went
+unmentioned, and this was the one write on the plane that left **no audit row at all**. Both are fixed: every
+count comes back (eight since `2026.09.11.1`, which added the OAuth-client inventory and the check history), and the call is recorded as `public_api.project.deleted` with those counts in its
+metadata — written *before* the delete, because the audit row's own `project_id` cascades too.
+:::
+
+```json
+{ "data": { "deleted": true, "cascade": {
+    "api_keys": 3, "stored_objects": 128,
+    "vault_credentials": 11, "vault_files": 2, "links": 4, "vault_reveals": 7,
+    "google_oauth_clients": 3, "credential_check_results": 21 } } }
+```
+
+## API keys
+
+`{project}` accepts an id, `public_id`, or slug; `{apiKey}` is the numeric key id. The safe
+representation never includes the hash or plaintext — the secret is returned **only** by create,
+rotate, and reveal.
+
+### `GET /projects/{project}/api-keys`
+List the project's keys, newest first (prefix, permissions, `restricted`, `is_active`, `origins_count`).
+**Paginated** — `per_page` (default 20, max 50) and `page`, with the usual `meta` and `message`. Rotating
+and deleting leaves the old rows in place, so a long-lived project accumulates keys without limit: loop on
+`meta.has_more` rather than assuming one call returned them all.
+
+:::caution `remaining_items` past the last page
+
+Before `2026.08.19.1` a request for a page beyond the end answered `has_more: false` **and**
+`remaining_items: <the whole total>` in the same object — two keys contradicting each other, and a loop that
+decided whether to keep paging from `remaining_items` never terminated. It reports `0` now. Against an older
+deploy, trust `has_more` / `next_page`.
+:::
+
+### `POST /projects/{project}/api-keys`
+Create a key. Body: `name` (required); optional `can_read` / `can_write` / `can_send_emails`,
+`restricted`, `allow_no_origin`, `email_daily_limit`, `rate_limit_per_minute`, `permissions`
+object, `is_test`, and (since `2026.10.23.5`, needing `can_manage_passwords`) the password-manager fields
+`password_scope`, `password_all_projects`, `password_abilities` — see
+[Password manager → Access and scopes](../api/passwords/access-and-scopes.md), and (since `2026.10.24.2`)
+`allowed_ips`: IP addresses or CIDR ranges the key works from, as a list or newline/comma text (`null` = anywhere;
+[details](../api/passwords/access-and-scopes.md#limit-a-key-to-your-servers-addresses)). **Every omitted boolean defaults to `false`** — ask for the capabilities you
+want. **Returns the plaintext once, flat under `data`** alongside the key's fields:
+```json
+{ "data": { "id": 7, "key_prefix": "fh_live_ab12", "can_read": true, "restricted": false, "plaintext_key": "fh_live_ab12..." } }
+```
+:::note Changed 2026-07-18
+Create and rotate used to nest the key under `data.api_key`, so `data.id` read back as `undefined`.
+Both are flat now, matching every other key endpoint. Omitted booleans also stored as `null` before;
+they are real `false` values now.
+:::
+
+### `POST /projects/{project}/billing/checkout`
+Since `2026.10.23.6`: a Polar checkout URL for one service plan of the project — body `service` (required), `email`. See [Billing](../api/billing.md).
+
+### `GET /projects/{project}/api-keys/{apiKey}`
+Fetch one key (safe representation).
+
+### `PATCH /projects/{project}/api-keys/{apiKey}`
+Update `name`, the `can_*` flags, `restricted`, `allow_no_origin`, limits, `permissions`,
+`is_active`, or the password-manager fields (`password_scope`, `password_all_projects`,
+`password_abilities`; the token needs `can_manage_passwords`), or `allowed_ips`. Turning `restricted` on with no origins denies every request — add origins first
+(below), or rely on the platform-wide [global origins](#global-origins) an administrator has
+configured (check those first; a key does not need its own copy of one).
+
+#### `allow_no_origin` — restricting a server-side key
+
+A restricted key refuses any request that carries neither an `Origin` nor an `X-App-Id` header.
+Browsers always send `Origin`; server-side HTTP clients (Laravel/Guzzle, Cloudflare Workers, Node
+CLIs, Flutter's `dart:io`) send none, so such keys had to be left unrestricted.
+
+Set `allow_no_origin: true` and a restricted key accepts header-less requests while still matching
+every request that *does* send an `Origin` against its allowlist. From release `2026.09.10.1`, a request
+with no `Origin` that carries an `X-App-Id` the key does not list is accepted too: the header is an audit
+tag there, never a reason to refuse. Be honest about the guarantee:
+absence of a header proves nothing, so `curl` passes too — this is weaker than an origin check, and
+much stronger than leaving the key unrestricted.
+
+### `DELETE /projects/{project}/api-keys/{apiKey}`
+Delete a key; its origins cascade, and the count comes back as
+`{ "deleted": true, "cascade": { "origins": 2 } }`. To stop a key working while keeping its record, prefer
+`PATCH { "is_active": false }`.
+
+:::note There is no `revoke`, `deprecate` or `restrictions` endpoint
+All three return `404`. Deactivating is `PATCH { "is_active": false }`; restricting is
+`PATCH { "restricted": true }` plus the origins sub-resource. Those verbs belong to a *different* product's
+management API and are easy to conflate with this one.
+:::
+
+### `POST /projects/{project}/api-keys/{apiKey}/rotate`
+Issue a new secret. The old key stops working **immediately** — update every consumer in the same change.
+Returns the key's fields plus the new `plaintext_key`.
+
+### `POST /projects/{project}/api-keys/{apiKey}/reveal`
+Re-read the stored plaintext for a key you already created. The response is **only**
+`{ "plaintext_key": "fh_live_..." }` — not the key's other fields; `GET` the key for those.
+
+Two different causes share `409 PLAINTEXT_UNAVAILABLE`, told apart by `details.reason`:
+
+| `reason` | Meaning | Remedy |
+| --- | --- | --- |
+| `not_retained` | The key predates plaintext retention — nothing is stored. | Rotate. |
+| `undecryptable` | A value **is** stored but was encrypted under a different `APP_KEY`. | Rotate. |
+
+The remedy is the same, which is why they share a status; the distinction exists so an operator can tell a
+historical gap from a key-management problem.
+
+## Origins
+
+Manage a key's allowed origins. Domain values are validated against the same **scheme + port**
+policy as the dashboard and stored canonically, so the response shows the exact origin a browser
+sends (`example.com` → `https://example.com`). See
+[API key restrictions](../getting-started/api-key-restrictions.md) for the full policy.
+
+### `GET .../api-keys/{apiKey}/origins`
+List the key's origins.
+
+Browser extensions use `type: "domain"` with an extension scheme —
+`chrome-extension://<id>` (also `moz-extension://`, `safari-web-extension://`), where the host is
+the extension id. These carry no port and no wildcard. Only Chrome ids are stable: a Firefox or
+Safari extension id is a per-install UUID, so such an entry matches a single machine.
+
+Some origins are configured platform-wide by an administrator (**global origins**) and are accepted
+by *every* restricted key without appearing in this list — typically local dev hosts and the
+Capacitor WebView origins. They are dashboard-managed, but they are **readable** here: see
+[Global origins](#global-origins) below, and check them **before** adding anything, or you will add
+duplicates the key never needed.
+
+### `POST .../api-keys/{apiKey}/origins`
+Add one. Body: `type` (`domain` / `android` / `ios`), `value`, and — android only —
+`sha256_fingerprints[]` / `sha1_fingerprints[]` (colons optional; normalized to upper-hex).
+
+```bash
+curl -X POST .../origins -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"type":"domain","value":"example.com"}'
+# -> 201 { "data": { "id": 9, "type": "domain", "value": "https://example.com", ... } }
+```
+A public host typed with `http://` is a `422` (the message tells you to use `https://`); a repeat is a
+`409 ORIGIN_ALREADY_EXISTS`.
+
+### `PATCH .../origins/{origin}`
+Change `value` and/or the fingerprint lists. Type is immutable — change it by deleting and recreating.
+
+### `DELETE .../origins/{origin}`
+Remove one origin.
+
+## Global origins
+
+Origins an administrator has registered **platform-wide**: every restricted key accepts them in
+addition to its own. Both endpoints are **read-only** and open to any valid token — writes stay in
+the dashboard, because a global rule affects every project.
+
+**Check here before you add an origin to a key.** An origin the platform already covers is a
+duplicate that only adds noise.
+
+### `GET /global-origins`
+List every **active** global rule. Inactive rules are omitted, because they are invisible to
+enforcement too. Each row carries the administrator's `note` — why that origin is trusted for every
+key.
+
+```bash
+curl -s .../global-origins -H "Authorization: Bearer $TOKEN"
+```
+```json
+{ "data": [ { "id": 4, "type": "domain", "value": "http://localhost:*",
+              "sha256_fingerprints": null, "sha1_fingerprints": null,
+              "note": "Local dev on any port, all projects", "created_at": "2026-07-18T..." } ] }
+```
+
+### `POST /global-origins/check`
+Ask whether specific origins are **already covered**, and add only the ones that are not.
+
+Use this rather than comparing the list yourself — matching is **not string equality**, and the
+difference is not intuitive:
+
+- `https://*.example.com` covers `https://app.example.com` **and** the bare apex `https://example.com`.
+- `https://example.com` (an apex rule) covers **no** subdomain at all.
+- `http://localhost:*` covers every port.
+
+Body takes up to **50** candidates, each `type` + `value` — the same objects you would hand to
+`POST .../origins`. An `android` candidate may add `cert_fingerprint` (the value the app sends as
+`X-Android-Cert`), since a rule that pins signing certificates refuses the package without one.
+
+```bash
+curl -X POST .../global-origins/check -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"origins":[{"type":"domain","value":"app.example.com"},{"type":"domain","value":"https://app.zaions.com"}]}'
+```
+```json
+{ "data": [
+  { "type": "domain", "value": "app.example.com", "canonical_value": "https://app.example.com",
+    "covered": true,  "matched_by": { "id": 3, "value": "https://*.example.com", "note": "…" } },
+  { "type": "domain", "value": "https://app.zaions.com", "canonical_value": "https://app.zaions.com",
+    "covered": false, "matched_by": null }
+] }
+```
+
+Verdicts come back **one per candidate, in request order**, so you can zip them onto your own list.
+`canonical_value` shows the normalisation (`example.com` → `https://example.com`) — the exact string
+a browser sends and the exact string `POST .../origins` would store.
+
+A value that can never be a legal origin is a **verdict, not an error**: you get `200` with
+`covered: false` and a `reason`, so one typo does not discard the answers for every other candidate
+in the batch — and the message is the same one `POST .../origins` would have refused it with.
+
+| `reason.code` | Meaning |
+| --- | --- |
+| `INVALID_ORIGIN` | The value violates origin policy (e.g. `http://` on a public host), so it can never be covered. |
+| `CERT_FINGERPRINT_REQUIRED` | A global rule allows this android package but pins certificates, and you sent no `cert_fingerprint`. |
+| `CERT_FINGERPRINT_NOT_ALLOWED` | The package is pinned and the fingerprint you sent is not one of the pinned ones. |
+
+These are verdict codes **inside a `200` body** — not HTTP errors, and not in the table below.
+
+## Lookup
+
+### `POST /api-keys/lookup`
+Reverse-lookup an `fh_live_` key you found in a local `.env`. Body `{ "api_key": "fh_live_..." }`.
+Returns the key's project, its safe representation, and its full origin list — or `404 NOT_FOUND` if
+the key is unknown or outside this token's scope.
+
+```json
+{ "data": { "project": { "slug": "my-web-app", ... }, "api_key": { "restricted": true, ... }, "origins": [ { "type": "domain", "value": "https://myapp.com" } ] } }
+```
+
+## Supabase
+
+Two separate surfaces, on two separate scopes, and neither returns the other's credential:
+
+| Surface | Scope | Guide |
+| --- | --- | --- |
+| `GET`/`POST /supabase-projects…` — one project's keys, JWT secret, Postgres and S3 credentials | `can_manage_supabase` | **[Supabase project vault](./supabase-projects.md)** |
+| `GET`/`POST /supabase-accounts…` — an account's personal access token (`sbp_…`) | `can_read_supabase_tokens` | **[Supabase account tokens](./supabase-accounts.md)** |
+
+`can_manage_supabase` does **not** imply `can_read_supabase_tokens`: a project key reaches one project, an
+account token reaches every project that account owns.
+
+## Project vault
+
+Every third-party credential, config file and identifier a project needs. Gated by **three** opt-in token
+scopes — `can_read_vault` (metadata and presence flags), `can_reveal_vault` (the values) and, since
+`2026.08.20.1`, `can_write_vault` (creating, changing and deleting them). Full guide:
+**[Project vault](./project-vault.md)**.
+
+## Credential checks
+
+`POST /projects/{project}/credential-checks` · `POST /credential-checks` · `GET /credential-checks/{run}` ·
+`GET /credential-checks/{run}/results`. `verify` (read-only probes) needs `can_read_vault`; `send` (real
+"Test Analytics" events) needs `can_write_vault` and a project whose `test_events_enabled` switch is on —
+otherwise `409 TEST_EVENTS_DISABLED`. A client project answers `409 CLIENT_PROJECT` first, whatever the switch
+says; `verify` still runs on it. Full guide: **[Credential checks](./credential-checks.md)**.
+
+## Google OAuth clients
+
+`GET /projects/{project}/google-oauth-clients` (`can_read_vault`, no secrets) ·
+`POST …/google-oauth-clients/import` and `POST …/google-oauth-clients/keepalive` (`can_write_vault`). The
+keep-alive answers `409 CLIENT_PROJECT` on a client project, then `409 GOOGLE_OAUTH_KEEPALIVE_DISABLED`
+while the project's switch is off; the import runs either way. Full guide:
+**[Google OAuth clients and keep-alive](./google-oauth-keepalive.md)**.
+
+## AI provider accounts
+
+`GET|POST /ai-accounts` · `GET|PATCH /ai-accounts/{account}` · `POST /ai-accounts/{account}/reveal` ·
+`GET|PUT /projects/{project}/ai-accounts` · `GET|PUT /ai-accounts/{account}/projects`. Reads and the reveal
+need **`can_read_ai_accounts`**; creating, editing and **assigning** need `can_write_vault`.
+🔴 **One account can serve every project.** `PATCH /ai-accounts/{account} {"all_projects": true}` is a
+standing rule that covers projects created later; `PUT /ai-accounts/{account}/projects {"all_existing": true}`
+is a snapshot of today's projects and does not. Sending `all_existing` and `project_ids` together is a 422. 🔴 `can_reveal_vault` does **not** grant an AI key — it is
+for reading one project's configuration, while an AI key authorises a whole provider account. Full guide:
+**[Project vault](./project-vault.md#ai-provider-accounts-are-linked-not-copied)**.
+
+### AI credit routing
+
+Live since backend `2026.10.10.1` (route and usage) and `2026.10.22.3` (the hourly lease). A product never
+hardcodes an AI model or key. Its **server** asks FilesHub which account and tier to use, calls the provider
+itself, then reports what it spent:
+
+| Route | Plane / scope | Returns |
+|---|---|---|
+| `GET /projects/{project}/ai/route?capability=chat` | Management, `can_read_ai_accounts` | `available`, `account`, `api_key`, `max_tier`, `tiers` (model + effort per tier), `credits`, `refresh_after` |
+| `POST /projects/{project}/ai/lease?capability=chat` | Management, `can_read_ai_accounts` | This hour's allowance: `lease` (`id`, `allowance_usd`, `reported_usd`, `remaining_usd`, `expires_at`), `account`, `api_key`, `max_tier`, `tiers` with `price_per_mtok_usd`, `credits`, `refresh_after`. Asking again in the same hour returns the same lease; a refusal is `409` with a typed code |
+| `POST /projects/{project}/ai/usage` | Management, `can_read_ai_accounts` | `202 {recorded}`; batches of up to 100 items. With a lease, each item carries `lease_id` and a unique `idempotency_key` (a retry counts once); an unproven cost is sent as `usage_basis: estimated` and corrected later with `corrects_idempotency_key` |
+| `GET /api/v1/ai/status` | data plane, `X-API-Key` | `available`, `max_tier`, `refresh_after` only. Safe in a browser bundle. From `2026.10.25.1` also `reason` and `credits` (`final_expiry_at`, `expiring_soon`, `economy_reason`; never a balance) |
+
+- **Which account.** Projects assigned to an account reserve it. Other projects borrow it only when *Allow
+  Other Projects* is on, and only while its balance is above its reserve. Projects with no assigned account use
+  the *All Projects* account, which is also the failover. Credit that expires soonest is spent first. Accounts
+  marked `paid` are never routed.
+- **Which tier.** `economy` < `standard` < `enhanced`. Use the highest tier at or below **both** `max_tier` and
+  the user's own plan. When the balance is low, `max_tier` drops to `economy`.
+- **Leases (recommended for new consumers).** Ask for a lease once an hour, price each call with
+  `tiers.*.price_per_mtok_usd`, spend at most `lease.remaining_usd` before `lease.expires_at`, and report every call.
+- **When to ask again.** The answer changes at most hourly. Cache it until `refresh_after`, which is also sent
+  as `Cache-Control`, and do not poll.
+- `available: false` means no account has usable credit. Pause the AI features until `refresh_after`; nothing
+  is billed.
+- 🔴 The `route` response contains a live provider key. Call it from a server, never a browser. Every read is
+  recorded as a reveal.
+
+#### From backend `2026.10.25.1` (built, deploy pending)
+
+- **Why it is refused.** `ai/route`, `ai/status` and every lease `409` carry `reason`: `credit_expired` (every
+  grant has passed its expiry or is inside the account's `expiry_buffer_hours`, 15 by default), `no_credits`,
+  `low_balance` (a shared account is under its reserve), `no_account` (nothing serves the capability) or
+  `not_eligible`. A `409` also carries `error.details.credits` for the account behind it, when there is one.
+- **When the credit ends.** `credits` gains `next_expiry_at` (the soonest grant still holding money; `expires_at`
+  and `hours_left` keep meaning this), `final_expiry_at` and `final_hours_left` (the last usable grant),
+  `expiring_soon` and `economy_reason` (`expiring` | `low_balance` | null).
+- **The last day runs at economy.** Inside an account's `economy_within_hours` (default 24, 0 turns it off) of
+  its final expiry, `max_tier` is `economy` whatever the balance, so the cheapest model uses what is left.
+- **The cheapest paid fallback.** The route, the lease and every `409` carry `fallback`, for example
+  `{"openai": {"model": "gpt-6-luna", "price_per_mtok_usd": {…}}, "anthropic": {"model": "claude-haiku-5-5", …}}`.
+  Use it on your own paid key while FilesHub refuses, instead of a model you picked.
+- **The account read shows the grants.** `GET /ai-accounts/{account}` → `credits.final_expiry_at`,
+  `usable_until`, `hours_left`, `expiry_buffer_hours`, `economy_within_hours` and `grants[]` (`amount_usd`,
+  `granted_at`, `expires_at`, `usable`; the latest 20). 🔴 `notes` is no longer in the plain read or the list
+  (`has_notes` says whether notes exist). It comes back only from `POST /ai-accounts/{account}/reveal`, and a note
+  that contains a key-shaped string is refused with `422`.
+
+:::warning These endpoints are live; the data is thin
+Probed 2026-08-19: **7 of 55 projects hold a stored credential**, so most reveals return the empty skeleton.
+An empty service means *not entered*, never *not applicable*.
+
+🔴 **Do not read `configured_services` as "someone entered data".** It includes the *derived* `fileshub`
+service, which is computed from the project's own API key — so almost every project lists it while holding
+nothing typed in at all. A sweep that skips projects with a non-empty `configured_services` skips every
+project. The [Project vault](./project-vault.md) page explains what that does and does not let you conclude.
+
+*(An earlier version of this box said "as of 2026-08-04 no registered project has any configured service".
+That count was measured through a read path fixed in `2026.08.19.1`; it was an artefact, not an
+observation.)*
+:::
+
+### `GET /vault/services`
+The field registry — every service, field, label, help text, `secret`, `client_safe` and `env_key`. Schema
+discovery: **any valid token may read it, with no vault scope at all**, because it describes the shape of the
+vault and never its contents. It is the one vault endpoint that cannot return `403`.
+
+### `GET /vault/projects`
+Projects with vault metadata. Query `q` (name / slug / app identifier), `status`, `per_page` (max 50), `page`.
+
+### `GET /projects/{project}/vault`
+One project **without secret values** — non-secret config plus `has` presence flags.
+
+### `GET /projects/{project}/vault/{service}`
+The same, narrowed to one service. Unknown service → `404`, listing the valid ones.
+
+### `POST /projects/{project}/vault/reveal`
+Every credential, plus `.env` blocks for `vite` / `next` / `node` / `laravel`, plus `undecryptable[]`.
+Recorded against the project. **A block that would be empty is dropped**, so `env` can be `{}`.
+
+### `POST /projects/{project}/vault/{service}/reveal`
+The same, narrowed to one service.
+
+### `GET /projects/{project}/vault-files/{service}.{key}`
+The real bytes of a stored config file, with its original filename, `Content-Disposition`,
+`Content-Length` and `X-Checksum-Sha256`. Note the path segment is **`vault-files`**, not `vault/files` —
+the latter would be ambiguous with `vault/{service}/reveal`.
+
+## Database backups
+
+`GET /backups` lists the daily database backups on the server, newest first (`name`, `size_bytes`,
+`created_at`, plus the schedule and retention). `GET /backups/{name}` downloads one by its exact name.
+
+Both need **`can_read_backups`** — off by default, implied by no other scope — **and** a token for every
+project, because a backup is the whole database, every vault secret included. Each download is written to
+the audit log. An unknown name is a `404`. Since 2026-10-22.
+
+## Error codes
+
+Every failure on this plane uses one envelope — `{"error": {"code", "message", "details"?}}`. Branch on
+`code`, never on the message text. (The v1 data plane is different: a bare `{"message": "..."}` with no
+code — see [Errors & limits](../api/errors-and-limits.md).)
+
+| HTTP | `code` | When |
+| --- | --- | --- |
+| 401 | `MISSING_ACCESS_TOKEN`, `INVALID_ACCESS_TOKEN_FORMAT`, `INVALID_ACCESS_TOKEN`, `TOKEN_REVOKED`, `TOKEN_EXPIRED` | Auth (see [Authentication](./authentication.md)) |
+| 403 | `TOKEN_PERMISSION_DENIED` | The token lacks a **scope**; `details.required_scope` names it (values below). Deliberately **not** a 404: a scope is a property of your own token, so there is nothing to enumerate |
+| 403 | `FORBIDDEN` | The action is not allowed for this token |
+| 404 | `NOT_FOUND` | Project / key / origin / account / service unknown **or** outside the token's scope |
+| 403 | `SCOPE_ESCALATION_REFUSED` | An access-token create or change would grant a scope, every project or a later expiry the caller lacks; `details.scopes` lists them |
+| 409 | `SLUG_ALREADY_EXISTS` | A project slug you supplied is taken |
+| 409 | `SELF_DEMOTION_REFUSED`, `SELF_REVOKE_REFUSED`, `SELF_DELETE_REFUSED` | A token tried to remove its own `can_manage_access_tokens`, switch itself off, or delete itself |
+| 409 | `ORIGIN_ALREADY_EXISTS` | That key already has an origin with the same type and value |
+| 409 | `PLAINTEXT_UNAVAILABLE` | A secret cannot be handed back; `details.reason` is `not_retained` or `undecryptable` |
+| 409 | `CLIENT_PROJECT` | A `send` credential check or a Google OAuth keep-alive run on a client project (`is_client_project: true`). Checked before either switch; `details` is `{"is_client_project": true}` |
+| 409 | `TEST_EVENTS_DISABLED` | A `send` credential check on a project whose Test Events switch is off; `details.enable_with` shows the PATCH |
+| 409 | `GOOGLE_OAUTH_KEEPALIVE_DISABLED` | A keep-alive run on a project whose Google OAuth Keep-Alive switch is off |
+| 422 | `VALIDATION_FAILED` | Bad body — `details` holds the per-field messages |
+| 429 | — | Over **120 requests/minute** per token. This plane's limit is fixed, unlike the per-key limit on the data plane |
+
+`details` is **absent** when a code does not carry one — never `null`.
+
+### `details.required_scope` — match on both forms
+
+The value is not uniform yet, so read it defensively:
+
+| Gate | What it returns |
+| --- | --- |
+| Project vault read | `can_read_vault` |
+| Project vault reveal | `can_reveal_vault` |
+| Supabase **project** vault | `can_manage_supabase` |
+| Supabase **account** token | `can_read_supabase_tokens` |
+| Access tokens | `can_manage_access_tokens` |
+
+All four now report the token's own column name, so the 403 names the switch to enable in Nova.
+
+:::note Older releases returned two shorter labels
+Before `2026.08.04.1` (deployed 2026-08-04) the Supabase pair reported `supabase_projects` and
+`supabase_tokens`, which matched no column and no Nova field. **Accepting all six strings** costs nothing and
+survives either release. Verify which is live with `curl -s https://fileshub.zaions.com/api/version` rather
+than inferring it from a document — including this one.
+:::

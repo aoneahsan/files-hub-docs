@@ -1,0 +1,134 @@
+---
+sidebar_position: 2
+title: Management API authentication
+description: Authenticate the FilesHub Management API with an fh_pat_ access token via the Authorization Bearer header, and understand token scope, expiry, and revocation.
+keywords: [fileshub access token, fh_pat, bearer token, authorization header, X-Access-Token, token expiry, revoke token, management api auth]
+last_update:
+  date: 2026-10-23
+  author: Ahsan Mahmood
+---
+
+# Authentication
+
+Every management request carries an access token:
+
+```bash
+curl https://fileshub.zaions.com/api/public/v1/token \
+  -H "Authorization: Bearer fh_pat_XXXXXXXXXXXXXXXX"
+```
+
+The `X-Access-Token: fh_pat_...` header is accepted as a fallback when a bearer header is awkward to
+set. **Prefer the bearer header** — and never put a `--token`-style value where a shell records it.
+
+## Get a token
+
+Create one in the FilesHub admin under **Access Tokens**: give it a name, decide whether it covers
+**all projects** or a chosen set, and optionally set an expiry. The full token is shown on the token's
+detail page (owner only) and is stored encrypted, so you can re-read it later — but treat it like a
+password.
+
+A token holding `can_manage_access_tokens` can also create, change, rotate and delete tokens over the API —
+[`/access-tokens`](./endpoints.md#access-tokens) — never one wider than itself. Over the API the plaintext is
+returned **once**, by create and rotate; there is no reveal route.
+
+## Introspect first
+
+An agent's first call should confirm the token works and learn its scope:
+
+```bash
+curl https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{
+  "data": {
+    "name": "Claude Code CLI",
+    "token_prefix": "fh_pat_XzTJC7PU",
+    "all_projects": true,
+    "can_manage_supabase": true,
+    "can_read_vault": true,
+    "can_reveal_vault": false,
+    "can_write_vault": false,
+    "can_read_supabase_tokens": false,
+    "can_read_ai_accounts": false,
+    "can_read_developer_accounts": false,
+    "can_read_payment_accounts": false,
+    "can_read_backups": false,
+    "can_manage_access_tokens": false,
+    "can_manage_passwords": false,
+    "can_delete_projects": false,
+    "expires_at": null,
+    "last_used_at": "2026-07-18T09:12:44+00:00",
+    "created_at": "2026-07-18T09:00:00+00:00"
+  }
+}
+```
+
+When the token is scoped to specific projects, `all_projects` is `false` and a `projects` array lists exactly
+what it may manage — `id`, `public_id`, `name`, `slug` per row.
+
+:::tip `projects` is absent, not null, on an all-projects token
+Note the response above has no `projects` key at all. An all-projects token covers projects that do not
+exist yet, so no list could describe it, and the field is omitted rather than sent as `null` or `[]`. Test
+with `'projects' in data` (or `data.projects !== undefined`), never `data.projects === null`. Every other
+field on this page is always present.
+:::
+
+These booleans are **separate, off-by-default axes**, independent of the project scope:
+
+| Flag | Gates |
+|---|---|
+| `can_manage_supabase` | The [Supabase project vault](./supabase-projects.md) — account-wide, so the project scope cannot express it |
+| `can_read_vault` | The [project vault](./project-vault.md): metadata, links, and **which** credentials exist — never a value |
+| `can_read_developer_accounts` | [Developer accounts](./developer-accounts.md) — the tokens that publish under your name (npm, Hugging Face, Docker Hub, …). Its own axis: neither `can_reveal_vault` nor `can_read_ai_accounts` grants it |
+| `can_reveal_vault` | The project vault's credential **values**, config-file bytes and `.env` blocks. Implies read |
+| `can_read_supabase_tokens` | A [Supabase account's personal access token](./supabase-accounts.md) (`sbp_…`) — the whole account, not one project |
+| `can_write_vault` | Writing project credentials, and assigning accounts to projects. Implies read, **not** reveal — a caller populating a vault needs to see which fields are already set, and does not need every secret handed back |
+| `can_read_ai_accounts` | An [AI provider account's](./project-vault.md) key — account-wide, so it spends that account's balance and reaches every model on it |
+| `can_read_payment_accounts` | [Payment accounts](./payment-accounts.md) — Stripe, PayPal, Polar.sh and other payment-provider keys. They move money, so **no other flag grants it** |
+| `can_manage_email_marketing` | The [email-marketing](../email-marketing/api.md) lists, contacts, suppressions and sequences of the projects in scope |
+| `can_read_backups` | The [database backups](./endpoints.md#database-backups) — the whole database. Also needs an all-projects token |
+| `can_manage_access_tokens` | [Other access tokens](./endpoints.md#access-tokens): list, create, change, rotate, delete — only ever up to the caller's own scopes, projects and expiry. **No other flag grants it** |
+| `can_manage_passwords` | Since `2026.10.23.5`: setting an API key's [password-manager scope](../api/passwords/access-and-scopes.md) (`password_scope`, `password_all_projects`, `password_abilities`) on the api-keys endpoints. Every-project reach also needs `all_projects`. **No other flag grants it** |
+| `can_delete_projects` | Since `2026.10.24.1`: [deleting a project](./endpoints.md#delete-projectsproject), which removes its whole vault, keys and files. The call also needs `{"confirm": "<slug>"}`. **No other flag grants it** |
+
+**Two imply `can_read_vault`: `can_reveal_vault` and `can_write_vault`.** Nothing else implies anything —
+each remaining flag grants only itself. In particular:
+
+- **`can_manage_supabase` does not grant `can_read_supabase_tokens`** — one reaches a project's credentials,
+  the other reaches the account that owns every project.
+- **`can_reveal_vault` does not grant `can_read_ai_accounts` or `can_read_developer_accounts`.** It is the
+  strongest grant over *one project's* configuration, and neither an account-wide AI key nor a token that
+  publishes packages under your name is that.
+- **`can_read_ai_accounts` and `can_read_developer_accounts` do not imply each other.** Spending an AI
+  balance and publishing a package are separate decisions.
+
+A token missing one of these gets **`403 TOKEN_PERMISSION_DENIED`** with `details.required_scope`, rather
+than the anti-enumeration `404` used for resources — the scope is a property of your own token, so an
+honest error is more useful than pretending the resource does not exist. The exact strings that field
+returns are not uniform yet:
+[`details.required_scope`](./endpoints.md#detailsrequired_scope--match-on-both-forms).
+
+## Auth errors
+
+Every failure is `401` with a machine-readable `code`:
+
+| Code | Meaning |
+| --- | --- |
+| `MISSING_ACCESS_TOKEN` | No bearer / `X-Access-Token` header was sent. |
+| `INVALID_ACCESS_TOKEN_FORMAT` | The value is malformed — e.g. you sent an `fh_live_` API key, which does not work here. |
+| `INVALID_ACCESS_TOKEN` | The token is well-formed but unknown. |
+| `TOKEN_REVOKED` | The token exists but is deactivated. Re-activate or mint a new one. |
+| `TOKEN_EXPIRED` | The token is past its expiry. |
+
+## Revoke
+
+Turn a token **inactive** (or delete it) in the admin, or over the API with
+`PATCH /access-tokens/{id} {"is_active": false}` / `DELETE /access-tokens/{id}` from another token holding
+`can_manage_access_tokens`. The next request with it returns `TOKEN_REVOKED` (or `INVALID_ACCESS_TOKEN` once
+deleted) immediately — there is no cache to wait out. A token cannot switch itself off or delete itself.
+
+## Rate limit
+
+The management plane is limited to **120 requests per minute** per client. Beyond that you get a
+standard `429`.

@@ -1,0 +1,385 @@
+# FilesHub — full LLM context
+
+> FilesHub (https://fileshub.zaions.com) is a per-service-priced file-storage, email, and
+> developer-utility API built on Laravel + Nova. This file gives an AI assistant enough
+> detail to answer integration questions accurately without crawling every page. A
+> machine-readable OpenAPI 3.1 spec is at https://fileshub-docs.zaions.com/openapi.json, and
+> every doc page is mirrored as raw Markdown under /raw/ (index /raw/manifest.json).
+> Last updated: 2026-07-14.
+
+## What FilesHub is
+
+A small HTTP API that stores files for you and serves them back at a stable URL, sends
+transactional email from verified domains, and exposes a large catalogue of stateless
+developer utilities. Apps use it as their upload + email backend so they never have to run
+their own. Every request is authenticated with a per-project API key sent in the `X-API-Key`
+header. The API is versioned under `/api/v1` (two status endpoints, `/health` and `/version`,
+live at `/api`).
+
+Base URL: `https://fileshub.zaions.com/api/v1`
+
+## Authentication
+
+Send `X-API-Key: <key>` on every request. Keys belong to a project and carry scopes:
+
+- `read` — list and download (including private) objects; list jobs, templates, schedules.
+- `write` — upload and delete objects; manage templates and schedules.
+- `email` — send email.
+- `email_template` — manage email templates (with `write`).
+- per-utility service scopes (e.g. `converter`, `qr_code`) — all enabled by default.
+
+Keys may be `live` (`fh_live_...`) or `test` (`fh_test_...`). A **restricted** key only works
+from allowlisted origins so you can ship it in a frontend with no proxy backend:
+
+- Web — the browser's `Origin`/`Referer` is checked against allowed domains (supports
+  `*.example.com` wildcards).
+- Android — send `X-App-Id` (or `X-Android-Package`) with the package name; optionally pin
+  signing certificates and send a matching SHA-256/SHA-1 in `X-Android-Cert`.
+- iOS — send `X-App-Id` with the bundle id.
+
+These are self-declared headers (Google-Maps-key trust model): they stop key reuse from other
+apps/sites but are not cryptographic attestation, so keep high-privilege keys server-side.
+Create and manage keys and their origins in the Nova admin panel.
+
+## The object lifecycle (storage API)
+
+### Upload — POST /api/v1/objects (write)
+
+Multipart `form-data`:
+
+- `file` (required) — the file. Validated against the configured max size
+  (`FILESHUB_MAX_UPLOAD_MB`, default 10 MB) and an optional allowed-MIME list.
+- `visibility` (optional) — `public` or `private`. Defaults to `private` server-side, but
+  the Aoneahsan/Zaions integration convention is to send `public`.
+- `expires_in_days` (optional, 1–3650) — auto-delete N days from now.
+- `expires_at` (optional, ISO-8601, must be in the future) — auto-delete at an absolute time.
+  If both are given, `expires_at` wins.
+
+Success `201`:
+
+```json
+{
+  "public_id": "01JDKQXXXXXXXXXXXXXXXXXXXXX",
+  "project_id": "01JDKPXXXXXXXXXXXXXXXXXXXXX",
+  "visibility": "public",
+  "mime_type": "application/pdf",
+  "size_bytes": 1048576,
+  "url": "https://fileshub.zaions.com/api/v1/objects/01JDKQXXXXXXXXXXXXXXXXXXXXX",
+  "expires_at": null
+}
+```
+
+The `url` is what you store in your own database and render in your UI. The `public_id` is a
+ULID — sortable, URL-safe, collision-resistant.
+
+### Download / view — GET /api/v1/objects/{public_id}
+
+Streams the file with its real `Content-Type` and original filename. Public objects need no
+key (use the URL directly in an `<img>` or `<a>`); private objects require a `read` key from
+the same project. Expired objects return `404` and are cleaned up on access.
+
+### List — GET /api/v1/objects (read)
+
+Query params: `page` (default 1), `per_page` (default 20, max 100), `visibility`
+(`public`|`private`, optional filter). Returns:
+
+```json
+{
+  "data": [
+    {
+      "public_id": "01JDKQ...",
+      "original_filename": "photo.jpg",
+      "mime_type": "image/jpeg",
+      "size_bytes": 524288,
+      "visibility": "public",
+      "url": "https://fileshub.zaions.com/api/v1/objects/01JDKQ...",
+      "created_at": "2026-06-23T12:00:00+00:00"
+    }
+  ],
+  "meta": { "current_page": 1, "per_page": 20, "total": 150 }
+}
+```
+
+### Change expiry — PATCH /api/v1/objects/{public_id} (write)
+
+Send exactly one of `expires_at` (an ISO date in the future, or `null` to keep the object until it is deleted) or
+`expires_in_days` (1–3650, from now). Returns `200 { "data": { public_id, project_id, original_filename, visibility,
+mime_type, size_bytes, url, expires_at }, "message": "Updated" }`. Only the key's own project's objects; `422` when
+neither or both are sent or the date is past. Since backend `2026.10.25.3`.
+
+### Delete — DELETE /api/v1/objects/{public_id} (write)
+
+Permanently deletes the database record and the stored file (a model event removes the file).
+Returns `200 { "message": "Deleted" }`. Only objects belonging to the key's project are
+deletable.
+
+## Error envelope
+
+Errors return a JSON body `{ "message": "..." }` with an appropriate status code:
+
+- `401` — missing/invalid key, or a private object requested without a key.
+- `403` — key lacks the required permission, or origin/app-id not allowed.
+- `404` — object not found, expired, or the stored file is missing.
+- `422` — validation failed (e.g. file too large, bad `visibility`). The message is the first
+  validation error.
+- `429` — rate limit exceeded.
+- `500` — server error.
+
+## Email API
+
+- Send — `POST /api/v1/emails/send` (email scope). Raw (`subject` + `body_html`/`body_text`) or
+  `template` + `variables`. One `to` per call; optional `to_name`, `cc`/`bcc` (<=10), `reply_to`,
+  `from_name`, `attachments` (FilesHub object ULIDs, <=5), `domain` (`aoneahsan.com` default,
+  `zaions.com`, `trizlink.com`), `queue` (default true => `202 Accepted` with `job_id` +
+  `status_url`; false => synchronous `201`), `scheduled_at` (one future send). Errors: `422`
+  validation / unknown domain, `429` quota, `503` domain temporarily without capacity.
+- Templates — `GET /api/v1/emails/templates` (read); `POST`/`PATCH`/`DELETE
+  /api/v1/emails/templates{/slug}` (write + email_template). Fields: `name`, `slug` (immutable),
+  `category`, `subject`, `body_html`/`body_text`, `variables`. Send with `template` + `variables`.
+- Schedules — `GET`/`POST`/`PATCH`/`DELETE /api/v1/email-schedules{/id}` + `POST
+  /api/v1/email-schedules/{id}/run`. `cron_expression` (5-field or `@hourly`/`@daily`/`@weekly`/
+  `@monthly`), `timezone` (IANA), `recipients` (1–50, one email each per run), template or raw
+  content. `PATCH {"is_active": false}` pauses.
+
+## Email marketing API
+
+- Per-project contact lists, imports (paste text or a private CSV object; one pipeline; counters always sum
+  to total_rows), project-wide suppression, drip sequences (tracks, conditions on clicks and product events),
+  click tracking with `?c=<contact_token>`, product events, RFC 8058 one-click unsubscribe, double opt-in.
+- Key flag `can_manage_email_marketing` (default off); every endpoint except
+  `POST /api/v1/email-lists/{list}/subscribe` refuses a browser `Origin` (server-side only).
+- Lists `GET|POST /api/v1/email-lists` · contacts `…/email-lists/{list}/contacts` · imports
+  `POST …/email-lists/{list}/imports` · sequences `/api/v1/email-sequences` (+ `/activate`, `/enroll`,
+  `/steps/{key}/test`) · events `POST /api/v1/email-contacts/events` (idempotent) · settings
+  `/api/v1/email-marketing/settings`. Management plane: the same under `/api/public/v1/projects/{project}/`.
+- Docs: https://fileshub-docs.zaions.com/email-marketing/overview
+
+## Password manager API (backend 2026.10.23.5)
+
+Logins per project: `title` (required), `websites[]` (normalised to https://host[/path]), `username`,
+`password` (required, encrypted), `totp_secret` (base32 or otpauth://, encrypted), `notes` (encrypted),
+`tags[]`, `is_favorite`. FilesHub adds `id` (26-char public id), `strength {score 0-4, label}`, `reused`
+(single-entry answers; null in lists), `has_verification_code`, `owner_scope` (own|admin), `created_via`
+(api|dashboard), timestamps, `deleted_at`.
+
+Access (data-plane key, all closed by default): `password_scope` none|own|admin; own = only entries this key
+created; admin = entries from admin keys and the dashboard in its project, never an own key's;
+`password_all_projects` (admin only) = every project (`project_id` filter on list, `project_id` on create);
+`password_abilities` subset of list, reveal, create, update, delete (null = all). Unreachable = 404.
+
+Endpoints under https://fileshub.zaions.com/api/v1: GET /passwords (q, website, tag, favorite, trashed=only,
+project_id, page, per_page<=50) · POST /passwords (201) · GET /passwords/{id} · PATCH /passwords/{id} (new
+password moves the old one to history, last 10) · POST /passwords/{id}/reveal (`history: true` adds history;
+returns password, unreadable, verification_code {code, expires_in}) · DELETE /passwords/{id} (Recently
+Deleted; `?permanent=1` on a deleted entry purges, 409 otherwise) · POST /passwords/{id}/restore ·
+POST /passwords/generate (style grouped|random, length 8-128, symbols, numbers, uppercase).
+Errors `{message}`: 401 key, 402 no plan (external projects), 403 `Required scope: passwords` or
+`lacks the password ability: <ability>`, 404, 409, 422, 429.
+Management plane: api-keys create/update accept password_scope, password_all_projects, password_abilities;
+needs token scope `can_manage_passwords` (+ all_projects for every-project reach).
+Docs: https://fileshub-docs.zaions.com/api/passwords
+
+## Jobs & status
+
+- Jobs — `GET /api/v1/jobs` (read; paginated, default 20 / max 50; filters `status`, `type`) and
+  `GET /api/v1/jobs/{job_id}`. A job serializes `{ id, type, status, attempts, result, error,
+  queued_at, started_at, finished_at }`; status is `pending` -> `processing` -> `completed` /
+  `failed`. Queued email retries 3x with backoff.
+- Health — `GET /api/health` (no key): `{ status, app, version, backend_version, database,
+  timestamp }`; `status` is `ok` or `degraded`.
+- Version — `GET /api/version` (no key): `{ backend_version, env }` deploy marker (code constant,
+  `YYYY.MM.DD.N`).
+
+## Management API (control plane)
+
+Alongside the data plane, FilesHub has a server-side **Management API** at
+`https://fileshub.zaions.com/api/public/v1` for administering the account itself: projects, API keys,
+and origin restrictions. It is authenticated by a **user-level access token** (prefix `fh_pat_`) sent
+as `Authorization: Bearer fh_pat_...` (or `X-Access-Token`). This is a different token family from the
+per-project `fh_live_` API keys — an `fh_live_` key is rejected here (`INVALID_ACCESS_TOKEN_FORMAT`)
+and an `fh_pat_` token does nothing on `/api/v1`. The plane sends no CORS headers and is server/CLI
+only; never put an access token in a browser or a committed file.
+
+A token covers all projects (existing and future — the default) or an explicit subset; a resource the
+token does not cover returns `404 NOT_FOUND`, never 403, so scopes cannot be enumerated. Four separate,
+off-by-default booleans sit on their own axes beside the project scope, and `GET /token` reports all of
+them: `can_manage_supabase` (the Supabase project vault, below), `can_read_supabase_tokens` (a Supabase
+account's personal access token, below), `can_read_vault` (project-vault metadata and presence flags) and
+`can_reveal_vault` (project-vault values, file bytes and `.env` blocks; implies read). Only that last pair
+implies anything — in particular `can_manage_supabase` does NOT grant `can_read_supabase_tokens`. A
+missing scope is 403 `TOKEN_PERMISSION_DENIED` with `details.required_scope`, not 404, because a scope is
+a property of the caller's own token. Success is `{ "data": ... }`; errors are
+`{ "error": { "code", "message", "details? } }`. The plane is rate limited to 120 requests/minute.
+Create tokens in the FilesHub admin under Access Tokens.
+
+Endpoints:
+- `GET /token` — introspect the token (name, scope, expiry). The intended first call.
+- Projects — `GET /projects` (`?q=` name/slug search, `?status=`, paginated), `POST /projects`,
+  and `GET|PATCH|DELETE /projects/{project}` where `{project}` is an id, ULID public_id, or slug.
+  Delete cascades the project's keys, origins, stored objects, and audit logs.
+- API keys — `GET|POST /projects/{project}/api-keys`, `GET|PATCH|DELETE /projects/{project}/api-keys/{id}`,
+  `POST .../{id}/rotate` (new secret, old dies), `POST .../{id}/reveal` (re-read the stored plaintext).
+  Create and rotate return `plaintext_key` once; the list/detail representation never includes the
+  hash or plaintext.
+- Origins — `GET|POST /projects/{project}/api-keys/{id}/origins` and `PATCH|DELETE .../origins/{id}`.
+  Domain values are validated against the same scheme+port policy as the dashboard and stored
+  canonically (`example.com` -> `https://example.com`); `http://` on a public host is a 422, a repeat
+  is a 409. Android origins may pin `sha256_fingerprints` / `sha1_fingerprints`.
+- Global origins — `GET /global-origins` lists every active origin an administrator has registered
+  platform-wide; every restricted key accepts these in addition to its own, and they never appear in a
+  key's own origin list. Read-only over the API: they are created and edited only in the dashboard,
+  because a rule that affects every project is an operator decision. `POST /global-origins/check` takes
+  up to 50 `{type, value}` candidates (android may add `cert_fingerprint`) and returns one verdict each,
+  in request order, saying whether the platform already covers it and which rule matched. Add only the
+  candidates reporting `covered: false`. Use the check rather than comparing the list yourself, because
+  matching is not string equality: `https://*.example.com` covers its subdomains AND the bare apex, an
+  apex rule such as `https://example.com` covers no subdomain at all, and `http://localhost:*` covers
+  every port. It runs the same matcher request-time enforcement uses, so it cannot disagree with it. A
+  value that can never be a legal origin is a verdict (200, `covered: false`, plus a `reason` code such
+  as `INVALID_ORIGIN`), not a request-level error, so one bad candidate does not discard the rest.
+  Adding a globally-covered origin to a key is still accepted — nothing rejects it — so the check is the
+  only thing preventing a redundant entry.
+- Lookup — `POST /api-keys/lookup` with `{ "api_key": "fh_live_..." }` returns that key's project,
+  safe representation, and origins (or 404). This is what lets an AI coding agent read a local
+  project's `.env`, learn which FilesHub project it belongs to, and enforce origin restrictions.
+- Supabase project vault — `GET /supabase-projects` (paginated, `?q=`/`?active=`),
+  `GET /supabase-projects/{idOrRef}`, and `POST /supabase-projects/{idOrRef}/reveal`. Read and reveal a
+  registered Supabase project's full credential set — API keys, JWT secret, Postgres connection details,
+  S3 keys — plus ready-to-paste React (`VITE_*`), Node, and Laravel (`DB_*`) `.env` blocks. Read-only
+  (projects are created/edited in the FilesHub admin), gated by the `can_manage_supabase` scope (a token
+  without it gets 403 `TOKEN_PERMISSION_DENIED`, not 404, since the scope is a property of the caller's
+  token). `{idOrRef}` is the numeric id or the `<ref>` of a `<ref>.supabase.co` URL. Every reveal is
+  recorded. Secret presence (`has` flags) is reported without decrypting; a stored secret that cannot be
+  decrypted (e.g. under a rotated APP_KEY) comes back `null` rather than failing the call. Derived
+  endpoints (rest/auth/storage/graphql/functions/realtime/dashboard) are computed from the project URL.
+  A project payload carries an `account` POINTER — which account owns it, whether that account has a
+  personal access token stored, and the endpoint plus scope that would return it — but never the token.
+- Supabase account tokens — `GET /supabase-accounts` (paginated, `?q=`/`?active=`),
+  `GET /supabase-accounts/{idOrEmail}`, and `POST /supabase-accounts/{idOrEmail}/reveal`. A personal
+  access token (`sbp_…`) belongs to the supabase.com ACCOUNT, not a project: it drives the Supabase
+  Management API and `supabase login --token`, so it reaches every project that account owns, including
+  ones that do not exist yet. It is therefore stored once per account and gated by its own scope,
+  `can_read_supabase_tokens` — `can_manage_supabase` does not grant it, and a token holding only that
+  gets 403 here. The reveal returns the token plus `env.cli` = `SUPABASE_ACCESS_TOKEN=…`, the variable
+  the Supabase CLI reads, so `supabase link` / `db push` / `functions deploy` work without an
+  interactive login. Read-only (accounts are created/edited in the FilesHub admin); every reveal is
+  recorded with field names only.
+- Project vault — `GET /vault/services` (the field registry; any valid token), `GET /vault/projects`,
+  `GET /projects/{project}/vault` and `/vault/{service}`, `POST /projects/{project}/vault/reveal` and
+  `/vault/{service}/reveal`, `GET /projects/{project}/vault-files/{service}.{key}`. Every third-party
+  credential, config file and identifier a project needs — Firebase, OAuth clients, Sentry, OneSignal,
+  signing fingerprints, `google-services.json` — so a fresh machine is provisioned without opening a
+  console. Three scopes: `can_read_vault` (metadata and presence flags, never a value),
+  `can_reveal_vault` (values, file bytes, `.env` blocks) and `can_write_vault` (creating, changing and
+  deleting them). Reveal and write both imply read; write does NOT imply reveal, so a seeding agent can fill
+  a project in without being handed back every secret already stored. The generated `vite` and `next`
+  blocks contain only fields marked client-safe, so a server secret cannot appear in one.
+- Project vault WRITES — `PUT|DELETE /projects/{project}/vault/{service}`, `POST /projects/{project}/vault`
+  (many services in one atomic call), `POST /projects/{project}/vault-move` (retire a service whose name the
+  registry never declared onto declared fields), `POST|DELETE /projects/{project}/vault-files/{service}.{key}`
+  (multipart or base64), `PUT /projects/{project}/links`. Added in backend `2026.08.20.1`; the vault was
+  read-only before that and older documents say so. An absent key is left alone, an explicit `null` deletes
+  that field's row, and every response returns the full read payload plus a `changes` block naming created,
+  updated and deleted FIELD NAMES — never a value. For a field the registry declares, the registry decides
+  whether it is secret; a caller-supplied flag counts only on the freeform `general` service and defaults to
+  secret. `fileshub` is a DERIVED service computed from the project's own slug, API key and origins, and
+  refuses writes; `supabase` is a link and refuses them too. `GET /vault/services` publishes `writable` and
+  `derived` per service, so a caller learns this from schema discovery rather than from a 422.
+
+- AI provider accounts — `GET|POST /ai-accounts`, `GET|PATCH /ai-accounts/{account}`,
+  `POST /ai-accounts/{account}/reveal`, `GET|PUT /projects/{project}/ai-accounts`, and
+  `GET|PUT /ai-accounts/{account}/projects` (backend `2026.08.22.1` — the account-centric direction, one
+  account to many projects, which is how a shared fleet key is actually managed). Added in backend
+  `2026.08.21.1`. An OpenAI or Anthropic key authorises an ACCOUNT — it spends that account's balance and
+  reaches every model on it — so it lives on an `ai_accounts` record that projects point at MANY-TO-MANY (an
+  app routinely uses one provider for embeddings and another for chat), rather than being copied into each
+  project's vault. Its own scope, `can_read_ai_accounts`, which `can_reveal_vault` deliberately does NOT
+  imply: that scope reads one project's configuration, while an AI key is account-wide and bounded by
+  nothing FilesHub knows about. ASSIGNING an account to a project needs only `can_write_vault`, because an
+  assignment is a pointer and those responses never contain a key. 🔴 TWO availability modes and they are
+  NOT the same feature: `all_projects: true` on the account is a STANDING rule covering every project
+  including ones created later, while `{"all_existing": true}` on `PUT /ai-accounts/{account}/projects` is a
+  SNAPSHOT of today's projects that covers no future project. A body carrying both is refused with 422
+  rather than resolved by precedence, because both readings are defensible. Each entry in a resolved set
+  reports `via: explicit | all_projects`, which is what tells a caller where to go to undo it. 🔴 NAME
+  COLLISION: `access_tokens.all_projects` means which projects the CALLER may reach — an AI account flagged
+  for every project never widens a scoped token. A reveal returns the key plus `env.node`
+  carrying the variable the provider's SDK actually reads; there is no `vite`/`next` block and there never
+  will be. Clearing a key is an explicit `clear_api_key: true` — a blank value is dropped, because Laravel's
+  ConvertEmptyStringsToNull middleware makes "" and null indistinguishable to the controller. The `openai`
+  vault service stays declared and superseded: a data migration lifted stored values onto account records
+  additively, leaving the originals in place.
+
+Full reference: https://fileshub-docs.zaions.com/management-api/overview, the Supabase vault at
+https://fileshub-docs.zaions.com/management-api/supabase-projects, Supabase account tokens at
+https://fileshub-docs.zaions.com/management-api/supabase-accounts, the project vault at
+https://fileshub-docs.zaions.com/management-api/project-vault, and the agent recipe at
+https://fileshub-docs.zaions.com/management-api/agent-workflow.
+
+## Beyond storage: developer utilities
+
+FilesHub also exposes 40+ stateless utility endpoint groups under `/api/v1`, including: hashing and
+verification, Base64/URL encoding, JSON/CSV/XML/YAML converters, UUID/ULID/NanoID generators,
+QR codes, short URLs, OTP send/verify, an encryption vault, image resize/compress/crop/convert,
+PDF generation, link previews, sitemap/feed generation, webhooks, uptime monitors, and scheduled
+tasks. Each takes the same `X-API-Key`; write utilities need `write` plus the group's service scope
+(all enabled by default). Summary: https://fileshub-docs.zaions.com/api/utilities-index.
+
+## Honest limits
+
+- Single-region, locally-stored backend — not a global CDN. Use a CDN for large global media.
+- Default 10 MB upload cap (configurable per deployment).
+- No published client SDK yet; integrate over plain HTTP in any language. A TypeScript SDK is
+  archived until the API stabilises.
+
+## Author
+
+Built and maintained by Ahsan Mahmood — https://aoneahsan.com ·
+https://github.com/aoneahsan · https://www.npmjs.com/~aoneahsan
+
+## Management API — developer accounts (backend 2026.09.01.1)
+
+The account-wide PUBLISHING credentials: npm, Hugging Face, GitHub, Docker Hub, PyPI, crates.io, RubyGems,
+Packagist, NuGet, Maven Central, Homebrew, Chrome Web Store, VS Code Marketplace, Firefox AMO, Edge Add-ons,
+JetBrains Marketplace, Cloudflare, Vercel, Netlify, Expo, Sentry. 21 providers; `GET /developer-accounts/providers`
+returns the live list.
+
+A publish token authorises an ACCOUNT, not a project — one npm token publishes every package the owner has —
+so it lives on one record and projects point at it, rather than being copied into every project vault.
+
+Scope: `can_read_developer_accounts` (default false) for list, show and reveal. Neither `can_reveal_vault`
+nor `can_read_ai_accounts` implies it. Assignment needs only `can_write_vault`, because an assignment is a
+pointer whose response carries no value.
+
+Endpoints: GET /developer-accounts/providers · GET|POST /developer-accounts ·
+GET|PATCH /developer-accounts/{account} · POST /developer-accounts/{account}/reveal ·
+GET|PUT /developer-accounts/{account}/projects · GET|PUT /projects/{project}/developer-accounts.
+`{account}` = numeric id, the identifier, or `provider:identifier`.
+
+A reveal returns the values, `env.node`, and `config_files` — the literal dotfile content, e.g.
+`{".npmrc": "//registry.npmjs.org/:_authToken=..."}`. Write what you are given rather than re-deriving the
+format. There is no `vite` or `next` block: every field here authenticates a publish, so none of it belongs
+in a browser bundle. `env` and `config_files` are maps and are `{}` when empty; `undecryptable` is a list and
+is `[]`.
+
+A blank credential value means LEAVE ALONE. Removing one needs `clear_credentials: ["token"]`.
+`all_projects` on the account is a standing rule covering future projects; `{"all_existing": true}` on the
+projects endpoint is a snapshot of today. Both in one body is a 422.
+
+## Management API — debug keystores (backend 2026.08.31.2)
+
+Every build machine's Android debug signing key, stored once and keyed by machine id, because a debug
+keystore is generated per MACHINE and signs every app built on it. Mirrored onto each project's vault payload
+as a derived `debug_keystores` block.
+
+No new scope: reads use `can_read_vault`, the file download and passwords use `can_reveal_vault`, writes use
+`can_write_vault`. The SHA-1/SHA-256 fingerprints are non-secret and come back on an ordinary read — they
+ship in `assetlinks.json` and authorise nothing alone.
+
+Endpoints: GET|POST /debug-keystores · GET|PATCH|DELETE /debug-keystores/{machine} ·
+GET|POST /debug-keystores/{machine}/file · POST /debug-keystores/{machine}/reveal.
+There is deliberately no projects/{project}/debug-keystores pair.
+
+Three Android fingerprints are three different keys: Play App Signing (`play_console.app_signing_*`), the
+upload keystore (`capacitor.upload_*`), and the per-machine debug key here. Mixing them up is the usual cause
+of a Google Sign-In or App Links failure that reads as an app bug.

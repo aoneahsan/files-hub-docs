@@ -1,0 +1,279 @@
+---
+sidebar_position: 7
+title: Changelog
+description: Notable changes to the FilesHub documentation site, latest first.
+keywords: [fileshub changelog, docs changelog, release notes]
+last_update:
+  date: 2026-10-25
+  author: Ahsan Mahmood
+---
+
+# Changelog
+
+Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-10-25 — Backend on Laravel 13
+
+- Live since 2026-10-26 (backend `2026.10.25.4`, deployed with `2026.10.25.5`).
+- No API change. The backend moves to Laravel 13 (PHP 8.3+), and `POST /api/v1/favicons/generate` works again: it had
+  depended on an image package that was never installed.
+
+## 2026-10-25 — Object expiry after upload, vault digest behind reveal
+
+- Live since 2026-10-26 (backend `2026.10.25.3`, deployed with `2026.10.25.5`).
+- New [Change an object's expiry](api/update-object.md): `PATCH /api/v1/objects/{public_id}` with `expires_at`
+  (or `null`) or `expires_in_days`.
+- **Breaking:** the [project vault](management-api/project-vault.md) plain read no longer returns a file's `checksum`;
+  the reveal still does.
+- Vault writes over the Management API now check each field's declared format, as Nova does; `native_update.api_key`
+  accepts only an `nu_app_…` key (`INVALID_VAULT_VALUE` otherwise).
+
+## 2026-10-25 — Shared marketing mailboxes
+
+- Live since 2026-10-26 (backend `2026.10.25.2`, deployed with `2026.10.25.5`).
+- [Email marketing settings](email-marketing/api.md#shared-mailboxes): a mailbox can serve several projects. Assigning
+  one held elsewhere shares it instead of refusing; each project gets an equal share of its day, the rest rolls over
+  in the last two hours of the window, `share_used` names a used share, and pauses apply to every project on the box.
+- The email-marketing routes accept a numeric project id.
+- OpenAI's economy tier now runs on `gpt-6-luna` (`gpt-5-nano` shuts down 2026-12-11).
+
+## 2026-10-25 — AI credit: refusal reasons, end dates, the last-day economy tier, the cheapest fallback
+
+- Live since 2026-10-25 (backend `2026.10.25.1`).
+- [AI credit routing](management-api/endpoints.md#ai-credit-routing): every refusal names its `reason`
+  (`credit_expired`, `no_credits`, …); `credits` adds `final_expiry_at`, `expiring_soon` and `economy_reason`; the
+  last 24 hours of a credit run at `economy`; `fallback` names the cheapest paid model per provider.
+- `GET /ai-accounts/{account}` lists the credit grants with their dates; `notes` moved to the reveal.
+
+## 2026-10-24 — password manager v2
+
+- Live (backend `2026.10.24.2`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- [Password manager](api/passwords/overview.md): Wi-Fi networks and secure notes beside logins; a breach check
+  against Have I Been Pwned (`compromised`); any `otpauth://` code (8 digits, 60 seconds, SHA-256/512);
+  Recently Deleted empties after 30 days; 30 reveals a minute per key; answers never cached.
+- New endpoints: [security recommendations](api/passwords/endpoints.md#security),
+  [CSV import](api/passwords/endpoints.md#import) and [activity](api/passwords/endpoints.md#activity).
+- Any API key can be [limited to your servers' addresses](api/passwords/access-and-scopes.md#limit-a-key-to-your-servers-addresses) with `allowed_ips`.
+- [Dashboard](api/passwords/dashboard.md): kinds, a Security filter, a breach badge, CSV import and export.
+
+## 2026-10-24 — security hardening
+
+- Live (backend `2026.10.24.1`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- New [Security](api/security.md) page: stored secrets under their own key, the URLs FilesHub will fetch for you,
+  invalid-key limits, files and images, two-step sign-in for the dashboard, and the browser security headers.
+- [Deleting a project](management-api/endpoints.md#delete-projectsproject) needs the new token scope
+  [`can_delete_projects`](management-api/authentication.md) and `{"confirm": "<slug>"}`.
+- The encryption vault's encrypt/decrypt routes are off until a key's `encryption_vault` permission is switched
+  on; JWTs are signed per project; SVG conversion answers `501` ([utilities](api/utilities-index.md)).
+
+## 2026-10-23 — billing by card, and supporting FilesHub
+
+- Live (backend `2026.10.23.6`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- [Billing and support](api/billing.md): buy a service plan by card with `POST /api/v1/billing/checkout` (or the Management
+  plane's `…/projects/{project}/billing/checkout`); how the plan switches on, renews, cancels and ends; the support page.
+
+## 2026-10-23 — password manager, and the weekly deliverability review on the server
+
+- Live (backend `2026.10.23.4` and `2026.10.23.5`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- New [password manager](api/passwords/overview.md): logins per project with websites, username, encrypted password,
+  verification codes, notes, tags and Recently Deleted. A [quick start](api/passwords/quick-start.md), the
+  [access and scopes](api/passwords/access-and-scopes.md) rules (own and admin key scopes, every-project reach,
+  five abilities), the full [endpoint reference](api/passwords/endpoints.md) and the [dashboard](api/passwords/dashboard.md).
+- API keys on the Management plane gain `password_scope`, `password_all_projects` and `password_abilities`;
+  access tokens gain [`can_manage_passwords`](management-api/authentication.md).
+- [Deliverability](email-marketing/deliverability.md): the weekly review runs on the server, and two endpoints list and run reviews.
+
+## 2026-10-23 — access tokens over the API, mailbox moves, resubscribe, lift and erase
+
+- Live (backend `2026.10.23.3`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- [Access tokens](management-api/endpoints#access-tokens) can be listed, created, changed, rotated and deleted over the Management API with the new `can_manage_access_tokens` scope — never one wider than the calling token, and never the calling token's own lockout (`SELF_DEMOTION_REFUSED`, `SELF_REVOKE_REFUSED`, `SELF_DELETE_REFUSED`). The plaintext is returned once, from create and rotate.
+- `PATCH …/email-marketing/settings` accepts `move_accounts: true` to take a mailbox from another project the token also reaches; the response lists what `moved` from where.
+- New contact routes: [`resubscribe`, `erase`, and lifting a project suppression](email-marketing/api#suppressions). An account-wide stop still needs the dashboard.
+
+## 2026-10-23 — plan limits, and yesterday's send totals
+
+- Live (backend `2026.10.23.2`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- A service plan can cap an external project's calls per minute or per day. Over the cap the API answers **429** naming the plan and the limit, with `Retry-After` ([status codes](api/errors-and-limits#status-codes)). The cap can be raised, lowered or lifted for one project on its own subscription.
+- The deliverability report gains `sent_yesterday` and `last_resort_sent_yesterday` per mailbox, so the last-resort mix stays checkable after the midnight reset.
+
+## 2026-10-22 — per-service plans, database backups, and the HTTP 402
+
+- **Live since backend `2026.10.22.4`** (deployed 2026-10-22).
+- FilesHub is priced per service: each API has its own monthly price, listed at [fileshub.zaions.com/pricing](https://fileshub.zaions.com/pricing). A project that calls a service it has no plan for gets **402** naming the service ([status codes](api/errors-and-limits#status-codes)). The owner's own projects are internal and never refused.
+- **Two new Management routes**, `GET /backups` and `GET /backups/{name}`, behind the new token scope `can_read_backups` ([endpoints](management-api/endpoints#database-backups)).
+
+## 2026-10-22 — the OpenAPI spec now covers every API route
+
+- `openapi.json` 1.8.0 gains **201 operations**: every developer utility (converters, encoders, generators, text, network and date tools), notifications, pastes, short URLs, webhooks, mock APIs, uptime monitors, vault, push, and the newer Management routes (email batches, email-marketing reports, sequence step approve/hold, `api-keys/lookup`, `projects/{project}/ai/lease`).
+- Each generated operation names its server, its auth, its path parameters and its request fields from the validation rules, and carries `x-generated: true`. See [OpenAPI spec](api/openapi).
+
+## 2026-10-10 — AI credit routing: which AI account and tier a project uses
+
+- Live (backend `2026.10.10.1`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- **Three new routes**, described in [Management API endpoints](management-api/endpoints#ai-credit-routing): `GET /projects/{project}/ai/route` and `POST /projects/{project}/ai/usage` on the Management plane (`can_read_ai_accounts`), and the browser-safe `GET /api/v1/ai/status`.
+- AI accounts gain credit grants with expiry dates, reserved and shared accounts, and a balance-capped tier. The account records in `GET /ai-accounts` now carry a `credits` block.
+- `openapi.json` gains the 3 paths.
+
+## 2026-09-30 — payment accounts: Stripe, PayPal, Polar.sh and 19 more
+
+- **Live since 2026-09-30** (backend `2026.09.30.3`).
+- **A new page, [Payment accounts](management-api/payment-accounts).** Keys, webhook secrets and login details for 22 payment providers, entered in the dashboard. Only the account email is required.
+- **A new token flag, `can_read_payment_accounts`** (default off). No other flag grants it.
+- `openapi.json` gains the 5 read-only paths.
+
+## 2026-09-29 — email marketing: lists, imports, drip sequences, one-click unsubscribe
+
+- Live (production runs `2026.10.25.5`, confirmed 2026-10-26).
+- 🔴 **A new section, [Email marketing](email-marketing/overview).** Per-project contact lists; imports by CSV (with a column map), by pasting addresses, or one at a time — all through one pipeline whose counters always add up; project-wide suppression; RFC 8058 one-click unsubscribe; double opt-in sign-up forms; drip sequences with tracks and conditions on clicks and product events; click tracking; and product events (`signed_up`, `activated`). [API reference](email-marketing/api) · [product integration recipe](email-marketing/product-integration).
+- **A new key flag, `can_manage_email_marketing`** (default off), on API keys and access tokens. It is a flag, not a service permission, because the endpoints return personal data — and every one of them except `subscribe` refuses a browser `Origin`.
+- **Email templates:** `is_marketing` and `layout` on [create](api/email-templates). A marketing template belongs to one project, is invisible to other projects' keys, and cannot be sent through `POST /emails/send`.
+- `openapi.json` gains the 49 new paths (both planes) under the `Email marketing` tag.
+
+## 2026-09-16 — the vault takes a file of any format, and the OTA signing key has a home
+
+- Live (backend `2026.09.16.1`; production runs `2026.10.25.5`, confirmed 2026-10-26).
+- 🔴 **A new freeform service, [`general_files`](management-api/project-vault#services-covered) — it accepts any file, of any format, under a key you name.** There is no allow-list, no extension check and no content sniffing anywhere on the upload path. Previously a file could only be stored on a key the registry declared as a file field, so anything else — a `.pem`, a `.zip`, a recovery-codes `.txt` — had nowhere to go. It is deliberately separate from `general`, which holds freeform *text*: the two row kinds share a `(project, service, key)` identity in different tables, so one service accepting both would let them shadow each other.
+- **`mime_type` is documented** on both upload forms. It is what "pick the file type" means: recorded, handed back on read, optional, and never validated against a list.
+- **A new field, `native_update.signing_private_key`** (`type: file`, `secret: true`). The OTA platform stores a signing key's public half and fingerprint and never the private key, so a locally generated one has no second copy anywhere; this gives it one. It carries no `env_key`, so no generated `.env` block can ever contain it.
+- **Two limits, neither about format:** 10 MB per file (raised from 1 MB), and 100 files per project — `422 VAULT_FILE_LIMIT_REACHED`. The second keeps the un-paginated file list in `GET /projects/{project}/vault` finite; replacing a file you already store is not a new file.
+- **Two refusals now name the endpoint that would have worked** instead of dead-ending: a file sent to `general` points at `general_files`, and a string sent to `general_files` points at `vault-files`.
+- **Corrected:** the `GET /vault/services` description in `openapi.json` claimed "18 services and 87 fields" and `llms.txt` claimed "20 services, 95 fields". Both had been stale for months. They now tell you to count from the response, which is what [the page itself](management-api/project-vault#services-covered) has always said.
+
+## 2026-09-11 — a client's project is never sent a test event or kept alive
+
+- **Live.** Backend `2026.09.11.3` was deployed on 2026-09-11.
+- 🔴 **A new project flag, `is_client_project`** (boolean, default `false`). It marks a client's project and **outranks both switches**: such a project is never sent a "Test Analytics" event and never has its Google OAuth clients kept alive, whatever `test_events_enabled` and `google_oauth_keepalive_enabled` say. The switches already default off; the flag is a second, independent layer, so a switch turned on by mistake still cannot reach a client's analytics, OAuth clients or database. It is written on [`PATCH /projects/{project}`](management-api/endpoints#patch-projectsproject) with `can_write_vault` (`422` without it), and every project payload carries it.
+- **A new `409 CLIENT_PROJECT`**, checked before the switch, on a [credential-check `send`](management-api/credential-checks) and on a [keep-alive run](management-api/google-oauth-keepalive). `details` is `{"is_client_project": true}`. A `verify` run and the OAuth import still work on a client project, because neither sends anything.
+- The daily test events, the daily keep-alive and a queued run's `"all_enabled"` never select a client project, and a queued run that lists one records it as `skipped`. A client project's OAuth clients read `keepalive.enabled: false`.
+- 🔴 **The Supabase keep-alive honours it too.** A registration is never kept alive when it is flagged as a client's database itself, or when any FilesHub project linked to it is a client project. [`GET /supabase-projects`](management-api/supabase-projects) gains `keepalive.client_project`, that effective value, beside `keepalive.enabled`.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json): `is_client_project` on the project schemas and the `PATCH` body, `CLIENT_PROJECT` on both operations, and `keepalive.enabled` + `keepalive.client_project` on the Supabase project schema (`enabled` had been missing from it since `2026.08.23.1`).
+
+## 2026-09-11 — OAuth client ids stored on the vault get the keep-alive
+
+- **Live.** Backend `2026.09.11.2` was deployed on 2026-09-11.
+- 🔴 **A fifth import source, `vault`.** Client ids already stored on the `google_cloud` vault service (`oauth_web_client_id`, `oauth_android_client_id` and `oauth_ios_client_id`) are registered as web, Android and iOS clients, so they are kept alive too. No Google API lists an OAuth client created by hand in Cloud Console. Recording its id on `google_cloud` is how such a client gets the keep-alive.
+- 🔴 **No secret is taken from Supabase any more.** Supabase's auth-config API returns the Google provider's secret as a SHA-256 hash, not the secret itself. `2026.09.11.1` compared that hash with the vault, which reported a false `conflicts` entry, and could write it into a blank `oauth_web_client_secret`. The import now reads client ids only from Supabase and never stores a 64-hex value as a secret.
+- **A sign-in provider still picks the primary web client.** When Firebase Auth or Supabase Auth names a web client, that client wins; `vault` is the lowest priority. A stored value that does not end in `.apps.googleusercontent.com` is ignored and reported in `notes`.
+- The report's `sources` gains a `vault` key: `ok (N client id(s))`, or `skipped: no OAuth client id stored on google_cloud`.
+- **An Android config failure now carries Google's own message**, e.g. `(HTTP 400: …The length of field 'display_name' value exceeds 63 characters.)`, where `2026.09.11.1` stopped at the status code. That particular 400 is a Google-side failure; [Troubleshooting](management-api/google-oauth-keepalive#troubleshooting) explains the cause and the way round it.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json): `vault` added to a client's `sources` enum and to the import report's `sources` description.
+
+## 2026-09-11 — "Test Analytics" credential checks and the Google OAuth keep-alive
+
+- **Live.** Backend `2026.09.11.1`, which carries both features below, was deployed on 2026-09-11.
+- 🔴 **New page: [Credential checks](management-api/credential-checks).** Send a real "Test Analytics" event to a project's Amplitude, Sentry, Firebase Analytics and GA4 — or verify every stored analytics, error and push credential read-only — and get one verdict per tool. The page is honest about the limits. Amplitude and Sentry acknowledge what they receive, and Firebase proves its config. GA4 answers the same for any id. Clarity has no server-side event API at all.
+- 🔴 **New page: [Google OAuth clients and keep-alive](management-api/google-oauth-keepalive).** Google deletes an OAuth client that makes no token request for six months. FilesHub now imports every client a project owns, from Firebase, `google-services.json` and Supabase, and exercises each one daily.
+- 🔴 **Both are opt-in per project, and off by default**, so a client project is never sent a test event or has its tokens used. The two switches are writable on [`PATCH /projects/{project}`](management-api/endpoints#patch-projectsproject).
+- [Project vault](management-api/project-vault) lists two new services: `google_analytics` (a GA4 property Firebase did not create) and `yandex_metrica`.
+
+## 2026-09-10 — a server's `X-App-Id` no longer refuses its own requests
+
+- **[API key restrictions](getting-started/api-key-restrictions#server-side-consumers-allow_no_origin), [the `allow_no_origin` endpoint notes](management-api/endpoints) and the OpenAPI spec** now say what release `2026.09.10.1` changes. On a key with Allow No Origin, a request with no `Origin` is accepted whatever `X-App-Id` it carries. Earlier releases refused an app id the key did not list, even though the same request without the header got through, so a server that labelled itself for the audit log was locked out.
+- Unchanged: a request whose `Origin` is not allowed is still refused, with or without an app id, and a key **without** Allow No Origin still checks `X-App-Id` as a native-app identity.
+
+## 2026-09-04 — a 22nd developer-account provider, and formats that both write planes enforce
+
+- **[Developer accounts](management-api/developer-accounts) now lists 22 providers**, adding `native_update` — the account-wide token that administers every over-the-air app on a native-update account. Backend `2026.09.04.1`.
+- 🔴 **New section: a provider name may also be a project-vault service.** Six names appear in both places, and the page now says plainly why that is not duplication: the vault row is *that project's* configuration (a DSN, an extension id, an OTA app id and its device key), the developer account is the credential that administers every one of them. A DSN says where errors go; an auth token can delete the project.
+- 🔴 **New section: a field may declare a format.** A value that does not match is refused on write with **422 `INVALID_DEVELOPER_ACCOUNT_CREDENTIAL`**, and `details` names the provider and field — **never the value**, because an error that echoes what was sent puts a credential into the response body, your log and your CI transcript. Documented with the real error body.
+- The rule this closes was real: the format check ran in the admin form and **not** on the API, so a value the form refused could still be stored over the write plane. Two planes disagreeing is worse than neither checking.
+
+## 2026-09-01 — developer accounts, debug keystores, and the two releases this site had missed
+
+- 🔴 **New page: [Developer accounts](management-api/developer-accounts).** The tokens that publish under your name — npm, Hugging Face, Docker Hub, PyPI, crates.io, the extension stores, Vercel, Netlify, Sentry — on one account-level record, because a publish token authorises an **account**, not a project. One npm token publishes every package you own; copying it into each project's vault is not storing one credential, it is storing fifty copies and rotating means finding all fifty. Backend `2026.09.01.1`.
+- 🔴 **The reveal hands back a `.npmrc` line, not a string.** `config_files` carries the literal dotfile content, so CI writes what it was given. A job that re-derives `//registry.npmjs.org/:_authToken=` gets the prefix subtly wrong once and then cannot publish — while the error blames authentication. There is no `vite` or `next` block and there never will be: every field on a developer account authenticates a publish, so a browser bundle is exactly where none of it belongs.
+- **21 providers ship declared, and the page tells you not to trust that number** — `GET /developer-accounts/providers` returns the live list, because adding a provider is a config entry that needs no release note.
+- 🔴 **New page: [Debug keystores](management-api/debug-keystores)** — shipped in backend `2026.08.31.2` and undocumented here until now. A debug keystore is generated per **machine**, not per app, so it is stored once and every project's vault payload carries it as a derived block. The page leads with why you care: Google Sign-In, App Links and Firebase each fail in a way that never mentions signing, and all three are a fingerprint nobody wrote down.
+- 🔴 **No new scope for debug keystores, and the page says why.** A new scope defaults to `false` on every token that already exists, so minting one 403s every caller until each is edited. That cost is worth paying for a credential and not for a **fingerprint**, which ships publicly in `assetlinks.json` and authorises nothing alone. Developer accounts made the opposite call, for the opposite reason.
+- 🔴 **[Authentication](management-api/authentication) listed five scopes; there are eight.** `can_write_vault` shipped in `2026.08.20.1` and appeared **nowhere** on that page — not in the table, not in the `GET /token` sample. `can_read_ai_accounts` and `can_read_developer_accounts` were missing too. All three are now documented, and the sample payload shows the full set.
+- 🔴 **And a sentence on that page was wrong, not merely incomplete:** *"Only `can_reveal_vault` implies another"*. `can_write_vault` also implies `can_read_vault` — a caller populating a vault must be able to see which fields are already set. Corrected, with the three non-implications spelled out, because a scope that looks like it should imply another is exactly where a caller guesses.
+- **OpenAPI: 44 → 54 paths.** All ten developer-account and debug-keystore operations, linting at **0 errors / 2 accepted warnings** — the documented baseline.
+- `llms.txt` and `llms-full.txt` carry both subsystems, so an agent reading the machine-readable mirror gets the scope rules and the `config_files` contract without loading a page.
+
+## 2026-08-24 — Cloudflare Turnstile, and the Supabase release the site had missed
+
+- 🔴 **New page: [Verify a Turnstile token](api/turnstile).** `POST /api/v1/turnstile/verify` checks a Cloudflare Turnstile token using the secret key stored in your project's vault, so the secret never has to reach your frontend. A static or Firebase-hosted app with no backend of its own can now use Turnstile without standing up a worker for one form.
+- 🔴 **The page leads with the thing integrations get wrong: a failed challenge is `200`, not `4xx`.** A visitor failing a captcha is a normal outcome. Were it an error status, an integration would have to tell "FilesHub is broken" from "the visitor failed" by parsing a message — and one that skipped that step would treat an outage as a bot and reject every real person. Branch on `success` for the verdict, on the status code for whether the verdict means anything. The two `409`s stay distinct because *store a secret* and *re-enter it* are different fixes.
+- **New vault service `turnstile`**, taking the registry to **22 services / 101 fields**. Deliberately separate from `cloudflare`: a project uses Turnstile without owning any Cloudflare account config, and merging them would make `configured_services` report an account that does not exist.
+- **Action checking is documented** — without it, a token minted on your signup form is a perfectly valid token on your login form. A mismatch returns `fileshub-action-mismatch`; the prefix marks it as ours so a future Cloudflare code can never silently collide.
+- 🔴 **[Supabase projects](management-api/supabase-projects) was a release behind and is now current.** It documented `keepalive` without `enabled`, and neither `endpoints.jwks` nor `config.jwt` — all three shipped in backend `2026.08.23.1`. Added: the two-switch explanation (`is_active` retires a registration, `keepalive.enabled` decides whether FilesHub may **write** to that database — a client project is `active: true, keepalive.enabled: false`), the `?keepalive=` filter, and the JWT signing-key fields with the reason `endpoints.jwks` is derived rather than stored.
+- 🔴 **A `keepalive.last_status` that never moves is not a broken project when `enabled` is `false`** — it is one deliberately left alone, and a skip writes no run row at all. That sentence is in the docs now because the payload alone reads like a failure.
+
+## 2026-08-22 — one AI account for every project
+
+- 🔴 **An AI account can now serve every project, including projects created later.** The owner keeps one or two provider accounts for a whole fleet, so the common case is not "assign this key to a project" but *this key **is** the fleet's key*. Set `all_projects` on the account and there are no pivot rows to maintain — and no 56th project quietly created without it.
+- **Two new routes, the account-centric direction:** `GET|PUT /ai-accounts/{account}/projects`. The existing pair assigns many accounts to one project; this assigns one account to many projects. Both need `can_write_vault`, and neither ever returns a key.
+- 🔴 **`{"all_existing": true}` and `all_projects` are different features, and the docs now say so in a table.** The first is a *snapshot* — every project that exists right now, future ones excluded. The second is a *standing rule*. Sending both in one body is a **422** rather than resolved by precedence: "all_existing wins" and "the explicit list wins" are equally defensible, so a caller should never have to guess which was implemented.
+- Each resolved entry reports `via: explicit | all_projects`, which is what tells you where to undo it — an `all_projects` entry is detachable from the account, never from the project.
+- 🔴 **A note on a name collision:** an access token *also* has an `all_projects` field, meaning which projects *you* may reach. An AI account flagged for every project never widens a token's scope.
+- Corrected a stale box on [Endpoints](management-api/endpoints): it claimed no project had any configured service, a figure measured through a read path fixed in `2026.08.19.1`. The honest count, probed 2026-08-19, is 7 of 55 — with a warning that `configured_services` now includes the *derived* `fileshub` service and so cannot be read as "someone entered data".
+
+## 2026-08-21 — AI provider accounts
+
+- **An OpenAI or Anthropic key now lives on its own account record**, not in each project's vault. That key authorises an *account*: it spends its balance and reaches every model on it, and two or three accounts serve a whole fleet — so copying it per project meant one secret in twenty rows, rotated in twenty places, agreeing in none. Same argument that put a Supabase personal access token on its account. Documented in [AI provider accounts](management-api/project-vault#ai-provider-accounts-are-linked-not-copied).
+- 🔴 **A new scope, `can_read_ai_accounts`, and `can_reveal_vault` does NOT imply it.** The most powerful grant over *project* credentials still answers `403` from every `/ai-accounts` endpoint, deliberately: it is given to a caller that should read one project's configuration, not to hand out billing. **Assigning** an account to a project is different again and needs only `can_write_vault`, because an assignment is a pointer and never returns a key. `GET /token` now reports six booleans.
+- 🔴 **Many accounts per project**, unlike the single Supabase link — an app routinely uses OpenAI for embeddings and Anthropic for chat, and a single foreign key would make that inexpressible.
+- A reveal returns `env.node` carrying the variable the provider's SDK actually reads. 🔴 **There is no `vite` or `next` block and there never will be** — an AI key in a browser bundle is someone else spending the balance.
+- 🔴 **Clearing a key is `{"clear_api_key": true}`, not a blank value.** A blank `api_key` is dropped so editing an unrelated field cannot wipe the credential, and it could not be "absent keeps, null clears" like the vault endpoints: Laravel's `ConvertEmptyStringsToNull` middleware rewrites `""` to null before a controller sees it, so the two are indistinguishable and that rule would have destroyed the key on any empty string.
+- **`openai` stays a declared vault service, marked superseded.** A data migration lifted stored values onto account records *additively* — the originals were left in place, because deleting a credential is an owner decision. Removing the service would have orphaned every one of them.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.5.0**.
+
+## 2026-08-20 — The project vault became writable
+
+- 🔴 **The vault now accepts writes, reversing a decision that was reaffirmed as recently as 2026-08-19.** If you find a page, a note or a tool description still saying *"no credential write endpoint exists or is planned"*, it is stale — that sentence was true until backend `2026.08.20.1`. What changed is scale, not principle: around sixty projects times ninety-odd declared fields is not a workload a form can carry, and most of those values already sit in a local checkout, a git remote, or a console a CLI can read. The admin keeps its per-field help text and stays the better place to type a single value by hand.
+- **Seven routes**, documented in [Writing to the vault](management-api/project-vault#writing-to-the-vault): a partial per-service upsert, an atomic bulk write, a service clear (which requires an explicit `confirm`), an orphan move, config-file store and delete, and a link-list replace. Each answers with the *same* payload `GET /projects/{project}/vault` returns — so you confirm what landed without a second call and without needing `can_reveal_vault` — plus a `changes` block naming created, updated and deleted **field names**, never a value.
+- **A new opt-in scope, `can_write_vault`**, off by default like the rest. It **implies** `can_read_vault` (a writer must be able to see which fields are already set) and deliberately does **not** imply `can_reveal_vault` — a seeding agent should be able to fill a project in without being handed back every secret you already hold. [Authentication](management-api/authentication) and the [endpoint reference](management-api/endpoints) now list five capability booleans.
+- **What the write plane refuses, and why.** A free-text service name is rejected on create — that is the entry-side half of the ISSUE-09 story, where a credential stored under an undeclared service name was invisible in three clean `200`s for two weeks. An *existing* orphan stays deletable and movable, because the write side must be able to clean up whatever the read side can see; `POST /projects/{project}/vault-move` exists for exactly that and validates the whole move before writing any of it. And for a registry-declared field **the registry decides whether a value is secret** — a caller-supplied flag counts only on the freeform `general` service, where it defaults to secret.
+- 🔴 **`fileshub` is now a *derived* service.** Its four fields — project slug, API base, `fh_live_` key and that key's origins — are computed from records FilesHub already holds, and writes to it are refused. Same reasoning that makes `supabase` a link rather than a copy: a stored second version of a credential the database already owns is two values that can drift with nothing to say which is right. `GET /vault/services` now publishes `writable` and `derived` per service so you learn this from schema discovery instead of from a `422`.
+- **Two new services in the registry: `firefox_addons` and `edge_addons`** — Mozilla AMO (extension id, listing slug, JWT issuer and secret) and Microsoft Partner Center (product id, client id and secret, tenant token URL). The registry is now **20 services, 95 fields**.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.4.0**: 2 new paths, 7 new methods on existing paths, and 9 new schemas. `VaultServicePayload` and `VaultServiceDefinition` gained `derived` and `writable`. Verified 0 errors, and 0 new warnings against the previous spec.
+
+## 2026-08-01 — Supabase account tokens
+
+- New page: **[Supabase account tokens](management-api/supabase-accounts)**. A Supabase personal access token (`sbp_…`) belongs to an *account*, not a project — it drives the Supabase Management API and `supabase login --token`, so one token reaches every project that account owns, including projects that do not exist yet. It now lives on its own account record, entered once for all the projects underneath it, and is read back over three new endpoints: `GET /supabase-accounts`, `GET /supabase-accounts/{idOrEmail}` and `POST /supabase-accounts/{idOrEmail}/reveal`. The reveal returns `env.cli` = `SUPABASE_ACCESS_TOKEN=…`, so `supabase link` / `db push` / `functions deploy` need no interactive login.
+- **A new opt-in token scope, `can_read_supabase_tokens`**, off by default — and the part worth reading twice: **`can_manage_supabase` does not grant it.** The two have different blast radii, so they are different switches; a token holding only `can_manage_supabase` gets `403` from every account endpoint. Documented in [Authentication](management-api/authentication) (now four separate axes, with which of them imply each other stated explicitly), [overview](management-api/overview) and the [endpoint reference](management-api/endpoints).
+- The [Supabase project vault](management-api/supabase-projects) payload gained an `account` **pointer** — which account owns the project, whether it has a token stored, and the endpoint plus scope that would return it. It is a pointer and never a credential: no project endpoint returns a personal access token, whatever scopes the caller holds.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.2.0**: 3 new paths and 3 new schemas. Token introspection also gained `can_read_vault` and `can_reveal_vault`, which the spec had been missing since they shipped — a client generated from 1.1.0 was unaware of both.
+- `llms.txt` and `llms-full.txt` gained the account endpoints **and the project vault**, which had been omitted when that page shipped on 2026-07-31.
+
+## 2026-07-31 — Project vault
+
+- New page: **[Project vault](management-api/project-vault)**. FilesHub now stores every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Clarity, Amplitude, Cloudflare, Capacitor signing, GitHub, the three store consoles, OpenAI, SMTP, plus a freeform bucket — and reads them back over the Management API, including ready-to-paste `.env` blocks for Vite, Next, Node and Laravel. Supabase is *linked* to the existing [account-wide vault](management-api/supabase-projects) rather than duplicated.
+- **Two new opt-in token scopes**, both off by default and documented in [Authentication](management-api/authentication): `can_read_vault` sees metadata and *which* credentials exist — presence flags, never a value — while `can_reveal_vault` sees the values, the file bytes and the env blocks. A token missing one gets `403 TOKEN_PERMISSION_DENIED` with `details.required_scope`, not the anti-enumeration `404` used for resources; that distinction is now stated in the [endpoint reference](management-api/endpoints) error table.
+- `GET /vault/services` publishes the **field registry itself** — every field's label, where in that console to find it, whether it is secret, whether it may ship in a browser bundle, and its `.env` name. Schema discovery, so an agent never has to guess what a project can hold.
+- The generated `VITE_` / `NEXT_PUBLIC_` blocks contain **only** fields marked `client_safe`, and a field marked `secret` is always `client_safe: false`. A server secret is structurally unable to appear in a client env block rather than merely omitted by convention.
+- [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) extended to **1.1.0**: 7 new paths and 8 new schemas, all using the 3.1 nullable form. The [agent workflow](management-api/agent-workflow) gained a bootstrap-a-machine-from-the-vault recipe.
+
+## 2026-07-30 — Global origins are readable over the Management API
+
+- Documented two read-only endpoints — **`GET /global-origins`** and **`POST /global-origins/check`** — in the [endpoint reference](management-api/endpoints). Global origins apply to every restricted key and never appear in a key's own list, so previously there was no way to see them over the API; the docs said outright that none existed. Writes stay in the dashboard. The [agent workflow](management-api/agent-workflow) now checks coverage *before* adding origins and adds only what comes back `covered: false`, and [API key restrictions](getting-started/api-key-restrictions) records that the read API exists.
+- The check endpoint runs the same matcher request-time enforcement uses, because coverage is **not** string equality: `https://*.example.com` covers its subdomains *and* the bare apex, an apex rule covers no subdomain, and `http://localhost:*` covers every port. Extended the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) with both paths and the `GlobalOriginPublic` / `GlobalOriginCheckResult` schemas, and added the guidance to `llms.txt` / `llms-full.txt`.
+- **Fixed 49 wrongly-typed nullable fields in the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json).** The spec declares OpenAPI 3.1, but 49 properties used the **3.0** `nullable: true` keyword. 3.1 removed that keyword, so it was being ignored — meaning the published spec asserted those 49 fields were **non-nullable while the API genuinely returns `null`**, and any client generated from it got the wrong types. They now use the 3.1 form, `"type": ["string", "null"]`. If you generated a client from this spec before today, regenerate it. No API behaviour changed; only the description of it was wrong.
+
+## 2026-07-22 — Supabase project vault (Management API)
+
+- Documented the **[Supabase project vault](management-api/supabase-projects)** — read and **reveal** a registered Supabase project's full credential set (API keys, JWT secret, Postgres connection details, S3 keys) plus ready-to-paste React/Node/Laravel `.env` blocks, over the Management API. Gated by the new **`can_manage_supabase`** access-token scope (off by default), which is a separate axis from the project scope.
+- Extended the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) with the `/api/public/v1/supabase-projects` endpoints (list, show, reveal) and added `can_manage_supabase` to the token introspection; noted the scope in [overview](management-api/overview) and [authentication](management-api/authentication), and added a Supabase section to `llms.txt` / `llms-full.txt`.
+
+## 2026-07-18 — Management API
+
+- Documented the new **[Management API](management-api/overview)** — a server-side control plane that manages projects, API keys, and origin restrictions with a user-level `fh_pat_` access token: [overview](management-api/overview), [authentication](management-api/authentication), the [endpoint reference](management-api/endpoints), and an [AI agent workflow](management-api/agent-workflow) for auto-configuring a project's API key.
+- Extended the [OpenAPI spec](https://fileshub-docs.zaions.com/openapi.json) with the `/api/public/v1/*` endpoints under a new `BearerAuth` scheme, and added a Management API section to `llms.txt` / `llms-full.txt`.
+
+## 2026-07-14 — Full API docs + AI surfaces, GitHub Pages
+
+- Moved to **`fileshub-docs.zaions.com`** on **GitHub Pages** as the single host (Firebase Hosting removed).
+- Documented the **email API**: [send](api/emails-send) (raw + template, multi-domain, queued), [templates](api/email-templates), and [recurring schedules](api/email-schedules).
+- Documented **[jobs](api/jobs)** (poll queued operations) and **[version & health](api/version-health)**.
+- Added **[API key restrictions](getting-started/api-key-restrictions)** — ship a key in a React/mobile frontend with web-origin, Android package + signing-cert, and iOS bundle-id allowlisting.
+- Added AI-agent surfaces: an **[OpenAPI 3.1 spec](api/openapi)** at [`/openapi.json`](https://fileshub-docs.zaions.com/openapi.json) and a **raw-Markdown mirror** of every page under `/raw/` (index at [`/raw/manifest.json`](https://fileshub-docs.zaions.com/raw/manifest.json)), with a "View raw Markdown" link on each page.
+- Added a summarized **[developer utilities index](api/utilities-index)** and expanded the [API overview](api/overview) with scopes and the full endpoint map.
+
+## 2026-06-23 — Initial public docs
+
+- Launched `fileshub-docs.zaions.com` as the public FilesHub documentation site (Docusaurus, hosted on Firebase Hosting + GitHub Pages).
+- Documented the storage **object API**: [upload](api/upload-object), [download](api/get-object), [list](api/list-objects), and [delete](api/delete-object), with exact request/response shapes and the `{ "message": ... }` error envelope.
+- Added **Getting Started**: [Quick Start](getting-started/quick-start), [Authentication](getting-started/authentication) (`X-API-Key`, permissions, restrictions), and [File visibility](getting-started/file-visibility) (`public` vs `private`).
+- Added **Integration Guides**: [Integrate from any app](guides/integrate-from-any-app) (JS/TS, React, PHP/Laravel) and [Browser & mobile uploads](guides/browser-and-mobile-uploads).
+- Added a [platform services](platform-services) map of the 50+ utility endpoints, an [FAQ](faq), and a [Privacy](privacy) note.
+- Added SEO/AI-discovery files: `robots.txt` (AI-bot allowlist), `sitemap.xml`, `llms.txt`, `llms-full.txt`, `humans.txt`, and `/.well-known/security.txt`, plus JSON-LD (WebSite, Organization, SoftwareApplication).
