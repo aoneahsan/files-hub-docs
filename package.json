@@ -26,7 +26,8 @@
     "serve": "docusaurus serve --port 5995",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "yarn build && npx -y wrangler@4 pages deploy build --project-name fileshub-docs --branch main --commit-dirty=true"
   },
   "dependencies": {
     "@docusaurus/core": "^3.10.2",
