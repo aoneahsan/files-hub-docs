@@ -1,28 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FilesHub logo">
-  <title>FilesHub</title>
-  <desc>A document with a glowing hub node, representing files served from a central storage API</desc>
-  <defs>
-    <linearGradient id="fh-grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6366f1"/>
-      <stop offset="1" stop-color="#8b5cf6"/>
-    </linearGradient>
-    <linearGradient id="fh-hub" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#22d3ee"/>
-      <stop offset="1" stop-color="#06b6d4"/>
-    </linearGradient>
-  </defs>
-  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#fh-grad)"/>
-  <!-- document -->
-  <path d="M22 16 h13 l9 9 v23 a3 3 0 0 1 -3 3 H22 a3 3 0 0 1 -3 -3 V19 a3 3 0 0 1 3 -3 z" fill="#ffffff" opacity="0.95"/>
-  <path d="M35 16 v6 a3 3 0 0 0 3 3 h6" fill="none" stroke="#6366f1" stroke-width="2" stroke-linejoin="round" opacity="0.55"/>
-  <!-- hub node + spokes (the "Hub") -->
-  <g stroke="url(#fh-hub)" stroke-width="2.4" stroke-linecap="round">
-    <line x1="32" y1="40" x2="25" y2="34"/>
-    <line x1="32" y1="40" x2="39" y2="34"/>
-    <line x1="32" y1="40" x2="32" y2="48"/>
-  </g>
-  <circle cx="32" cy="40" r="4.2" fill="url(#fh-hub)"/>
-  <circle cx="25" cy="34" r="2.2" fill="#06b6d4"/>
-  <circle cx="39" cy="34" r="2.2" fill="#06b6d4"/>
-  <circle cx="32" cy="48" r="2.2" fill="#06b6d4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+<path d="M16 0H24A16 16 0 0 1 40 16V24A16 16 0 0 1 24 40H16A16 16 0 0 1 0 24V16A16 16 0 0 1 16 0Z" fill="#020618"/>
+<path d="M10.9 9H13.1A2.4 2.4 0 0 1 15.5 11.4V14.902A6.8 6.8 0 0 0 15.5 25.098V28.6A2.4 2.4 0 0 1 13.1 31H10.9A2.4 2.4 0 0 1 8.5 28.6V11.4A2.4 2.4 0 0 1 10.9 9ZM26.9 9H29.1A2.4 2.4 0 0 1 31.5 11.4V28.6A2.4 2.4 0 0 1 29.1 31H26.9A2.4 2.4 0 0 1 24.5 28.6V25.098A6.8 6.8 0 0 0 24.5 14.902V11.4A2.4 2.4 0 0 1 26.9 9Z" fill="#FFFFFF"/>
+<path d="M16 20A4 4 0 1 0 24 20A4 4 0 1 0 16 20Z" fill="#F53003"/>
 </svg>
