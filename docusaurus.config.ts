@@ -176,6 +176,7 @@ const config: Config = {
   themeConfig: {
     image: 'img/social-card.svg',
     metadata: [
+      { name: 'yandex-verification', content: 'ffc2cf741c9b8c71' },
       { name: 'description', content: 'Documentation for FilesHub — a file-storage + utility API, priced per service. Upload, store, list, and serve files over HTTP with an X-API-Key. Maintained by Ahsan Mahmood.' },
       { name: 'keywords', content: 'fileshub, file storage api, file upload api, http file storage, public file url, image hosting api, x-api-key, multipart upload, laravel file storage, store files api, free file storage backend, capacitor file upload, react file upload api' },
       { name: 'author', content: 'Ahsan Mahmood' },
