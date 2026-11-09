@@ -976,7 +976,7 @@
           "Management API"
         ],
         "summary": "List projects",
-        "description": "Projects this token may manage. Supports ?q= (name/slug), ?status=, pagination.",
+        "description": "Projects this token may manage. Supports ?q= (name/slug), ?status=, ?lifecycle=, ?incomplete=1, pagination.",
         "operationId": "listProjects",
         "servers": [
           {
@@ -1058,6 +1058,26 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "lifecycle",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "production",
+                "frozen",
+                "other"
+              ]
+            }
+          },
+          {
+            "name": "incomplete",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Production projects still missing at least one readiness row, most missing first."
           }
         ]
       },
@@ -1199,6 +1219,49 @@
                       "type": "string",
                       "maxLength": 64
                     }
+                  },
+                  "lifecycle": {
+                    "type": "string",
+                    "enum": [
+                      "production",
+                      "frozen",
+                      "other"
+                    ]
+                  },
+                  "category": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "web-app",
+                      "mobile-app",
+                      "desktop-app",
+                      "browser-extension",
+                      "package",
+                      "platform-app",
+                      "backend",
+                      "private-notebook",
+                      "other"
+                    ]
+                  },
+                  "play_store_waived": {
+                    "type": "boolean",
+                    "description": "Google Play won't take the app; it ships as a signed APK from the website. Re-sending true keeps the original date."
+                  },
+                  "play_store_waiver_note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Required when play_store_waived is true."
+                  },
+                  "polar_waived": {
+                    "type": "boolean",
+                    "description": "Polar won't take the product; payments are handled by hand in the admin panel."
+                  },
+                  "polar_waiver_note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Required when polar_waived is true."
                   }
                 }
               }
@@ -1424,6 +1487,49 @@
                   "is_client_project": {
                     "type": "boolean",
                     "description": "Off by default. On: this is a client's project, and the flag OUTRANKS both switches \u2014 FilesHub never sends it a \"Test Analytics\" event and never keeps its Google OAuth clients, or a Supabase project linked to it, alive, whatever the switches say. Clearing it re-exposes the project to its switches, so it needs can_write_vault. Added in 2026.09.11.3."
+                  },
+                  "lifecycle": {
+                    "type": "string",
+                    "enum": [
+                      "production",
+                      "frozen",
+                      "other"
+                    ]
+                  },
+                  "category": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "web-app",
+                      "mobile-app",
+                      "desktop-app",
+                      "browser-extension",
+                      "package",
+                      "platform-app",
+                      "backend",
+                      "private-notebook",
+                      "other"
+                    ]
+                  },
+                  "play_store_waived": {
+                    "type": "boolean",
+                    "description": "Google Play won't take the app; it ships as a signed APK from the website. Re-sending true keeps the original date."
+                  },
+                  "play_store_waiver_note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Required when play_store_waived is true."
+                  },
+                  "polar_waived": {
+                    "type": "boolean",
+                    "description": "Polar won't take the product; payments are handled by hand in the admin panel."
+                  },
+                  "polar_waiver_note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Required when polar_waived is true."
                   }
                 }
               }
@@ -29064,6 +29170,149 @@
           }
         ]
       }
+    },
+    "/projects/{project}/readiness": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Project readiness",
+        "description": "Every row a production project owes for its category and platforms (analytics, Supabase, Google sign-in, app identifier, Polar, store listings), each done, missing or waived. Computed live. A project that is not in production returns scored=false and no items.",
+        "operationId": "getProjectReadiness",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project id, ULID public_id, or slug."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Readiness",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "project": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "lifecycle": {
+                          "type": "string",
+                          "enum": [
+                            "production",
+                            "frozen",
+                            "other"
+                          ]
+                        },
+                        "category": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "scored": {
+                          "type": "boolean"
+                        },
+                        "done": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "key": {
+                                "type": "string"
+                              },
+                              "group": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "where": {
+                                "type": "string",
+                                "description": "Where in the FilesHub dashboard the value goes."
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "done",
+                                  "missing",
+                                  "waived"
+                                ]
+                              },
+                              "waiver": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "play_store",
+                                  "polar",
+                                  null
+                                ]
+                              },
+                              "hint": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -30129,6 +30378,90 @@
           "is_client_project": {
             "type": "boolean",
             "description": "A client's project. Outranks both switches: never sent a test event and never kept alive, whatever test_events_enabled and google_oauth_keepalive_enabled say. Written only by PATCH /projects/{project}. Added in 2026.09.11.3."
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "production",
+              "frozen",
+              "other"
+            ],
+            "description": "production, frozen or other. Mirrors the owner's finalization record; only production projects are scored."
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "web-app",
+              "mobile-app",
+              "desktop-app",
+              "browser-extension",
+              "package",
+              "platform-app",
+              "backend",
+              "private-notebook",
+              "other"
+            ],
+            "description": "With platforms, decides which readiness rows apply."
+          },
+          "waivers": {
+            "type": "object",
+            "properties": {
+              "play_store": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "waived_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              },
+              "polar": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "waived_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "description": "The only two waivers. A waived row counts as done."
+          },
+          "readiness": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Stored snapshot; null when the project is not in production. GET /projects/{project}/readiness computes the full list live.",
+            "properties": {
+              "done": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              },
+              "missing": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "required": [
