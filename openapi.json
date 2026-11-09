@@ -29313,6 +29313,403 @@
           }
         }
       }
+    },
+    "/amplitude-projects/{id}": {
+      "delete": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Frees the slot; the FilesHub project and its vault are untouched",
+        "description": "frees the slot; the FilesHub project and its vault are untouched.\n\nGenerated from the route definition (DELETE api/public/v1/amplitude-projects/{id}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerDestroyProject",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Rename, re-id, move to another account, link a FilesHub project",
+        "description": "rename, re-id, move to another account, link a FilesHub project.\n\nGenerated from the route definition (PATCH api/public/v1/amplitude-projects/{id}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerUpdateProject",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/amplitude-accounts": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Every account with its slots and projects; ?has_room=1 narrows to accounts with a free slot",
+        "description": "every account with its slots and projects; ?has_room=1 narrows to accounts with a free slot.\n\nGenerated from the route definition (GET api/public/v1/amplitude-accounts). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerIndex",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Create an Amplitude Account",
+        "description": "Generated from the route definition (POST api/public/v1/amplitude-accounts). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerStore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/amplitude-accounts/{account}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Get an Amplitude Account",
+        "description": "Generated from the route definition (GET api/public/v1/amplitude-accounts/{account}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerShow",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Label, email, organization, limit, active, notes",
+        "description": "label, email, organization, limit, active, notes.\n\nGenerated from the route definition (PATCH api/public/v1/amplitude-accounts/{account}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerUpdate",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/objects/upload-attempts/{idempotencyKey}": {
+      "get": {
+        "tags": [
+          "Objects"
+        ],
+        "summary": "Read one upload attempt using the same authenticated key identity",
+        "description": "Read one upload attempt using the same authenticated key identity.\n\nGenerated from the route definition (GET api/v1/objects/upload-attempts/{idempotencyKey}). Data plane: authenticate with X-API-Key.",
+        "operationId": "objectControllerUploadAttempt",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "idempotencyKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "idempotency_key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/amplitude-accounts/{account}/projects": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Register a project in an account",
+        "description": "register a project in an account.\n\nGenerated from the route definition (POST api/public/v1/amplitude-accounts/{account}/projects). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicAmplitudeControllerStoreProject",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
