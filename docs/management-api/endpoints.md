@@ -160,6 +160,53 @@ the project to its switches, so it needs the same `can_write_vault` scope (`422`
 Credential **values** are written through the vault endpoints, not here — see
 [Project vault](./project-vault.md).
 
+#### Lifecycle, category and waivers
+
+Since `2026.11.09.1` a project also carries **`lifecycle`** (`production`, `frozen` or `other`, default
+`other`) and **`category`** (`web-app`, `mobile-app`, `desktop-app`, `browser-extension`, `package`,
+`platform-app`, `backend`, `private-notebook`, `other`). Both are writable on create and on `PATCH`, with no
+extra scope. Changing `lifecycle` writes a second audit row, `public_api.project.lifecycle_changed`, with
+`from` and `to`.
+
+Promote a rebuilt project, or freeze one:
+
+```bash
+curl -X PATCH "$B/projects/tilawah" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"lifecycle":"production","category":"web-app","platforms":["web","android"]}'
+```
+
+Two rows of the readiness list can be waived, and only these two:
+
+| Field | Means | Reason field |
+|---|---|---|
+| `play_store_waived: true` | Google Play won't take the app; it ships as a signed APK from the website | `play_store_waiver_note` (required) |
+| `polar_waived: true` | Polar won't take the product; payments are handled by hand in the admin panel | `polar_waiver_note` (required) |
+
+Sending `true` again keeps the date the waiver was first set; `false` clears it and its note. Every project
+payload shows them under `waivers.play_store` / `waivers.polar` (`null` when not waived).
+
+### `GET /projects/{project}/readiness`
+
+What a **production** project still owes, computed live. Which rows apply depends on `category` and
+`platforms`: analytics (Firebase measurement ID, Sentry, Amplitude, Clarity, OneSignal), a linked Supabase
+project, the Google web client and Google sign-in turned on in Supabase with that same client, the app
+identifier (Android and desktop), a Polar organization, and the store rows (Google Play, npm, Chrome, Firefox
+and Edge add-on stores, GitHub Releases for desktop). Each item is `done`, `missing` or `waived`, with
+`where` naming the place in the dashboard the value goes.
+
+```json
+{ "data": { "project": { "id": 51, "slug": "pregnancy-pal", "name": "PregnancyPal" },
+  "lifecycle": "production", "category": "web-app", "scored": true, "done": 6, "total": 11,
+  "items": [ { "key": "sentry", "group": "Analytics", "label": "Sentry DSN",
+               "where": "Vault → Sentry", "status": "missing", "waiver": null, "hint": null } ] } }
+```
+
+A frozen or other project answers `scored: false` with no items. Every project payload also has a
+`readiness` snapshot (`done`, `total`, `missing[]`, or `null` when not scored), refreshed on every write
+that can change it. `GET /projects?lifecycle=production` lists production projects;
+`GET /projects?incomplete=1` lists the ones still missing something, most missing first.
+
 ### `DELETE /projects/{project}`
 
 Since backend `2026.10.24.1` this needs the token scope [`can_delete_projects`](./authentication.md) (403
