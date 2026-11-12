@@ -29315,105 +29315,144 @@
       }
     },
     "/amplitude-projects/{id}": {
-      "delete": {
-        "tags": [
-          "Management API"
-        ],
-        "summary": "Frees the slot; the FilesHub project and its vault are untouched",
-        "description": "frees the slot; the FilesHub project and its vault are untouched.\n\nGenerated from the route definition (DELETE api/public/v1/amplitude-projects/{id}). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerDestroyProject",
-        "servers": [
-          {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The FilesHub record's id, not Amplitude's own project id.",
+          "schema": {
+            "type": "integer"
           }
-        ],
-        "x-generated": true,
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      },
+        }
+      ],
       "patch": {
         "tags": [
           "Management API"
         ],
-        "summary": "Rename, re-id, move to another account, link a FilesHub project",
-        "description": "rename, re-id, move to another account, link a FilesHub project.\n\nGenerated from the route definition (PATCH api/public/v1/amplitude-projects/{id}). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerUpdateProject",
+        "summary": "Update an Amplitude project",
+        "description": "Requires `can_write_vault`. Rename it, change its Amplitude project id or region, move it with `amplitude_account_id` (a full account is 422), link or unlink a FilesHub project with `project`, or set its API key. `api_key` goes to the vault of the project this same request links, else the current link; `null` removes it, and leaving it out keeps it.",
+        "operationId": "updateAmplitudeProject",
         "servers": [
           {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ],
-        "x-generated": true,
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AmplitudeProjectWrite"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "amplitude_account_id": {
+                        "type": "integer",
+                        "description": "Move the project into this account."
+                      }
+                    }
+                  }
+                ]
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "The updated Amplitude project",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AmplitudeProject"
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "$ref": "#/components/responses/ManagementError"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
           }
-        },
+        }
+      },
+      "delete": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Delete an Amplitude project",
+        "description": "Requires `can_write_vault`. Frees the slot in its account. The linked FilesHub project and its vault, the API key included, are untouched.",
+        "operationId": "deleteAmplitudeProject",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
         "security": [
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean",
+                          "const": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
+          }
+        }
       }
     },
     "/amplitude-accounts": {
@@ -29421,177 +29460,262 @@
         "tags": [
           "Management API"
         ],
-        "summary": "Every account with its slots and projects; ?has_room=1 narrows to accounts with a free slot",
-        "description": "every account with its slots and projects; ?has_room=1 narrows to accounts with a free slot.\n\nGenerated from the route definition (GET api/public/v1/amplitude-accounts). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerIndex",
+        "summary": "List Amplitude accounts",
+        "description": "Every Amplitude account, with its project limit, used and free slots, and the projects inside it. Any Management API token. `?has_room=1` keeps active accounts with a free slot, counted in SQL so pages stay true. A linked FilesHub project, and its `api_key`, show only inside the token's reach; `api_key` also needs a vault read scope. Added in backend 2026.11.09.3; `api_key` in 2026.11.12.1.",
+        "operationId": "listAmplitudeAccounts",
         "servers": [
           {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "has_room",
+            "in": "query",
+            "description": "Only active accounts with at least one free slot.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "One page of accounts, ordered by label",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AmplitudeAccount"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "$ref": "#/components/responses/ManagementError"
           },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
           }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
+        }
       },
       "post": {
         "tags": [
           "Management API"
         ],
-        "summary": "Create an Amplitude Account",
-        "description": "Generated from the route definition (POST api/public/v1/amplitude-accounts). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerStore",
+        "summary": "Register an Amplitude account",
+        "description": "Requires `can_write_vault`. `project_limit` defaults to 5. The login password is kept in the FilesHub dashboard only: a body carrying `password` is refused with 422, and no response ever contains it.",
+        "operationId": "createAmplitudeAccount",
         "servers": [
           {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ],
-        "x-generated": true,
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AmplitudeAccountWrite"
+                  },
+                  {
+                    "required": [
+                      "label"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "The new account",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AmplitudeAccount"
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "$ref": "#/components/responses/ManagementError"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
           }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
+        }
       }
     },
     "/amplitude-accounts/{account}": {
+      "parameters": [
+        {
+          "name": "account",
+          "in": "path",
+          "required": true,
+          "description": "The account's id.",
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
       "get": {
         "tags": [
           "Management API"
         ],
-        "summary": "Get an Amplitude Account",
-        "description": "Generated from the route definition (GET api/public/v1/amplitude-accounts/{account}). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerShow",
+        "summary": "Get an Amplitude account",
+        "description": "Any Management API token. The same shape as one item of the list.",
+        "operationId": "getAmplitudeAccount",
         "servers": [
           {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ],
-        "x-generated": true,
-        "parameters": [
+        "security": [
           {
-            "name": "account",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "BearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "The account and its projects",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AmplitudeAccount"
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
           }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
+        }
       },
       "patch": {
         "tags": [
           "Management API"
         ],
-        "summary": "Label, email, organization, limit, active, notes",
-        "description": "label, email, organization, limit, active, notes.\n\nGenerated from the route definition (PATCH api/public/v1/amplitude-accounts/{account}). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerUpdate",
+        "summary": "Update an Amplitude account",
+        "description": "Requires `can_write_vault`. Send only what changes. A `project_limit` below the projects the account already holds is 422, and so is `password`.",
+        "operationId": "updateAmplitudeAccount",
         "servers": [
           {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ],
-        "x-generated": true,
-        "parameters": [
+        "security": [
           {
-            "name": "account",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmplitudeAccountWrite"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "The updated account",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AmplitudeAccount"
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "$ref": "#/components/responses/ManagementError"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
           }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
+        }
       }
     },
     "/objects/upload-attempts/{idempotencyKey}": {
@@ -29660,55 +29784,86 @@
       }
     },
     "/amplitude-accounts/{account}/projects": {
+      "parameters": [
+        {
+          "name": "account",
+          "in": "path",
+          "required": true,
+          "description": "The account's id.",
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
       "post": {
         "tags": [
           "Management API"
         ],
-        "summary": "Register a project in an account",
-        "description": "register a project in an account.\n\nGenerated from the route definition (POST api/public/v1/amplitude-accounts/{account}/projects). Management plane: answers {data} or {error:{code,message}}.",
-        "operationId": "publicAmplitudeControllerStoreProject",
+        "summary": "Register a project in an Amplitude account",
+        "description": "Requires `can_write_vault`. `project` links the FilesHub project this Amplitude project measures (id, ULID or slug, inside the token's reach). `api_key` is saved in that FilesHub project's vault as `amplitude.api_key`, never on this record, so readiness, the credential checks and the `.env` blocks read it at once; without a linked project the token can reach, it is 422 on `api_key`. A full account is 422 on `amplitude_account_id`; an `amplitude_project_id` already in the account is 422. Added in backend 2026.11.09.3; `api_key` in 2026.11.12.1.",
+        "operationId": "createAmplitudeProject",
         "servers": [
           {
-            "url": "https://fileshub.zaions.com/api/public/v1"
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
           }
         ],
-        "x-generated": true,
-        "parameters": [
+        "security": [
           {
-            "name": "account",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AmplitudeProjectWrite"
+                  },
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  }
+                ]
+              }
             }
           }
-        ],
+        },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "The new Amplitude project",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AmplitudeProject"
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "$ref": "#/components/responses/ManagementError"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "$ref": "#/components/responses/ManagementError"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ManagementError"
+          },
+          "429": {
+            "$ref": "#/components/responses/ManagementError"
           }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
+        }
       }
     }
   },
@@ -34217,6 +34372,203 @@
                 }
               }
             }
+          }
+        }
+      },
+      "AmplitudeAccount": {
+        "type": "object",
+        "description": "An Amplitude login and the projects it holds. There is no password field: the login password stays in the FilesHub dashboard.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "label": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The Amplitude login email."
+          },
+          "organization": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "project_limit": {
+            "type": "integer",
+            "description": "How many projects this account may hold."
+          },
+          "used": {
+            "type": "integer"
+          },
+          "free": {
+            "type": "integer"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AmplitudeProject"
+            }
+          }
+        }
+      },
+      "AmplitudeAccountWrite": {
+        "type": "object",
+        "description": "`password` is not accepted: the login password is entered in the FilesHub dashboard only, and a body carrying it is 422.",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "maxLength": 255
+          },
+          "organization": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "project_limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 5000
+          }
+        }
+      },
+      "AmplitudeProject": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "amplitude_account_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "amplitude_project_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Amplitude's own project id (Settings \u2192 Projects)."
+          },
+          "region": {
+            "type": "string",
+            "enum": [
+              "us",
+              "eu"
+            ]
+          },
+          "project": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "The linked FilesHub project; null when there is none or the token cannot reach it.",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "api_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The linked FilesHub project's `amplitude.api_key` vault value. Client-public: the browser SDK ships it. Null when none is saved, when the token has no vault read scope (`can_read_vault`, `can_reveal_vault` or `can_write_vault`), or when it cannot reach that project."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AmplitudeProjectWrite": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "amplitude_project_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64,
+            "description": "Unique within its account."
+          },
+          "region": {
+            "type": "string",
+            "enum": [
+              "us",
+              "eu"
+            ],
+            "default": "us"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255,
+            "description": "The FilesHub project this Amplitude project measures: id, ULID or slug, inside the token's reach. Null unlinks it."
+          },
+          "api_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255,
+            "description": "Saved in the linked FilesHub project's vault as `amplitude.api_key`. Needs a linked project the token can reach (422 otherwise). Null removes it; leaving it out keeps it."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 5000
           }
         }
       }

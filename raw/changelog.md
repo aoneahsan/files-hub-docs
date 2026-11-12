@@ -4,13 +4,24 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-10-25
+  date: 2026-11-12
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-11-12 — Amplitude API key with the project; OneSignal identity verification
+
+- For backend `2026.11.12.1`.
+- [Amplitude accounts](management-api/amplitude-accounts) (a page since 2026-11-09): `api_key` on
+  `POST /amplitude-accounts/{account}/projects` and `PATCH /amplitude-projects/{id}` is saved in the linked
+  FilesHub project's vault, and every project row returns it to a token that can read that vault. The login
+  password is kept in the dashboard only; the API refuses `password` with 422.
+- [Project vault](management-api/project-vault): `onesignal` gains `identity_verification_private_key` and
+  `identity_verification_public_key`.
+- `openapi.json`: the seven Amplitude operations are written out with their request and response shapes.
 
 ## 2026-10-25 — Backend on Laravel 13
 
