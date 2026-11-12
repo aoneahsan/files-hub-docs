@@ -4,7 +4,7 @@ title: Project vault
 description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
 keywords: [project credential vault, store api keys per project, write credentials via api, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, can_write_vault, secrets vault for developers, bootstrap project credentials cli, seed project secrets programmatically]
 last_update:
-  date: 2026-09-11
+  date: 2026-11-12
   author: Ahsan Mahmood
 ---
 
@@ -180,6 +180,13 @@ below).
 Measurement ID) and `yandex_metrica` (counter id, plus the optional `counter_key` app-identifier tag) joined
 in `2026.09.11.1`. Every analytics, error and push credential here can be exercised with a
 [credential check](./credential-checks.md).
+
+`onesignal` holds the key pair for OneSignal's Token Identity Verification since `2026.11.12.1`:
+`identity_verification_private_key` (secret: the ES256 PEM that signs identity JWTs on your server, emitted
+as `ONESIGNAL_IDENTITY_VERIFICATION_SECRET_KEY` in the server `.env` blocks only) and
+`identity_verification_public_key` (the half OneSignal checks those JWTs with; not secret). Paste the PEM
+with its line breaks. And `amplitude.api_key` can also be written through the Amplitude project it belongs
+to ([Amplitude accounts](./amplitude-accounts.md)): the same vault row either way.
 
 :red_circle: **`turnstile` is separate from `cloudflare` on purpose.** A project uses Cloudflare Turnstile
 without owning any Cloudflare account configuration — no API token, no zone, no R2 — so merging them would

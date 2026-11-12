@@ -4,7 +4,7 @@
   "site": "https://fileshub-docs.zaions.com",
   "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
   "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
-  "lastUpdated": "2026-10-21",
+  "lastUpdated": "2026-11-12",
   "author": "Ahsan Mahmood",
   "buildGates": {
     "yarnInstall": "exit 0 expected",
@@ -190,6 +190,42 @@
       "seoFloor": true
     },
     {
+      "id": "management-api/amplitude-accounts",
+      "path": "docs/management-api/amplitude-accounts.md",
+      "status": "complete",
+      "seoFloor": true
+    },
+    {
+      "id": "management-api/credential-checks",
+      "path": "docs/management-api/credential-checks.md",
+      "status": "complete",
+      "seoFloor": true
+    },
+    {
+      "id": "management-api/debug-keystores",
+      "path": "docs/management-api/debug-keystores.md",
+      "status": "complete",
+      "seoFloor": true
+    },
+    {
+      "id": "management-api/developer-accounts",
+      "path": "docs/management-api/developer-accounts.md",
+      "status": "complete",
+      "seoFloor": true
+    },
+    {
+      "id": "management-api/google-oauth-keepalive",
+      "path": "docs/management-api/google-oauth-keepalive.md",
+      "status": "complete",
+      "seoFloor": true
+    },
+    {
+      "id": "management-api/payment-accounts",
+      "path": "docs/management-api/payment-accounts.md",
+      "status": "complete",
+      "seoFloor": true
+    },
+    {
       "id": "platform-services",
       "path": "docs/platform-services.md",
       "status": "complete",
@@ -214,7 +250,7 @@
       "seoFloor": false
     }
   ],
-  "totalPages": 35,
+  "totalPages": 41,
   "completePages": 35,
   "nextBatchSuggestion": {
     "id": "none",
