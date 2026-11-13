@@ -29865,6 +29865,323 @@
           }
         }
       }
+    },
+    "/projects/{project}/license-offer": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Show Offer (projects)",
+        "description": "Generated from the route definition (GET api/public/v1/projects/{project}/license-offer). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicenseControllerShowOffer",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Update Offer (projects)",
+        "description": "Generated from the route definition (PUT api/public/v1/projects/{project}/license-offer). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicenseControllerUpdateOffer",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "is_enabled": {
+                    "type": "boolean"
+                  },
+                  "sales_state": {
+                    "type": "string",
+                    "enum": [
+                      "on_sale",
+                      "quote_only"
+                    ]
+                  },
+                  "quote_only_reason": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 500
+                  },
+                  "product_name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "site_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uri",
+                    "maxLength": 255
+                  },
+                  "groups": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 5
+                  },
+                  "two_groups_discount_pct": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 90
+                  },
+                  "step_discount_pct": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 90
+                  },
+                  "max_discount_pct": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 90
+                  },
+                  "buyout_price_usd": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100000000
+                  },
+                  "combined_category": {
+                    "type": "boolean"
+                  },
+                  "included_update_months": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "renewals": {
+                    "type": "array",
+                    "maxItems": 6
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 5000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/licenses": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Licenses (projects)",
+        "description": "Generated from the route definition (GET api/public/v1/projects/{project}/licenses). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicenseControllerLicenses",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/licenses/import": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Import (projects)",
+        "description": "Generated from the route definition (POST api/public/v1/projects/{project}/licenses/import). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicenseControllerImport",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "licenses": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 200
+                  }
+                },
+                "required": [
+                  "licenses"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
