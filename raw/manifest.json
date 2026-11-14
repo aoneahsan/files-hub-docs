@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-12T12:02:05.311Z",
+  "generatedAt": "2026-11-14T09:02:05.550Z",
   "site": "https://fileshub-docs.zaions.com",
   "description": "Raw Markdown mirror of every FilesHub documentation page. Each url returns the un-rendered .md (front matter included). Built for AI coding agents. See also /openapi.json.",
-  "count": 57,
+  "count": 58,
   "files": [
     {
       "path": "about-the-author.md",
@@ -11,140 +11,146 @@
       "description": "FilesHub is built and maintained by Ahsan Mahmood, a senior full-stack engineer and the author of these docs."
     },
     {
-      "path": "api\\billing.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\billing.md",
+      "path": "api/billing.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/billing.md",
       "title": "Billing — buy a plan by card, and support FilesHub",
       "description": "Buy a FilesHub service plan by card through Polar with POST /api/v1/billing/checkout, how the plan switches on, renews, cancels and ends, and how to support FilesHub once or monthly."
     },
     {
-      "path": "api\\delete-object.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\delete-object.md",
+      "path": "api/delete-object.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/delete-object.md",
       "title": "Delete an object",
       "description": "DELETE /api/v1/objects/{public_id} permanently removes a FilesHub object — both the database record and the stored file. Requires a write-permission API key."
     },
     {
-      "path": "api\\email-schedules.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\email-schedules.md",
+      "path": "api/email-schedules.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/email-schedules.md",
       "title": "Recurring email schedules",
       "description": "Define cron-based recurring emails in FilesHub — create, list, update, pause, delete, and run-now — each sending to up to 50 recipients per run from a template or raw content."
     },
     {
-      "path": "api\\email-templates.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\email-templates.md",
+      "path": "api/email-templates.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/email-templates.md",
       "title": "Email templates",
       "description": "Manage reusable email templates in FilesHub — list them, and create, update, or delete them over the API — then send with template + variables."
     },
     {
-      "path": "api\\emails-send.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\emails-send.md",
+      "path": "api/emails-send.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/emails-send.md",
       "title": "Send an email",
       "description": "POST /api/v1/emails/send sends transactional email through FilesHub — raw HTML/text or a saved template, from one of three verified domains, queued by default with a job to poll."
     },
     {
-      "path": "api\\errors-and-limits.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\errors-and-limits.md",
+      "path": "api/errors-and-limits.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/errors-and-limits.md",
       "title": "Errors & limits",
       "description": "FilesHub returns a consistent JSON error envelope with an HTTP status code, and applies per-key rate limits and an upload size cap. This page lists every status code and limit."
     },
     {
-      "path": "api\\get-object.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\get-object.md",
+      "path": "api/get-object.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/get-object.md",
       "title": "Get / download an object",
       "description": "GET /api/v1/objects/{public_id} streams a stored file back from FilesHub. Public objects need no key; private objects require a read-permission key from the same project."
     },
     {
-      "path": "api\\jobs.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\jobs.md",
+      "path": "api/jobs.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/jobs.md",
       "title": "Job status",
       "description": "Poll GET /api/v1/jobs/{job_id} to track a queued FilesHub operation (like a queued email send) through queued → completed or failed, with attempts and result."
     },
     {
-      "path": "api\\list-objects.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\list-objects.md",
+      "path": "api/licensing.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/licensing.md",
+      "title": "Licensing — white-label licences, buyouts and verification",
+      "description": "The public licensing API behind every product's white-label pages — catalogue, quote, the bank-transfer pay page, renewals, requests, and licence verification by key or by domain."
+    },
+    {
+      "path": "api/list-objects.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/list-objects.md",
       "title": "List objects",
       "description": "GET /api/v1/objects returns a paginated list of your project's stored files, newest first, with an optional visibility filter. Requires a read-permission API key."
     },
     {
-      "path": "api\\openapi.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\openapi.md",
+      "path": "api/openapi.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/openapi.md",
       "title": "OpenAPI spec (for AI agents & codegen)",
       "description": "FilesHub ships a machine-readable OpenAPI 3.1 spec at /openapi.json covering every API route — feed it to Claude Code, Codex, or an OpenAPI generator to integrate without guesswork."
     },
     {
-      "path": "api\\overview.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\overview.md",
+      "path": "api/overview.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/overview.md",
       "title": "API overview",
       "description": "The FilesHub API under /api/v1 covers file objects, transactional email, jobs, and 40+ developer utilities — all authenticated with an X-API-Key header. This page maps the contract."
     },
     {
-      "path": "api\\pagination.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\pagination.md",
+      "path": "api/pagination.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/pagination.md",
       "title": "Pagination",
       "description": "Every FilesHub list endpoint is paginated the same way — 20 rows by default, 50 maximum — and every response states its page, its total, how much remains, and the exact call to make next."
     },
     {
-      "path": "api\\passwords\\access-and-scopes.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\passwords\\access-and-scopes.md",
+      "path": "api/passwords/access-and-scopes.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/passwords/access-and-scopes.md",
       "title": "Password manager — access and scopes",
       "description": "How FilesHub decides which passwords an API key can reach — own and admin password scopes, every-project reach, the five abilities — and how to grant them in the dashboard or over the Management API with can_manage_passwords."
     },
     {
-      "path": "api\\passwords\\dashboard.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\passwords\\dashboard.md",
+      "path": "api/passwords/dashboard.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/passwords/dashboard.md",
       "title": "Password manager — using the dashboard",
       "description": "Manage FilesHub passwords by hand in the admin dashboard — add a login with a suggested strong password, see the password and current verification code, edit, delete and restore."
     },
     {
-      "path": "api\\passwords\\endpoints.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\passwords\\endpoints.md",
+      "path": "api/passwords/endpoints.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/passwords/endpoints.md",
       "title": "Password manager — endpoint reference",
       "description": "Every /api/v1/passwords endpoint — list, create, get, update, delete, restore, reveal and generate — with parameters, the ability each needs, request and response examples, and every error."
     },
     {
-      "path": "api\\passwords\\overview.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\passwords\\overview.md",
+      "path": "api/passwords/overview.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/passwords/overview.md",
       "title": "Password manager — overview",
       "description": "The FilesHub password manager stores logins per project — websites, usernames, encrypted passwords, verification codes, notes and tags — and lets API keys with an own or admin password scope create, read, reveal and manage them."
     },
     {
-      "path": "api\\passwords\\quick-start.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\passwords\\quick-start.md",
+      "path": "api/passwords/quick-start.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/passwords/quick-start.md",
       "title": "Password manager — quick start",
       "description": "Give a FilesHub API key a password scope, then create, find, reveal, change and delete a password over the API, with curl and JavaScript examples."
     },
     {
-      "path": "api\\security.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\security.md",
+      "path": "api/security.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/security.md",
       "title": "Security — how FilesHub protects your keys, files and passwords",
       "description": "How FilesHub protects stored credentials, API keys, files and passwords, which URLs it will fetch for you, the browser security headers, and two-step sign-in for the dashboard."
     },
     {
-      "path": "api\\turnstile.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\turnstile.md",
+      "path": "api/turnstile.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/turnstile.md",
       "title": "Verify a Turnstile token",
       "description": "POST /api/v1/turnstile/verify checks a Cloudflare Turnstile token using the secret key stored in your project's vault, so the secret never has to reach your frontend or a Cloudflare Worker."
     },
     {
-      "path": "api\\update-object.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\update-object.md",
+      "path": "api/update-object.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/update-object.md",
       "title": "Change an object's expiry or visibility",
       "description": "PATCH /api/v1/objects/{public_id} changes when a FilesHub object expires, or whether it is public or private, after upload. Requires a write-permission API key of the object's project."
     },
     {
-      "path": "api\\upload-object.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\upload-object.md",
+      "path": "api/upload-object.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/upload-object.md",
       "title": "Upload an object",
       "description": "POST /api/v1/objects uploads a multipart file to FilesHub and returns a 201 with the object's ULID, public URL, and metadata. Supports visibility and optional auto-expiry."
     },
     {
-      "path": "api\\utilities-index.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\utilities-index.md",
+      "path": "api/utilities-index.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/utilities-index.md",
       "title": "Developer utilities index",
       "description": "A summarized index of FilesHub's stateless developer-utility endpoint groups — converters, hashing, encoding, generators, and more — all under /api/v1 with an X-API-Key."
     },
     {
-      "path": "api\\version-health.md",
-      "url": "https://fileshub-docs.zaions.com/raw/api\\version-health.md",
+      "path": "api/version-health.md",
+      "url": "https://fileshub-docs.zaions.com/raw/api/version-health.md",
       "title": "Version & health",
       "description": "GET /api/health and GET /api/version are FilesHub's public, no-auth status endpoints — health reports database connectivity, version returns the deployed backend build marker."
     },
@@ -155,56 +161,56 @@
       "description": "Notable changes to the FilesHub documentation site, latest first."
     },
     {
-      "path": "email-marketing\\api.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\api.md",
+      "path": "email-marketing/api.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/api.md",
       "title": "Email marketing API",
       "description": "Endpoints for FilesHub email marketing — lists, contacts, paste and CSV imports, suppressions, sequences, enrollment, test sends, product events and the public subscribe form — on the data plane and the management plane."
     },
     {
-      "path": "email-marketing\\batches.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\batches.md",
+      "path": "email-marketing/batches.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/batches.md",
       "title": "Contact batches",
       "description": "Each imported CSV becomes one numbered batch in the shared people pool. A batch is given to one product's campaign at a time, never to the same product twice, and every use is recorded with its results."
     },
     {
-      "path": "email-marketing\\contact-cleaning.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\contact-cleaning.md",
+      "path": "email-marketing/contact-cleaning.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/contact-cleaning.md",
       "title": "Contact cleaning",
       "description": "How FilesHub checks every address in the shared contact pool before a campaign mails it — address rules, DNS, an AI review of company domains, bounce history and a mailbox check with the recipient's own server — and how a project paused for bounces resumes by itself."
     },
     {
-      "path": "email-marketing\\cross-campaign-gap.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\cross-campaign-gap.md",
+      "path": "email-marketing/cross-campaign-gap.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/cross-campaign-gap.md",
       "title": "The gap between campaigns",
       "description": "A person who received a campaign email gets no email from a different campaign for 20 days. Follow-ups of a campaign already running for that person keep their own timing."
     },
     {
-      "path": "email-marketing\\deliverability.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\deliverability.md",
+      "path": "email-marketing/deliverability.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/deliverability.md",
       "title": "Mailbox warm-up and deliverability",
       "description": "How FilesHub warms up every sending mailbox with persona conversations, measures real replies, tunes each mailbox's daily limit every night, and exposes the numbers and controls on the Management API."
     },
     {
-      "path": "email-marketing\\overview.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\overview.md",
+      "path": "email-marketing/overview.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/overview.md",
       "title": "Email marketing overview",
       "description": "FilesHub email marketing keeps per-project contact lists, imports contacts by CSV, paste or one at a time, and sends drip sequences that branch on clicks and product events — with consent, suppression and one-click unsubscribe built in."
     },
     {
-      "path": "email-marketing\\people-pool.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\people-pool.md",
+      "path": "email-marketing/people-pool.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/people-pool.md",
       "title": "The shared people pool",
       "description": "One pool of people for the whole FilesHub account — a contact imported once can join a list of any project without a second upload, with one history per person across products."
     },
     {
-      "path": "email-marketing\\product-integration.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\product-integration.md",
+      "path": "email-marketing/product-integration.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/product-integration.md",
       "title": "Connect your product to email marketing",
       "description": "The recipe every product follows to connect FilesHub email marketing — carry the ?c= contact token through sign-up, report signed_up and activated events from the server, and add a double opt-in form."
     },
     {
-      "path": "email-marketing\\send-log.md",
-      "url": "https://fileshub-docs.zaions.com/raw/email-marketing\\send-log.md",
+      "path": "email-marketing/send-log.md",
+      "url": "https://fileshub-docs.zaions.com/raw/email-marketing/send-log.md",
       "title": "Send log and campaign report",
       "description": "Which email went to whom, from which campaign, step and mailbox, and what happened after — plus the stored campaign report with the waiting queue and a forecast date."
     },
@@ -215,38 +221,38 @@
       "description": "Frequently asked questions about FilesHub — what it is, how to authenticate, public vs private files, size limits, SDKs, deleting files, and how it compares to S3 or Firebase Storage."
     },
     {
-      "path": "getting-started\\api-key-restrictions.md",
-      "url": "https://fileshub-docs.zaions.com/raw/getting-started\\api-key-restrictions.md",
+      "path": "getting-started/api-key-restrictions.md",
+      "url": "https://fileshub-docs.zaions.com/raw/getting-started/api-key-restrictions.md",
       "title": "API key restrictions (ship a key in a frontend)",
       "description": "Restrict a FilesHub API key to your own web origins, browser-extension ids, Android package + signing certificate, or iOS bundle id — so you can embed the key in a React/mobile/extension app without a proxy backend."
     },
     {
-      "path": "getting-started\\authentication.md",
-      "url": "https://fileshub-docs.zaions.com/raw/getting-started\\authentication.md",
+      "path": "getting-started/authentication.md",
+      "url": "https://fileshub-docs.zaions.com/raw/getting-started/authentication.md",
       "title": "Authentication",
       "description": "FilesHub authenticates every request with an X-API-Key header. Keys are per project, carry read and write permissions, and can be restricted to specific web origins or mobile app ids."
     },
     {
-      "path": "getting-started\\file-visibility.md",
-      "url": "https://fileshub-docs.zaions.com/raw/getting-started\\file-visibility.md",
+      "path": "getting-started/file-visibility.md",
+      "url": "https://fileshub-docs.zaions.com/raw/getting-started/file-visibility.md",
       "title": "File visibility (public vs private)",
       "description": "Each FilesHub object is public or private. Public objects are downloadable by anyone at their URL; private objects require a read-permission API key from the same project."
     },
     {
-      "path": "getting-started\\quick-start.md",
-      "url": "https://fileshub-docs.zaions.com/raw/getting-started\\quick-start.md",
+      "path": "getting-started/quick-start.md",
+      "url": "https://fileshub-docs.zaions.com/raw/getting-started/quick-start.md",
       "title": "Quick Start",
       "description": "Upload your first file to FilesHub in about five minutes — get an API key, POST a multipart file with your X-API-Key, and use the returned public URL."
     },
     {
-      "path": "guides\\browser-and-mobile-uploads.md",
-      "url": "https://fileshub-docs.zaions.com/raw/guides\\browser-and-mobile-uploads.md",
+      "path": "guides/browser-and-mobile-uploads.md",
+      "url": "https://fileshub-docs.zaions.com/raw/guides/browser-and-mobile-uploads.md",
       "title": "Browser & mobile uploads",
       "description": "How to upload to FilesHub safely from a browser or a mobile app — multipart form data, restricted keys scoped to your domain or bundle id, and the backend-proxy alternative."
     },
     {
-      "path": "guides\\integrate-from-any-app.md",
-      "url": "https://fileshub-docs.zaions.com/raw/guides\\integrate-from-any-app.md",
+      "path": "guides/integrate-from-any-app.md",
+      "url": "https://fileshub-docs.zaions.com/raw/guides/integrate-from-any-app.md",
       "title": "Integrate from any app",
       "description": "Copy-paste FilesHub integration for JavaScript/TypeScript, React, PHP/Laravel, and mobile — upload a file, store the returned URL, render it, and clean it up on delete."
     },
@@ -257,80 +263,80 @@
       "description": "FilesHub is a file-storage and developer-utility API — upload a file over HTTP with an X-API-Key header, get a stable public URL, then list, download, or delete it."
     },
     {
-      "path": "management-api\\agent-workflow.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\agent-workflow.md",
+      "path": "management-api/agent-workflow.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/agent-workflow.md",
       "title": "Agent workflow — auto-configure a project's API key",
       "description": "Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates."
     },
     {
-      "path": "management-api\\amplitude-accounts.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\amplitude-accounts.md",
+      "path": "management-api/amplitude-accounts.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/amplitude-accounts.md",
       "title": "Amplitude accounts",
       "description": "Record which Amplitude account holds which project, how many projects each account may hold, which FilesHub project each Amplitude project measures, and its API key, over the FilesHub Management API."
     },
     {
-      "path": "management-api\\authentication.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\authentication.md",
+      "path": "management-api/authentication.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/authentication.md",
       "title": "Management API authentication",
       "description": "Authenticate the FilesHub Management API with an fh_pat_ access token via the Authorization Bearer header, and understand token scope, expiry, and revocation."
     },
     {
-      "path": "management-api\\credential-checks.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\credential-checks.md",
+      "path": "management-api/credential-checks.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/credential-checks.md",
       "title": "Credential checks (\"Test Analytics\")",
       "description": "Send a real \"Test Analytics\" event to a project's Firebase Analytics, GA4, Amplitude and Sentry — or verify the stored credentials read-only — per project and per tool, from the Management API, with an honest verdict for each."
     },
     {
-      "path": "management-api\\debug-keystores.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\debug-keystores.md",
+      "path": "management-api/debug-keystores.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/debug-keystores.md",
       "title": "Debug keystores",
       "description": "Every build machine's Android debug signing key on one account-level record — SHA-1 and SHA-256 fingerprints readable without a reveal, the keystore file itself backed up, and a derived block on every project's vault payload."
     },
     {
-      "path": "management-api\\developer-accounts.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\developer-accounts.md",
+      "path": "management-api/developer-accounts.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/developer-accounts.md",
       "title": "Developer accounts",
       "description": "Store the tokens that publish under your name — npm, Hugging Face, Docker Hub, PyPI, crates.io, the extension stores, Vercel, Netlify, Sentry — on one account-level record, and read them back over the FilesHub Management API with a ready-to-write .npmrc line."
     },
     {
-      "path": "management-api\\endpoints.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\endpoints.md",
+      "path": "management-api/endpoints.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/endpoints.md",
       "title": "Management API endpoints",
       "description": "Full endpoint reference for the FilesHub Public Management API — access tokens, projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples."
     },
     {
-      "path": "management-api\\google-oauth-keepalive.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\google-oauth-keepalive.md",
+      "path": "management-api/google-oauth-keepalive.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/google-oauth-keepalive.md",
       "title": "Google OAuth clients and keep-alive",
       "description": "Import every Google OAuth client a project owns from Firebase, google-services.json and Supabase, and keep each one in use daily so Google never deletes it as unused."
     },
     {
-      "path": "management-api\\overview.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\overview.md",
+      "path": "management-api/overview.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/overview.md",
       "title": "Management API overview",
       "description": "The FilesHub Public Management API lets a trusted server or AI coding agent create projects, mint and rotate per-project API keys, configure origin restrictions, and read a project's stored credentials using one account-wide access token."
     },
     {
-      "path": "management-api\\payment-accounts.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\payment-accounts.md",
+      "path": "management-api/payment-accounts.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/payment-accounts.md",
       "title": "Payment accounts",
       "description": "Keep the API keys, webhook secrets and login details of your payment-provider accounts (Stripe, PayPal, Polar.sh, Creem, Lemon Squeezy, Paddle and more) on one record, and read them back over the FilesHub Management API."
     },
     {
-      "path": "management-api\\project-vault.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\project-vault.md",
+      "path": "management-api/project-vault.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/project-vault.md",
       "title": "Project vault",
       "description": "Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks."
     },
     {
-      "path": "management-api\\supabase-accounts.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\supabase-accounts.md",
+      "path": "management-api/supabase-accounts.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/supabase-accounts.md",
       "title": "Supabase account tokens",
       "description": "Read a Supabase account's personal access token (sbp_…) over the FilesHub Management API, behind its own can_read_supabase_tokens scope, plus the SUPABASE_ACCESS_TOKEN env line the Supabase CLI reads."
     },
     {
-      "path": "management-api\\supabase-projects.md",
-      "url": "https://fileshub-docs.zaions.com/raw/management-api\\supabase-projects.md",
+      "path": "management-api/supabase-projects.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/supabase-projects.md",
       "title": "Supabase project vault",
       "description": "Read and reveal a Supabase project's full credential set — API keys, JWT secret, Postgres connection details, and S3 keys — over the FilesHub Management API, plus ready-to-paste React, Node and Laravel .env blocks."
     },
