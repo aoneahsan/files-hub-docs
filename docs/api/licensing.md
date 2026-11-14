@@ -2,8 +2,8 @@
 sidebar_position: 22
 title: Licensing — white-label licences, buyouts and verification
 sidebar_label: Licensing
-description: The public licensing API behind every product's white-label pages — catalogue, quote, Polar checkout on the product's own organization, renewals, requests, and licence verification by key or by domain.
-keywords: [fileshub licensing api, white-label licence api, license verification api, source buyout, polar checkout, /api/licensing/v1]
+description: The public licensing API behind every product's white-label pages — catalogue, quote, the bank-transfer pay page, renewals, requests, and licence verification by key or by domain.
+keywords: [fileshub licensing api, white-label licence api, license verification api, source buyout, white-label pay page, /api/licensing/v1]
 last_update:
   date: 2026-11-13
   author: FilesHub team
@@ -52,12 +52,15 @@ curl -s -X POST https://fileshub.zaions.com/api/licensing/v1/products/clearhire/
 | `POST /products/{slug}/checkout` | `kind` (`white_label` or `buyout`), `groups`, `buyer` {`name`, `email`, `company`, `domain`, `country`}, `notes`, `turnstile_token`, `success_path`, `cancel_path` |
 | `POST /products/{slug}/renewals` | `public_key`, `email` (the one on the licence), `months`, `turnstile_token` |
 | `POST /products/{slug}/inquiries` | `kind` (`quote`, `custom_work`, `buyout_call`), `name`, `email`, `company`, `groups`, `message`, `turnstile_token` |
-| `GET /orders/{order_id}` | One read on the thank-you page: `status` and, once paid, the licence key |
+| `GET /orders/{order_id}` | One read on the thank-you page: `status` (`awaiting_payment`, `payment_submitted`, `payment_rejected` or `paid`) and, once paid, the licence key |
 
-The checkout opens on **the product's own Polar organization** with the total FilesHub computed, and answers
-`{"data": {"checkout_url": "…"}}`; the page sends the buyer there in the same tab. Paths are joined to the
-product's own site. Nothing is granted by the redirect: the licence is issued when Polar's signed `order.paid`
-arrives and its amount matches the order, and FilesHub then emails the buyer their certificate.
+A licence is paid by **bank transfer to our Wise account**, never through a card checkout. The checkout opens an
+order at the total FilesHub computed and answers `{"data": {"checkout_url": "…", "order_id": "…"}}`; the page
+sends the buyer to that URL in the same tab. It is FilesHub's own pay page, which shows the order, the account
+details and a form for the transfer reference, amount, date and an optional receipt. Paths are joined to the
+product's own site. Nothing is granted by the redirect or by sending the details: we match the transfer against
+our account, and only then is the licence issued and the certificate emailed. If no payment method is published,
+`checkout_available` is `false` and pages offer the request form instead.
 
 `turnstile_token` is required when the product has a Turnstile secret in its FilesHub vault.
 
