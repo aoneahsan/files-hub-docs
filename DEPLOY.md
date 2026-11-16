@@ -9,7 +9,7 @@ free and auto-deploys on every push to `main`.
 
 ## Prerequisites
 
-- Node ≥ 18, yarn (classic). `yarn install` then `yarn build` must produce `./build`.
+- Node 26.13.1 LTS (`.nvmrc`) and Yarn. `yarn install` then `yarn build` must produce `./build`.
 - Custom domain **`fileshub-docs.zaions.com`**, carried by `static/CNAME` (Docusaurus copies it
   into the build).
 

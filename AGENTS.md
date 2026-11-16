@@ -10,6 +10,8 @@
 
 This public Docusaurus 3 repository `aoneahsan/files-hub-docs` uses `main` and GitHub Pages at `https://fileshub-docs.zaions.com`. The private Laravel source is `../fileshub/`; the parent `../` is a separate coordination repository. The previous `/projects/files-hub/` path is obsolete. The workspace coordinator is `../../../docs/tracking/fleet-maintenance-tracker.json`.
 
+<!-- fleet:node-26-13-1 v1 --> Node 26.13.1 LTS (.nvmrc), packages latest — 2026-11-16
+
 ## Working rules
 
 - Use Yarn locally. Never commit `.env`, keys, tokens or other secrets to this public repository. Read the actual private source (`app/Http/Controllers/Api/`, Form Requests, `routes/api.php`, `config/fileshub.php`, `ApiKeyAuth`) before stating an API fact or limit. Do not invent endpoints, fields, responses or usage figures.

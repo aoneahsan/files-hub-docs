@@ -36,7 +36,7 @@ function extractMeta(content) {
  * docusaurus.config.ts; the plugin exclude does not reach this raw mirror, so
  * the list has to be repeated here.
  */
-const NEVER_PUBLISH = new Set(['MANUAL-TASKS.md']);
+const NEVER_PUBLISH = new Set(['MANUAL-TASKS.md', 'PACKAGES.md']);
 const NEVER_PUBLISH_DIRS = new Set(['tracking']);
 
 /** Recursively collect every .md / .mdx file under a directory. */
