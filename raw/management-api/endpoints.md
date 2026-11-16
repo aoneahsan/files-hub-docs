@@ -4,7 +4,7 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — access tokens, projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token, create access token api, rotate access token]
 last_update:
-  date: 2026-10-23
+  date: 2026-11-16
   author: Ahsan Mahmood
 ---
 
@@ -458,6 +458,32 @@ Two separate surfaces, on two separate scopes, and neither returns the other's c
 
 `can_manage_supabase` does **not** imply `can_read_supabase_tokens`: a project key reaches one project, an
 account token reaches every project that account owns.
+
+## Licence payment methods
+
+The Wise or bank details the [licensing pay page](../api/licensing.md) lists, the same records as
+**Nova → White-label → Licence Payment Methods**. Since backend **`2026.11.16.1`**. The records are
+account-wide, so the token needs **All projects** on; reading needs `can_read_vault`, `can_reveal_vault` or
+`can_write_vault`, and writing needs `can_write_vault`.
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/license-payment-methods` | `?enabled=1\|0`, `page`, `per_page` | Paginated list, by `sort` then id |
+| `POST` | `/license-payment-methods` | `key` (required, `a-z0-9-_`, max 40), `label` (required, max 120), `fields`, `instructions` (max 1000), `is_enabled` (default `true`), `sort` | `201`, the method |
+| `GET` | `/license-payment-methods/{method}` | — | The method, by id or `key` |
+| `PATCH` | `/license-payment-methods/{method}` | Any of the create fields; absent keys stay as they are | The method |
+
+`fields` is an object of label → value, up to 20, each shown to the buyer with its own copy button. A PATCH
+that sends `fields` replaces the whole set. A second method with the same `key` is
+`409 PAYMENT_METHOD_ALREADY_EXISTS`. There is no DELETE, because an order keeps the key of the method it was
+paid with. To retire one, send `is_enabled: false`. When no method is enabled, every product shows its request
+form instead of Pay.
+
+```bash
+curl -X POST https://fileshub.zaions.com/api/public/v1/license-payment-methods \
+  -H "Authorization: Bearer $FILESHUB_PAT" -H "Content-Type: application/json" \
+  -d '{"key":"wise-usd","label":"Wise (USD account)","fields":{"Account holder":"…","Account number":"…"}}'
+```
 
 ## Project vault
 
