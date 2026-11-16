@@ -5,7 +5,7 @@ sidebar_label: Licensing
 description: The public licensing API behind every product's white-label pages — catalogue, quote, the bank-transfer pay page, renewals, requests, and licence verification by key or by domain.
 keywords: [fileshub licensing api, white-label licence api, license verification api, source buyout, white-label pay page, /api/licensing/v1]
 last_update:
-  date: 2026-11-13
+  date: 2026-11-16
   author: FilesHub team
 ---
 
@@ -81,4 +81,5 @@ and its subdomains.
 Agents set a product's offer with an `fh_pat_` token: `GET|PUT /api/public/v1/projects/{project}/license-offer`
 (writes need **Can Write Vault**), `GET /api/public/v1/projects/{project}/licenses`, and
 `POST /api/public/v1/projects/{project}/licenses/import` for licences issued before FilesHub held them
-(idempotent on `public_key`). See the [OpenAPI document](./openapi.md).
+(idempotent on `public_key`). The pay page's Wise and bank details are managed at
+`/api/public/v1/license-payment-methods` ([reference](../management-api/endpoints.md#licence-payment-methods)). See the [OpenAPI document](./openapi.md).

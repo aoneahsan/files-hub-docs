@@ -30182,6 +30182,184 @@
           }
         ]
       }
+    },
+    "/license-payment-methods": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List License Payment Methods",
+        "description": "Generated from the route definition (GET api/public/v1/license-payment-methods). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicensePaymentMethodControllerIndex",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Create a License Payment Method",
+        "description": "Generated from the route definition (POST api/public/v1/license-payment-methods). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicensePaymentMethodControllerStore",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/license-payment-methods/{method}": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Get a License Payment Method",
+        "description": "Generated from the route definition (GET api/public/v1/license-payment-methods/{method}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicensePaymentMethodControllerShow",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Update a License Payment Method",
+        "description": "Generated from the route definition (PATCH api/public/v1/license-payment-methods/{method}). Management plane: answers {data} or {error:{code,message}}.",
+        "operationId": "publicLicensePaymentMethodControllerUpdate",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
