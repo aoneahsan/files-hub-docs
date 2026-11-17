@@ -1,7 +1,7 @@
 # Deploying the FilesHub docs site
 
-This PUBLIC docs site is published on **GitHub Pages** at **`fileshub-docs.zaions.com`**. It is
-free and auto-deploys on every push to `main`.
+This PUBLIC docs site is published on **GitHub Pages** at **`fileshub-docs.zaions.com`**, served from
+the `gh-pages` branch. It is published by hand: there is no GitHub Actions workflow (house rule 2026-10-31).
 
 > These are **human-only** steps (they need repo settings or DNS access). An agent prepares the
 > config and content; you enable Pages and add the DNS record once. This file is referenced from
@@ -15,10 +15,11 @@ free and auto-deploys on every push to `main`.
 
 ## Steps
 
-1. Push this repo to `github.com/aoneahsan/files-hub-docs` (remote `o`). The workflow at
-   `.github/workflows/deploy-pages.yml` builds with yarn and deploys `./build` to Pages on every push
-   to `main`.
-2. In GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+1. Commit and push the source to `main` (remote `o`). `yarn build` must produce `./build` with zero errors.
+2. Inspect `build/` in the automation browser at 1440 and 390, then publish it: check out `gh-pages` in the
+   workspace `temp/` folder as a worktree, replace its files with `build/` (keep `.git`), commit
+   "Publish files-hub-docs <main sha>: <what changed>" as a fast-forward, push `gh-pages`, remove the worktree.
+   Pages → Source stays **Deploy from a branch: `gh-pages` / root**.
 3. **Custom domain:** Settings → Pages → Custom domain → `fileshub-docs.zaions.com`. The
    `static/CNAME` file already pins it. Turn on **Enforce HTTPS** once the certificate provisions.
 4. **DNS** — in the `zaions.com` zone, add:

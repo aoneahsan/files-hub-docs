@@ -5,7 +5,7 @@ Public documentation site for **FilesHub** — the zero-cost file-storage + deve
 - **Live docs:** https://fileshub-docs.zaions.com
 - **Product:** https://fileshub.zaions.com  ·  **API base:** `https://fileshub.zaions.com/api/v1`
 - **Built with:** [Docusaurus 3](https://docusaurus.io/) (React 19, TypeScript)
-- **Hosting:** GitHub Pages (free, auto-deploy on push)
+- **Hosting:** GitHub Pages (free), published by hand to the `gh-pages` branch
 - **For AI agents:** [`/openapi.json`](https://fileshub-docs.zaions.com/openapi.json) (OpenAPI 3.1) + a raw-Markdown mirror of every page under [`/raw/`](https://fileshub-docs.zaions.com/raw/manifest.json)
 - **Author:** [Ahsan Mahmood](https://aoneahsan.com)
 
@@ -27,7 +27,7 @@ yarn serve        # preview the built site on :5995
 
 ## Deploying
 
-See [`DEPLOY.md`](./DEPLOY.md). **GitHub Pages** is the single host: push to `main` and the [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) workflow builds and deploys (enable Pages → Source "GitHub Actions" once). Custom domain `fileshub-docs.zaions.com` via [`static/CNAME`](./static/CNAME).
+See [`DEPLOY.md`](./DEPLOY.md). **GitHub Pages** is the single host, served from the `gh-pages` branch, which is published by hand: no GitHub Actions in this repository (house rule 2026-10-31). Custom domain `fileshub-docs.zaions.com` via [`static/CNAME`](./static/CNAME).
 
 ## Editing content
 

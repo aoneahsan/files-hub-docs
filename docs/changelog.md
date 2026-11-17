@@ -4,13 +4,17 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-11-12
+  date: 2026-11-17
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-11-17 — Password abilities: one stored shape and `password_abilities_effective`
+
+- [Password access and scopes](/api/passwords/access-and-scopes): abilities are stored without duplicates in a fixed order, whichever way they are set, and every key answer adds `password_abilities_effective` — the abilities the key can use, spelled out.
 
 ## 2026-11-12 — Amplitude API key with the project; OneSignal identity verification
 
