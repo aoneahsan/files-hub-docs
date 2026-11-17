@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-16T09:32:24.781Z",
+  "generatedAt": "2026-11-17T10:09:37.451Z",
   "site": "https://fileshub-docs.zaions.com",
   "description": "Raw Markdown mirror of every FilesHub documentation page. Each url returns the un-rendered .md (front matter included). Built for AI coding agents. See also /openapi.json.",
   "count": 58,

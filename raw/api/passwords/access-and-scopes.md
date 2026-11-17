@@ -5,7 +5,7 @@ sidebar_label: Access and scopes
 description: How FilesHub decides which passwords an API key can reach — own and admin password scopes, every-project reach, the five abilities — and how to grant them in the dashboard or over the Management API with can_manage_passwords.
 keywords: [fileshub password scope, own scope admin scope, api key abilities, can_manage_passwords, password_scope, password_all_projects, password_abilities]
 last_update:
-  date: 2026-10-23
+  date: 2026-11-17
   author: FilesHub team
 ---
 
@@ -19,6 +19,10 @@ are **closed by default**: a new or existing key cannot touch a password until y
 | `password_scope` | `none` · `own` · `admin` | `none` |
 | `password_all_projects` | boolean — `admin` keys only | `false` |
 | `password_abilities` | any of `list`, `reveal`, `create`, `update`, `delete`; `null` means all five | `null` |
+
+Abilities are stored in one shape whichever way you set them (dashboard or API): duplicates removed, in the order
+`list`, `reveal`, `create`, `update`, `delete`. Sending `["update", "list", "list"]` stores `["list", "update"]`. An empty
+list `[]` means no ability at all; `null` means all five.
 
 ## The scopes
 
@@ -104,10 +108,11 @@ curl -X PATCH https://fileshub.zaions.com/api/public/v1/projects/my-project/api-
   -d '{"password_scope": "admin", "password_all_projects": false, "password_abilities": ["list", "reveal"]}'
 ```
 
-Every key answer on the Management plane now includes the three fields:
+Every key answer on the Management plane includes the three fields, plus `password_abilities_effective`: the abilities
+the key can actually use, spelled out, so `null` never has to be interpreted:
 
 ```json
-{ "data": { "id": 42, "name": "ci-bot", "password_scope": "admin", "password_all_projects": false, "password_abilities": ["list", "reveal"], "...": "…" } }
+{ "data": { "id": 42, "name": "ci-bot", "password_scope": "admin", "password_all_projects": false, "password_abilities": ["list", "reveal"], "password_abilities_effective": ["list", "reveal"], "...": "…" } }
 ```
 
 Errors you may see:
