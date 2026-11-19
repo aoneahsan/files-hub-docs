@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-17T10:09:37.451Z",
+  "generatedAt": "2026-11-19T14:00:38.132Z",
   "site": "https://fileshub-docs.zaions.com",
   "description": "Raw Markdown mirror of every FilesHub documentation page. Each url returns the un-rendered .md (front matter included). Built for AI coding agents. See also /openapi.json.",
-  "count": 58,
+  "count": 59,
   "files": [
     {
       "path": "about-the-author.md",
@@ -327,6 +327,12 @@
       "url": "https://fileshub-docs.zaions.com/raw/management-api/project-vault.md",
       "title": "Project vault",
       "description": "Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks."
+    },
+    {
+      "path": "management-api/social-accounts.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/social-accounts.md",
+      "title": "Social accounts",
+      "description": "Record which email holds which social media account (LinkedIn profiles and company pages, X, Instagram, Facebook, YouTube and more) and which project each account belongs to, over the FilesHub Management API."
     },
     {
       "path": "management-api/supabase-accounts.md",
