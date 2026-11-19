@@ -4,7 +4,7 @@
   "site": "https://fileshub-docs.zaions.com",
   "repo": "github.com/aoneahsan/files-hub-docs (PUBLIC)",
   "sourceProduct": "/home/ahsan/Documents/01-code/projects/files-hub (Laravel + Nova, PRIVATE)",
-  "lastUpdated": "2026-11-12",
+  "lastUpdated": "2026-11-19",
   "author": "Ahsan Mahmood",
   "buildGates": {
     "yarnInstall": "exit 0 expected",
@@ -248,10 +248,16 @@
       "path": "docs/email-marketing/contact-cleaning.md",
       "status": "complete",
       "seoFloor": false
+    },
+    {
+      "id": "management-api/social-accounts",
+      "path": "docs/management-api/social-accounts.md",
+      "status": "complete",
+      "seoFloor": false
     }
   ],
-  "totalPages": 41,
-  "completePages": 35,
+  "totalPages": 42,
+  "completePages": 36,
   "nextBatchSuggestion": {
     "id": "none",
     "note": "All pages complete; refresh on backend API changes."
@@ -291,6 +297,10 @@
     {
       "date": "2026-10-22",
       "summary": "email-marketing/contact-cleaning: backend 2026.10.22.2 — tries two hours apart, resting providers hold their people, POST /email-marketing/mailbox-checks/reopen with its OpenAPI operation."
+    },
+    {
+      "date": "2026-11-19",
+      "summary": "management-api/social-accounts: backend 2026.11.19.1, the social accounts registry (14 operations in openapi.json 1.9.0, llms.txt and llms-full.txt). docs:openapi --write added the missing GET /projects/{project}/email-templates/{template}."
     }
   ]
 }

@@ -4,13 +4,19 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-11-17
+  date: 2026-11-19
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-11-19 — Social accounts
+
+- For backend `2026.11.19.1`.
+- New page [Social accounts](management-api/social-accounts): which email holds which social account, and which project each one belongs to, over 14 Management API operations, including `GET /social-accounts/missing` for projects without social media.
+- `openapi.json` 1.9.0: the 14 operations and the `SocialIdentity` and `SocialAccount` schemas.
 
 ## 2026-11-17 — Password abilities: one stored shape and `password_abilities_effective`
 

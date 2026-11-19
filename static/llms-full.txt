@@ -337,6 +337,27 @@ tasks. Each takes the same `X-API-Key`; write utilities need `write` plus the gr
 Built and maintained by Ahsan Mahmood — https://aoneahsan.com ·
 https://github.com/aoneahsan · https://www.npmjs.com/~aoneahsan
 
+## Management API — social accounts (backend 2026.11.19.1)
+
+Which email holds which social account, and which project each account belongs to, both ways. An identity is
+an email (yours or a team member's, with who holds it). An account is one presence on one platform (LinkedIn
+profile or company page, X, Instagram, Facebook, YouTube and more; `GET /social-platforms` returns the 20 and
+the kinds each offers). An account belongs to any number of projects, each with a role (`official`,
+`promotion`, `personal_brand`). A login is a Password Manager pointer `{public_id, title}`, never a password.
+A `closed` account no longer counts as having one.
+
+Scope: reads need a vault scope, writes `can_write_vault`. Projects are seen through the token; one it cannot
+reach is left out of responses and is a 404 on writes.
+
+Endpoints: GET /social-platforms · GET|POST /social-identities · GET|PATCH /social-identities/{identity}
+(id or email) · POST /social-identities/{identity}/accounts · GET /social-accounts ·
+GET /social-accounts/missing?lifecycle=production|all&missing_on=linkedin,facebook ·
+GET|PATCH|DELETE /social-accounts/{account} · PUT /social-accounts/{account}/projects ·
+GET|PUT /projects/{project}/social-accounts.
+
+LinkedIn makes one person wait about 7 days between company pages: `created_on_platform_at` on a LinkedIn page
+sets the identity's `next_linkedin_page_on` (`now` or the date the wait ends).
+
 ## Management API — developer accounts (backend 2026.09.01.1)
 
 The account-wide PUBLISHING credentials: npm, Hugging Face, GitHub, Docker Hub, PyPI, crates.io, RubyGems,
