@@ -17,6 +17,12 @@
 - Raw Markdown mirror (every page as .md): https://fileshub-docs.zaions.com/raw/manifest.json
 - License: MIT (docs) · Author: Ahsan Mahmood (https://aoneahsan.com)
 
+
+## Get FilesHub
+
+- [All apps](https://fileshub-docs.zaions.com/apps): every released surface of FilesHub.
+- [FilesHub dashboard](https://fileshub.zaions.com)
+
 ## Core concepts
 
 - Authentication: every request carries an `X-API-Key` header. Keys are per project, with

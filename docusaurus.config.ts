@@ -1,6 +1,7 @@
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import { OTHER_PLATFORMS } from './src/data/platforms';
 
 // ---------------------------------------------------------------------------
 // FilesHub — Documentation site config
@@ -230,9 +231,13 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://fileshub.zaions.com',
-          label: 'fileshub.zaions.com',
+          type: 'dropdown',
+          label: 'Get FilesHub',
           position: 'right',
+          items: [
+            ...OTHER_PLATFORMS.map((platform) => ({ label: platform.name, href: platform.href })),
+            { label: 'All apps', to: '/apps' },
+          ],
         },
         {
           to: '/about-the-author',
@@ -250,6 +255,13 @@ const config: Config = {
       style: 'dark',
       links: [
         {
+          title: 'Get FilesHub',
+          items: [
+            ...OTHER_PLATFORMS.map((platform) => ({ label: platform.name, href: platform.href })),
+            { label: 'All apps', to: '/apps' },
+          ],
+        },
+        {
           title: 'Documentation',
           items: [
             { label: 'Introduction', to: '/intro' },
@@ -261,7 +273,6 @@ const config: Config = {
         {
           title: 'Product',
           items: [
-            { label: 'FilesHub app', href: 'https://fileshub.zaions.com' },
             { label: 'Integration overview', href: 'https://fileshub.zaions.com/ai-integration' },
             { label: 'Docs source', href: 'https://github.com/aoneahsan/files-hub-docs' },
           ],

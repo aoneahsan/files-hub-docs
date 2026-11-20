@@ -4,6 +4,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
+import { PRIMARY_PLATFORM } from '@site/src/data/platforms';
 import styles from './index.module.css';
 
 type Feature = {
@@ -52,10 +53,15 @@ function HomepageHeader(): ReactNode {
           <Link className="button button--secondary button--lg" to="/api/overview">
             API Reference
           </Link>
-          <Link className="button button--outline button--lg" href="https://fileshub.zaions.com">
+          <Link className="button button--outline button--lg" href={PRIMARY_PLATFORM.href}>
             Open FilesHub
           </Link>
         </div>
+        <p className={styles.also}>
+          <span>Get FilesHub</span>
+          <Link href={PRIMARY_PLATFORM.href}>{PRIMARY_PLATFORM.name}</Link>
+          <Link to="/apps">All apps →</Link>
+        </p>
       </div>
     </header>
   );
