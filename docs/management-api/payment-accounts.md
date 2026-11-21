@@ -4,7 +4,7 @@ title: Payment accounts
 description: Keep the API keys, webhook secrets and login details of your payment-provider accounts (Stripe, PayPal, Polar.sh, Creem, Lemon Squeezy, Paddle and more) on one record, and read them back over the FilesHub Management API.
 keywords: [stripe key storage, payment provider api keys, paypal client secret storage, polar.sh access token, lemon squeezy api key, paddle api key, creem api key, webhook secret vault, can_read_payment_accounts, payment credentials vault]
 last_update:
-  date: 2026-09-30
+  date: 2026-11-21
   author: Ahsan Mahmood
 ---
 
@@ -40,8 +40,10 @@ fields change to that provider's.
 
 ## Endpoints
 
-All of these are **read-only**. Every route except `providers` needs the `can_read_payment_accounts` scope,
-which is off by default. **No other scope grants it**, including `can_reveal_vault`.
+Account records are **read-only** here; they are entered in the dashboard. Only a project's **link** to an
+account can be written (since `2026.11.21.1`). Every route except `providers` needs the
+`can_read_payment_accounts` scope, which is off by default. **No other scope grants it**, including
+`can_reveal_vault`.
 
 | Method | Path | Returns |
 |---|---|---|
@@ -49,7 +51,8 @@ which is off by default. **No other scope grants it**, including `can_reveal_vau
 | `GET` | `/payment-accounts` | A page of accounts. Filters: `q`, `provider`, `email`, `active` |
 | `GET` | `/payment-accounts/{account}` | One account: `identifiers` (non-secret values) and `has.*` presence flags, never a secret |
 | `POST` | `/payment-accounts/{account}/reveal` | Every stored value plus an `env.node` block. Always audited, with field names only. `409` when nothing is stored |
-| `GET` | `/projects/{project}/payment-accounts` | Which accounts a project sells through (attached in the dashboard). Pointers only |
+| `GET` | `/projects/{project}/payment-accounts` | Which accounts a project sells through. Pointers only |
+| `PUT` | `/projects/{project}/payment-accounts` | Replace the project's links: `{"accounts": [{"account": 12, "purpose": "checkout"}]}`, `[]` removes them. Also needs `can_write_vault`. Audited. Linking a Polar account to CallVault, SMS App or FilesHub is refused with `422 POLAR_NOT_ALLOWED` |
 
 `{account}` is the numeric id or `provider:email`, for example `stripe:billing@example.com`. A bare email is
 refused because one login often owns accounts at several providers.

@@ -4,7 +4,7 @@ title: Agent workflow â€” auto-configure a project's API key
 description: Step-by-step recipe for an AI coding agent to map a local project to its FilesHub project and enforce origin restrictions on its API key using the Management API, checking global origins before adding duplicates.
 keywords: [ai agent fileshub, claude code fileshub, automate api key setup, origin restriction automation, global origins check, fh_pat access token workflow, wire up api key from env]
 last_update:
-  date: 2026-09-10
+  date: 2026-11-21
   author: Ahsan Mahmood
 ---
 
@@ -22,6 +22,16 @@ provided out-of-band as an environment variable (e.g. `FILESHUB_ACCESS_TOKEN`) â
 **1. Confirm the token and its scope.**
 ```bash
 curl -s https://fileshub.zaions.com/api/public/v1/token -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN"
+```
+
+**Know the project's app identifier?** Start there. It is the project's key everywhere (for example
+`com.aoneahsan.rentparty`, from `capacitor.config.ts` `appId` or Android `applicationId`). Resolve it, then
+read everything the project is already linked to:
+```bash
+curl -s "https://fileshub.zaions.com/api/public/v1/projects/lookup?app_identifier=com.aoneahsan.rentparty" \
+  -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN"
+curl -s https://fileshub.zaions.com/api/public/v1/projects/com.aoneahsan.rentparty/connections \
+  -H "Authorization: Bearer $FILESHUB_ACCESS_TOKEN"
 ```
 
 **2. Find the key in the local project.** Read the project's `.env` (or equivalent) for the FilesHub
