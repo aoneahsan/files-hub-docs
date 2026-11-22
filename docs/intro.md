@@ -4,7 +4,7 @@ title: Introduction
 description: FilesHub is a file-storage and developer-utility API — upload a file over HTTP with an X-API-Key header, get a stable public URL, then list, download, or delete it.
 keywords: [fileshub, file storage api, file upload api, http file storage, public file url, x-api-key, store files api, image hosting api, laravel file storage]
 last_update:
-  date: 2026-07-14
+  date: 2026-11-22
   author: Ahsan Mahmood
 ---
 
@@ -59,6 +59,7 @@ flowchart LR
 - [API Reference](api/overview) — every endpoint (objects, email, jobs) with exact request/response shapes.
 - [OpenAPI spec](api/openapi) — a machine-readable `/openapi.json` and raw-Markdown mirror for AI coding agents.
 - [Integrate from any app](guides/integrate-from-any-app) — copy-paste integration for JS/TS, PHP, and mobile.
+- [Other apps](other-apps) — belong to a project? Connect your own scripts, an AI assistant or a server to it, with keys and webhooks you make yourself.
 
 ## Honest limits
 

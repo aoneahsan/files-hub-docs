@@ -268,6 +268,7 @@ const config: Config = {
             { label: 'Quick Start', to: '/getting-started/quick-start' },
             { label: 'Authentication', to: '/getting-started/authentication' },
             { label: 'API Reference', to: '/api/overview' },
+            { label: 'Other apps (for people)', to: '/other-apps' },
           ],
         },
         {

@@ -316,6 +316,30 @@ https://fileshub-docs.zaions.com/management-api/supabase-accounts, the project v
 https://fileshub-docs.zaions.com/management-api/project-vault, and the agent recipe at
 https://fileshub-docs.zaions.com/management-api/agent-workflow.
 
+## Other apps: for people who belong to projects (backend 2026.11.22.1)
+
+- A person is someone whose dashboard access request was approved: a `viewer` or `operator` member of named
+  projects. Three doors, each switched on by an admin and off until then (every path answers 404 while off):
+  access keys + the person API, AI assistants over MCP, and webhooks. Two-step sign-in is not behind a switch.
+- Access keys: `fh_usr_` + 43 characters, made on Account → Other apps, scoped (`account:read`,
+  `projects:read`, `files:read`, `files:delete`, `usage:read`, `email_log:read`, `webhooks:read`), 30/90/365
+  days or never for see-only keys. Separate from `fh_pat_` management tokens and `fh_live_` project keys;
+  each is refused where the others work.
+- Person API: `https://fileshub.zaions.com/api/account/v1` (`Authorization: Bearer fh_usr_…`), OpenAPI 3.1 at
+  `/api/account/v1/openapi.json`. `token`, `me`, `projects`, `projects/{project}/files`, `files/{file}`,
+  `POST files/{file}/download-link` (5 minutes), `DELETE files/{file}` (202: asks; the person says yes on
+  FilesHub within 10 minutes), `removals/{removal}`, `usage`, `email-log` (never a body), `webhooks`,
+  `webhooks/{webhook}/deliveries`. `{data}` / `{data, meta}` / `{error: {code, message}}`; out of reach is 404.
+- Assistants: MCP at `https://fileshub.zaions.com/mcp/account`, its own OAuth 2.1 (dynamic registration, PKCE
+  S256). Separate from the vault MCP at `/mcp`. Deletes only ask.
+- Webhooks: Standard Webhooks signatures (`whsec_`); events `file.uploaded`, `file.deleted`, `email.sent`,
+  `email.failed`, `usage.limit_near`, plus `webhook.test`. Payloads never carry file content or message bodies.
+- Never reachable through any door: vault values and files, any reveal, `fh_live_`/`fh_pat_` secrets, Password
+  Manager, AI account keys, developer-account tokens, payment accounts, Supabase tokens, backups, message
+  bodies, marketing lists, other people's data, Nova.
+- Docs: https://fileshub-docs.zaions.com/other-apps · /other-apps/access-keys · /other-apps/api ·
+  /other-apps/assistants · /other-apps/webhooks · /other-apps/two-step-sign-in
+
 ## Beyond storage: developer utilities
 
 FilesHub also exposes 40+ stateless utility endpoint groups under `/api/v1`, including: hashing and

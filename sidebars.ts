@@ -120,6 +120,19 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Other apps (for people)',
+      collapsed: true,
+      link: { type: 'doc', id: 'other-apps/index' },
+      items: [
+        'other-apps/access-keys',
+        'other-apps/api',
+        'other-apps/assistants',
+        'other-apps/webhooks',
+        'other-apps/two-step-sign-in',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Integration Guides',
       collapsed: true,
       items: [

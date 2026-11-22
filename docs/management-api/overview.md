@@ -4,7 +4,7 @@ title: Management API overview
 description: The FilesHub Public Management API lets a trusted server or AI coding agent create projects, mint and rotate per-project API keys, configure origin restrictions, and read a project's stored credentials using one account-wide access token.
 keywords: [fileshub management api, access token, fh_pat, create api key programmatically, rotate api key, manage origins, project vault, ai agent, claude code, automate api keys]
 last_update:
-  date: 2026-08-04
+  date: 2026-11-22
   author: Ahsan Mahmood
 ---
 
@@ -32,7 +32,9 @@ origin-restricted before it ships in a frontend bundle.
 | **Access token** | `fh_pat_` | A server or CLI secret **only** — never a browser, never a committed file | Management plane — create/rotate/reveal keys, manage origins, manage projects (`/api/public/v1/*`) |
 
 An `fh_live_` API key is rejected by the management plane (`INVALID_ACCESS_TOKEN_FORMAT`), and an
-`fh_pat_` access token does nothing on the data plane. The management plane sends **no CORS headers**
+`fh_pat_` access token does nothing on the data plane. People who belong to projects have a third, narrower credential, the
+`fh_usr_` [access key](../other-apps/access-keys.md), for the [person API](../other-apps/api.md); it is
+refused here, and `fh_pat_` is refused there. The management plane sends **no CORS headers**
 — it is not callable from a browser by design.
 
 ## Scope
