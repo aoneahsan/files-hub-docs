@@ -109,6 +109,7 @@ const sidebars: SidebarsConfig = {
         'management-api/supabase-accounts',
         'management-api/project-vault',
         'management-api/developer-accounts',
+        'management-api/sign-in-provider-apps',
         'management-api/payment-accounts',
         'management-api/social-accounts',
         'management-api/amplitude-accounts',

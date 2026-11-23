@@ -31685,6 +31685,586 @@
           }
         ]
       }
+    },
+    "/projects/{project}/sign-in-providers/{app}": {
+      "delete": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Delete a sign-in provider app",
+        "description": "Deletes the app and its fields. It is audited before the delete. Requires `can_write_vault`. Added in backend 2026.11.23.2.",
+        "operationId": "deleteSignInProviderApp",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Get a sign-in provider app",
+        "description": "One app, without secret values. Requires `can_read_vault`. An app outside the named project answers 404. Added in backend 2026.11.23.2.",
+        "operationId": "getSignInProviderApp",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Update a sign-in provider app",
+        "description": "Changes `label`, `environment`, `status`, `account_email`, `notes` and `credentials`. A blank value leaves a field alone, and only `clear_credentials: [\"key\"]` deletes one. `project` (id, slug or app identifier) moves the app to another project the token reaches, otherwise 404. `provider` cannot change. Requires `can_write_vault`. Added in backend 2026.11.23.2.",
+        "operationId": "updateSignInProviderApp",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "project": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Move the app to this project (id, slug or app identifier)."
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "test",
+                      "production"
+                    ]
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255
+                  },
+                  "account_email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email",
+                    "maxLength": 255
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "registered",
+                      "in_review",
+                      "live",
+                      "disabled"
+                    ]
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 20000
+                  },
+                  "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "description": "Provider field key to value. GET /sign-in-providers/registry lists the keys."
+                  },
+                  "clear_credentials": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/sign-in-providers": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List a project's sign-in provider apps",
+        "description": "The OAuth / OpenID registrations made for this project in provider consoles, with non-secret `values` and `has.*` flags. Filters: `provider`, `environment`, `status`, `account_email`. Requires `can_read_vault`. Added in backend 2026.11.23.2.",
+        "operationId": "listProjectSignInProviderApps",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Add a sign-in provider app",
+        "description": "Creates one registration: `provider`, `environment` (`test` by default), `label`, `account_email` (the console login it was made under), `status`, `notes`, and `credentials` (a map of the provider's own field keys to values). A key the provider does not declare answers 422 `UNKNOWN_SIGN_IN_PROVIDER_FIELD` and nothing is stored. `is_secret` comes from the registry, never the caller. Answers 201 with the record and `changes` (field names only). Requires `can_write_vault`. Added in backend 2026.11.23.2.",
+        "operationId": "createSignInProviderApp",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "google",
+                      "apple",
+                      "microsoft",
+                      "facebook",
+                      "linkedin",
+                      "x",
+                      "pinterest",
+                      "tiktok",
+                      "github",
+                      "gitlab",
+                      "slack",
+                      "discord",
+                      "twitch",
+                      "spotify",
+                      "amazon",
+                      "yahoo",
+                      "custom_oidc"
+                    ]
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "test",
+                      "production"
+                    ]
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 255
+                  },
+                  "account_email": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "email",
+                    "maxLength": 255
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "registered",
+                      "in_review",
+                      "live",
+                      "disabled"
+                    ]
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 20000
+                  },
+                  "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "description": "Provider field key to value. GET /sign-in-providers/registry lists the keys."
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sign-in-providers": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List sign-in provider apps across projects",
+        "description": "Every app in every project this token reaches. Filter by `project` (id, slug or app identifier), `provider`, `environment`, `status` and `account_email`. Each row has non-secret `values` and `has.*` flags, never a secret. Paginated. Requires `can_read_vault`. Added in backend 2026.11.23.2.",
+        "operationId": "listSignInProviderApps",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/sign-in-providers/registry": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "List sign-in providers and their fields",
+        "description": "Every provider (Google, Apple, Microsoft, Facebook, LinkedIn, X, Pinterest, TikTok, GitHub, GitLab, Slack, Discord, Twitch, Spotify, Login with Amazon, Yahoo, other OpenID Connect) with its own fields: the label its console uses, where to find the value, the type, whether it is secret, and the `env_key` a reveal publishes it under. The schema only, never a record. Any valid token. Added in backend 2026.11.23.2.",
+        "operationId": "listSignInProviders",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/sign-in-providers/{app}/reveal": {
+      "post": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Reveal a sign-in provider app",
+        "description": "Every value, including secrets, plus an `env` block named `<PROVIDER>_<FIELD>` (e.g. `GITHUB_CLIENT_SECRET`, `APPLE_PRIVATE_KEY_P8`). `undecryptable` lists stored values that cannot be read. Always recorded, with field names only. Requires `can_reveal_vault`. Added in backend 2026.11.23.2.",
+        "operationId": "revealSignInProviderApp",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1",
+            "description": "Public Management API (fh_pat_ access token)"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {

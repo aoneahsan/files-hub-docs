@@ -4,13 +4,20 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-11-22
+  date: 2026-11-23
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-11-23 — Sign-in provider apps
+
+- For backend `2026.11.23.2`. The new page [Sign-in provider apps](management-api/sign-in-provider-apps) covers
+  OAuth and OpenID Connect registrations kept on the project they were made for. There are 17 providers, each
+  record notes the console account it was made under, and every value can be read back over the Management API.
+- `openapi.json` gains the eight routes.
 
 ## 2026-11-22 — Other apps: access keys, assistants and webhooks for people
 
