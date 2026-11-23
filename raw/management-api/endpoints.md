@@ -4,7 +4,7 @@ title: Management API endpoints
 description: Full endpoint reference for the FilesHub Public Management API — access tokens, projects, API keys (create, rotate, reveal), origins, global origins, and reverse key lookup, with request and response examples.
 keywords: [fileshub management api endpoints, create project api, create api key api, rotate api key, reveal api key, manage origins api, global origins api, api-keys lookup, access token, create access token api, rotate access token]
 last_update:
-  date: 2026-11-16
+  date: 2026-11-21
   author: Ahsan Mahmood
 ---
 
@@ -96,13 +96,20 @@ update. `platforms` and `tech_stack` are always arrays, empty rather than `null`
 carries three booleans that only [`PATCH`](#patch-projectsproject) writes: `test_events_enabled`,
 `google_oauth_keepalive_enabled` and, since `2026.09.11.3`, `is_client_project`.
 
-:::note One field is not yours to change later
-`app_identifier` is the reverse-DNS app id. It is **immutable once the app is published to a store** —
-changing it orphans every existing install. The API will accept the write; the store will not forgive it.
+:::note The app identifier is the project's key everywhere
+Since `2026.11.21.1`, `app_identifier` (for example `com.aoneahsan.rentparty`) is the one key every linked
+record finds a project by. Supabase, AI accounts, payment accounts, social accounts, Amplitude and developer
+accounts all hang off it. It is **unique**, stored **lowercase**, and must be a reverse-domain identifier:
+2 to 8 dot-separated parts, each starting with a letter, at most 155 characters. Anything that passes is also
+a valid Android, Apple and Tauri id. A bad shape or a value another project holds is a `422`.
+
+It is **locked once set**. A store never lets a published id change, so a `PATCH` that changes or clears a
+set value answers `409 IDENTIFIER_LOCKED` unless it also carries `"confirm_identifier_change": true`. Every
+change is audited. Setting it for the first time needs no flag.
 :::
 
 ### `GET /projects`
-List the projects this token may manage. Query: `q` (substring match on name or slug), `status`
+List the projects this token may manage. Query: `q` (substring match on name, slug or app identifier), `status`
 (`active` / `inactive`), `per_page`, `page`. Each item includes `api_keys_count`.
 
 ### `POST /projects`
@@ -129,7 +136,8 @@ A token scoped to specific projects is **attached to the project it just created
 project resolves instead of 404-ing.
 
 ### `GET /projects/{project}`
-Fetch one project by **numeric id, ULID `public_id`, or slug**. Adds an abbreviated `api_keys` list —
+Fetch one project by **numeric id, ULID `public_id`, slug or app identifier**. The same applies to every
+`{project}` on this API, for example `/projects/com.aoneahsan.rentparty/vault`. Adds an abbreviated `api_keys` list —
 `id`, `name`, `key_prefix`, `restricted`, `is_active` per key, newest first. For the full key representation
 call the api-keys endpoints below.
 
@@ -185,6 +193,28 @@ Two rows of the readiness list can be waived, and only these two:
 
 Sending `true` again keeps the date the waiver was first set; `false` clears it and its note. Every project
 payload shows them under `waivers.play_store` / `waivers.polar` (`null` when not waived).
+
+### `GET /projects/lookup?app_identifier=…`
+The project an app identifier names (case does not matter). An unknown identifier and one outside the
+token's scope both answer `404`; a value that is not reverse-domain shaped is `422`.
+
+### `GET /projects/{project}/connections`
+Everything one project is linked to, in one read, and never a secret: its FilesHub API keys, Supabase
+project, AI accounts, developer accounts, payment accounts, social accounts, Amplitude projects, Google OAuth
+client count, the vault services it has values for, and its readiness summary. Each section is gated by the
+same scope as its own endpoint. A section this token cannot read comes back as
+`{"restricted": "can_read_vault"}` (or the scope it needs) instead of failing the whole call.
+
+```bash
+curl -s .../projects/com.aoneahsan.rentparty/connections -H "Authorization: Bearer $TOKEN"
+```
+```json
+{ "data": { "project": { "id": 7, "slug": "rentparty", "app_identifier": "com.aoneahsan.rentparty", "…": "…" },
+            "supabase_project": { "id": 12, "name": "rentparty", "ref": "abcd…", "region": "…" },
+            "ai_accounts": [ … ], "payment_accounts": { "restricted": "can_read_payment_accounts" },
+            "social_accounts": { … }, "amplitude_projects": [ … ], "google_oauth_clients": 1,
+            "vault_services": ["firebase", "sentry"], "readiness": { "done": 9, "total": 11, "missing": ["…"] } } }
+```
 
 ### `GET /projects/{project}/readiness`
 

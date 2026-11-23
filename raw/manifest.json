@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-20T16:50:33.374Z",
+  "generatedAt": "2026-11-23T08:08:10.072Z",
   "site": "https://fileshub-docs.zaions.com",
   "description": "Raw Markdown mirror of every FilesHub documentation page. Each url returns the un-rendered .md (front matter included). Built for AI coding agents. See also /openapi.json.",
-  "count": 59,
+  "count": 65,
   "files": [
     {
       "path": "about-the-author.md",
@@ -345,6 +345,42 @@
       "url": "https://fileshub-docs.zaions.com/raw/management-api/supabase-projects.md",
       "title": "Supabase project vault",
       "description": "Read and reveal a Supabase project's full credential set — API keys, JWT secret, Postgres connection details, and S3 keys — over the FilesHub Management API, plus ready-to-paste React, Node and Laravel .env blocks."
+    },
+    {
+      "path": "other-apps/access-keys.md",
+      "url": "https://fileshub-docs.zaions.com/raw/other-apps/access-keys.md",
+      "title": "Access keys (fh_usr_)",
+      "description": "Make an fh_usr_ access key for a script or server of yours, scoped to the projects and actions it needs. How long keys last, when FilesHub shows one again, rotating with a 24-hour overlap, and revoking."
+    },
+    {
+      "path": "other-apps/api.md",
+      "url": "https://fileshub-docs.zaions.com/raw/other-apps/api.md",
+      "title": "The person API (/api/account/v1)",
+      "description": "Every call of the FilesHub person API with curl examples — your account, projects, file metadata, 5-minute download links, deletes that wait for your yes, usage and limits, the email log without bodies, and your webhooks. One envelope, cursor pages, an OpenAPI 3.1 file."
+    },
+    {
+      "path": "other-apps/assistants.md",
+      "url": "https://fileshub-docs.zaions.com/raw/other-apps/assistants.md",
+      "title": "Connect an AI assistant (MCP at /mcp/account)",
+      "description": "Add FilesHub to Claude, ChatGPT, Claude Code or Cursor with one address, https://fileshub.zaions.com/mcp/account. You approve each assistant on FilesHub, pick its projects and what it may do, and every delete it asks for waits for your yes."
+    },
+    {
+      "path": "other-apps/index.md",
+      "url": "https://fileshub-docs.zaions.com/raw/other-apps/index.md",
+      "title": "Other apps — your FilesHub projects in your own tools",
+      "description": "People who belong to FilesHub projects can connect their own scripts with fh_usr_ access keys, AI assistants over MCP, and servers with signed webhooks. What each door reaches, what it never reaches, and who switches it on."
+    },
+    {
+      "path": "other-apps/two-step-sign-in.md",
+      "url": "https://fileshub-docs.zaions.com/raw/other-apps/two-step-sign-in.md",
+      "title": "Two-step sign-in for people",
+      "description": "Turn on two-step sign-in on FilesHub with an authenticator app and ten recovery codes. Remembered browsers, what a recovery code can and cannot do, moving to a new phone, signing out everywhere else, and a support reset."
+    },
+    {
+      "path": "other-apps/webhooks.md",
+      "url": "https://fileshub-docs.zaions.com/raw/other-apps/webhooks.md",
+      "title": "Webhooks — events, signatures and retries",
+      "description": "FilesHub sends your server a signed POST when a file is uploaded or deleted, an email is sent or fails, or a service passes 80% of its limit. Sample payloads for every event, Standard Webhooks verification in Node and PHP, retries, pausing and the addresses FilesHub refuses."
     },
     {
       "path": "platform-services.md",

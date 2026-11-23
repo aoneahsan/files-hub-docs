@@ -12494,6 +12494,75 @@
             "description": "Not found, or out of this token's project scope"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Replace a project's payment-account links",
+        "description": "Body {\"accounts\": [{\"account\": <id or provider:email>, \"purpose\"?: string}]}; [] removes all. Writes links only; credentials stay in the dashboard. Needs can_read_payment_accounts and can_write_vault. Polar is refused for callvault, smsapp and fileshub (422 POLAR_NOT_ALLOWED). Added in backend 2026.11.21.1.",
+        "operationId": "publicPaymentAccountControllerAssign",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accounts": {
+                    "type": "array",
+                    "maxItems": 20
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     },
     "/email-people": {
@@ -31491,6 +31560,97 @@
           },
           {
             "name": "template",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/lookup": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "The project an app identifier names",
+        "description": "Case-insensitive. Unknown and out-of-scope answer the same 404; a malformed identifier is 422. Added in backend 2026.11.21.1.",
+        "operationId": "publicProjectControllerLookup",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/connections": {
+      "get": {
+        "tags": [
+          "Management API"
+        ],
+        "summary": "Everything a project is linked to",
+        "description": "Every link of one project in one read, no secrets: API keys, Supabase project, AI, developer, payment and social accounts, Amplitude projects, Google OAuth client count, vault services and readiness. A section the token cannot read is {\"restricted\": \"<scope>\"}. {project} accepts id, public_id, slug or app identifier. Added in backend 2026.11.21.1.",
+        "operationId": "publicProjectConnectionsControllerShow",
+        "servers": [
+          {
+            "url": "https://fileshub.zaions.com/api/public/v1"
+          }
+        ],
+        "x-generated": true,
+        "parameters": [
+          {
+            "name": "project",
             "in": "path",
             "required": true,
             "schema": {

@@ -4,13 +4,32 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-11-19
+  date: 2026-11-22
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-11-22 — Other apps: access keys, assistants and webhooks for people
+
+- For backend `2026.11.22.1`. Each of the three doors starts off and opens when an admin switches it on.
+- New section [Other apps](other-apps): people who belong to projects connect their own tools, and see what
+  each door reaches and what no door ever reaches.
+- [Access keys](other-apps/access-keys): `fh_usr_` keys, scoped to your projects, 30/90/365 days or never
+  for see-only keys, shown again only within 10 minutes of a sign-in, rotated with a 24-hour overlap.
+- [The person API](other-apps/api) at `/api/account/v1`, with its own OpenAPI 3.1 file: account, projects,
+  file details, 5-minute download links, deletes that wait for your yes, usage and limits, the email log
+  without bodies, your webhooks.
+- [Assistants](other-apps/assistants): Claude, ChatGPT, Claude Code and Cursor connect at `/mcp/account`,
+  with its own OAuth (PKCE, self-registration). The vault MCP at `/mcp` is unchanged.
+- [Webhooks](other-apps/webhooks): five events plus the test event, Standard Webhooks signatures
+  (`whsec_`), receivers in Node and PHP checked against FilesHub's own signer, retries, pausing and the
+  addresses FilesHub refuses.
+- [Two-step sign-in](other-apps/two-step-sign-in) for people: an authenticator app, ten recovery codes, a
+  7-day remembered browser you opt into, sign out everywhere else, and a support reset.
+- [Management API overview](management-api/overview): how `fh_usr_` keys differ from `fh_pat_` tokens.
 
 ## 2026-11-19 — Social accounts
 
