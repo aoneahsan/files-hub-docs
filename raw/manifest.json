@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-23T08:08:10.072Z",
+  "generatedAt": "2026-11-23T12:42:10.430Z",
   "site": "https://fileshub-docs.zaions.com",
   "description": "Raw Markdown mirror of every FilesHub documentation page. Each url returns the un-rendered .md (front matter included). Built for AI coding agents. See also /openapi.json.",
-  "count": 65,
+  "count": 66,
   "files": [
     {
       "path": "about-the-author.md",
@@ -327,6 +327,12 @@
       "url": "https://fileshub-docs.zaions.com/raw/management-api/project-vault.md",
       "title": "Project vault",
       "description": "Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks."
+    },
+    {
+      "path": "management-api/sign-in-provider-apps.md",
+      "url": "https://fileshub-docs.zaions.com/raw/management-api/sign-in-provider-apps.md",
+      "title": "Sign-in provider apps",
+      "description": "Keep every OAuth and OpenID Connect app you register for a project (Google, Apple, Microsoft, GitHub and 13 more) on that project in FilesHub, with the console account you made it under, and read it back over the Management API."
     },
     {
       "path": "management-api/social-accounts.md",
