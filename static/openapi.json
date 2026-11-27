@@ -34273,6 +34273,23 @@
           "writable": {
             "type": "boolean",
             "description": "Whether PUT /projects/{project}/vault/{service} accepts fields for it \u2014 false for linked and derived services. Added 2026.08.20.1."
+          },
+          "inherits": {
+            "type": "array",
+            "description": "Fields this service does NOT store: each is read from a developer account that serves the project (sentry.auth_token from the `sentry` developer account). Always secret; the value needs can_read_developer_accounts. Added 2026.11.27.1.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string" },
+                "label": { "type": "string" },
+                "help": { "type": "string" },
+                "developer_account_provider": { "type": "string" },
+                "developer_account_field": { "type": "string" },
+                "env_key": { "type": ["string", "null"] },
+                "secret": { "type": "boolean" },
+                "required_scope": { "type": "string" }
+              }
+            }
           }
         }
       },
@@ -34327,7 +34344,27 @@
             "items": {
               "type": "string"
             },
-            "description": "Present on a derived service only: stored rows that exist under it from before it became derived. Named rather than silently overridden. Added 2026.08.20.1."
+            "description": "Present on a derived service, and on a service with inherited fields: stored rows that exist from before the field became derived or inherited. Named, never served. Added 2026.08.20.1; inherited fields 2026.11.27.1."
+          },
+          "inherited": {
+            "type": "object",
+            "description": "Present on a service with inherited fields: per field, where its value comes from. Never a value. `included` is true only when the value is in `values` (a reveal whose token also holds can_read_developer_accounts). Added 2026.11.27.1.",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "developer_account_provider": { "type": "string" },
+                "developer_account_field": { "type": "string" },
+                "developer_account_id": { "type": ["integer", "null"] },
+                "developer_account": { "type": ["string", "null"] },
+                "via": { "type": ["string", "null"], "enum": ["explicit", "all_projects", null] },
+                "ambiguous": { "type": "boolean" },
+                "candidates": { "type": "integer" },
+                "required_scope": { "type": "string" },
+                "reveal_via": { "type": ["string", "null"] },
+                "included": { "type": "boolean" },
+                "note": { "type": ["string", "null"] }
+              }
+            }
           }
         }
       },
@@ -34766,7 +34803,7 @@
         "properties": {
           "values": {
             "type": "object",
-            "description": "Field key -> value. An absent key is left alone; an explicit null DELETES that field's row.",
+            "description": "Field key -> value. An absent key is left alone; an explicit null DELETES that field's row. An INHERITED field (listed in the service's `inherits`, e.g. sentry.auth_token) refuses a value with 422 INHERITED_VAULT_FIELD; null still deletes a row stored before it became inherited.",
             "additionalProperties": {
               "type": [
                 "string",
@@ -34777,7 +34814,7 @@
             "example": {
               "dsn": "https://abc@o1.ingest.sentry.io/2",
               "org_slug": "zaions",
-              "auth_token": null
+              "project_slug": null
             }
           },
           "secrets": {

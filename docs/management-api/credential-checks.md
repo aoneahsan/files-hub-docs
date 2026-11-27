@@ -4,7 +4,7 @@ title: Credential checks ("Test Analytics")
 description: Send a real "Test Analytics" event to a project's Firebase Analytics, GA4, Amplitude and Sentry — or verify the stored credentials read-only — per project and per tool, from the Management API, with an honest verdict for each.
 keywords: [test analytics event, verify amplitude api key, verify sentry dsn, test ga4 measurement id, firebase analytics webconfig, clarity project id check, onesignal app id check, credential check api, analytics credentials test]
 last_update:
-  date: 2026-09-11
+  date: 2026-11-27
   author: Ahsan Mahmood
 ---
 
@@ -47,7 +47,7 @@ applicable).
 | Tool (`service`) | Needs | What a server can prove |
 | --- | --- | --- |
 | `amplitude` | `amplitude.api_key` | **Everything.** An empty-events request validates the key and ingests nothing; a real send is acknowledged (`events_ingested`). A US key is invalid on the EU endpoint, so the data centre is detected too |
-| `sentry` | `sentry.dsn` | **Everything.** The envelope endpoint authenticates the DSN. Verify sends an outcome report, not an event; send creates one event with a fixed fingerprint, so repeated runs stay in **one** issue per project |
+| `sentry` | `sentry.dsn` | **Everything.** The envelope endpoint authenticates the DSN. Verify sends an outcome report, not an event; send creates one event with a fixed fingerprint, so repeated runs stay in **one** issue per project. With `org_slug` and `project_slug` stored, the auth token from the project's [Sentry developer account](./developer-accounts.md#sentry-one-account-every-project) is checked against that project too |
 | `firebase_analytics` | `firebase.web_api_key`, `firebase.app_id_web` | **The config.** Firebase's own web-config endpoint proves the key and the web app id, and returns the measurement id — compared with the one stored. The event then goes to GA4 |
 | `google_analytics` | `google_analytics.measurement_id` | **Nothing.** GA4 answers the same for any id, so the verdict is `sent`; confirm in GA4 → Admin → **DebugView**. The event is `test_analytics` — GA4 rejects spaces in event names |
 | `clarity` | `clarity.project_id` | **That the project exists.** Clarity has no server-side event API; the event is recorded from a browser by the Live browser test in the admin panel |

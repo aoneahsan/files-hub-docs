@@ -4,13 +4,23 @@ title: Changelog
 description: Notable changes to the FilesHub documentation site, latest first.
 keywords: [fileshub changelog, docs changelog, release notes]
 last_update:
-  date: 2026-11-23
+  date: 2026-11-27
   author: Ahsan Mahmood
 ---
 
 # Changelog
 
 Notable changes to this documentation site, latest first. The FilesHub product's own release notes live with the app at [fileshub.zaions.com](https://fileshub.zaions.com).
+
+## 2026-11-27 — One Sentry account for every project
+
+- For backend `2026.11.27.1`. The Sentry auth token now lives only on a `sentry` developer account, which
+  also holds the organisation's slug and id, API base URL, login, 2FA recovery codes, internal-integration
+  client and webhook details, and the legacy API key. Turn it on for all projects or attach the ones you pick:
+  [Sentry: one account, every project](management-api/developer-accounts#sentry-one-account-every-project).
+- The project vault's `sentry` service drops its `auth_token` field. The token appears there as an inherited
+  value, and a reveal carries it only when the token also holds `can_read_developer_accounts`. Writing it on a
+  project answers `422 INHERITED_VAULT_FIELD`.
 
 ## 2026-11-23 — Sign-in provider apps
 

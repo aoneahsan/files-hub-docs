@@ -2,9 +2,9 @@
 sidebar_position: 7
 title: Developer accounts
 description: Store the tokens that publish under your name — npm, Hugging Face, Docker Hub, PyPI, crates.io, the extension stores, Vercel, Netlify, Sentry — on one account-level record, and read them back over the FilesHub Management API with a ready-to-write .npmrc line.
-keywords: [npm token storage, store npm publish token, huggingface token api, docker hub pat storage, pypi token vault, ci publishing credentials, npmrc from api, can_read_developer_accounts, package publishing secrets, store marketplace credentials, developer account vault]
+keywords: [sentry auth token for all projects, sentry organization token storage, npm token storage, store npm publish token, huggingface token api, docker hub pat storage, pypi token vault, ci publishing credentials, npmrc from api, can_read_developer_accounts, package publishing secrets, store marketplace credentials, developer account vault]
 last_update:
-  date: 2026-09-04
+  date: 2026-11-27
   author: Ahsan Mahmood
 ---
 
@@ -50,6 +50,10 @@ distinction that matters:
 A DSN says where errors go; an auth token can delete the project. Storing them together is how the wrong one
 gets sent.
 
+**Sentry goes one step further** (backend `2026.11.27.1`): a project's vault does not hold a Sentry auth
+token at all. It reads one from the Sentry developer account that serves it. See
+[Sentry: one account, every project](#sentry-one-account-every-project).
+
 ### A field may declare a format, and both write planes enforce it
 
 Since `2026.09.04.1`, a provider can declare the shape its own backend requires, and a value that does not
@@ -68,7 +72,9 @@ match is refused on write with **422 `INVALID_DEVELOPER_ACCOUNT_CREDENTIAL`**:
 `details` names the provider and the field and **never the value** — a validation error that echoes what was
 sent puts a credential into the response body, your log and your CI transcript.
 
-Only `native_update.token` declares one today. It exists because that platform mints two token families whose
+Two fields declare one today. `sentry.auth_token` must start with `sntrys_` (organization token) or
+`sntryu_` (personal token), so a DSN or a legacy API key pasted into the wrong box is refused on entry.
+`native_update.token` exists because that platform mints two token families whose
 names differ by four characters, one of which is meant to ship inside an app; sending the wrong one fails on
 *format* at your first publish, months later, with an error that reads like a revoked token.
 
@@ -182,6 +188,84 @@ resolved entry reports `via: explicit | all_projects`, which tells you where to 
 projects **you** may reach. They are unrelated, and an account flagged for every project never widens a
 token's scope — a project-scoped token still sees only its own projects listed under that account.
 
+## Sentry: one account, every project
+
+From backend **`2026.11.27.1`**, the Sentry auth token lives **only** on a `sentry` developer account. The
+project vault's `sentry` service keeps the per-project facts (the DSN, the org and project slugs) and no
+longer has an `auth_token` field. Each project gets the token from whichever Sentry account serves it.
+
+The account holds the organisation's details in one place:
+
+| Field | Secret | Env var | What it is |
+|---|---|---|---|
+| `auth_token` | yes · required | `SENTRY_AUTH_TOKEN` | Organization token (`sntrys_…`) or personal token (`sntryu_…`) |
+| `token_type` · `token_scopes` | no | | Which kind of token, and what it may do (`project:releases`, `org:read`) |
+| `org_slug` · `org_id` | no | `SENTRY_ORG` | The organisation |
+| `api_base` | no | `SENTRY_URL` | `https://sentry.io`, `https://de.sentry.io`, or your self-hosted URL |
+| `account_email` · `password` | password only | | The login |
+| `two_factor_recovery_codes` | yes | | One per line |
+| `integration_client_id` · `integration_client_secret` | secret only | | An internal integration. The secret also verifies its webhooks (`Sentry-Hook-Signature`) |
+| `webhook_url` | no | | Where that integration sends webhooks |
+| `legacy_api_key` | yes | | The old organisation API key, for tooling that still asks for one |
+
+Set it up in three calls:
+
+```bash
+# 1. Create the account. The org slug is the identifier.
+curl -X POST "$FH/developer-accounts" -H "Authorization: Bearer $FH_PAT" -H "Content-Type: application/json" \
+  -d '{"provider": "sentry", "account_identifier": "zaions", "credentials": {"auth_token": "sntrys_…", "org_slug": "zaions"}}'
+
+# 2a. Serve every project, including ones created later…
+curl -X PATCH "$FH/developer-accounts/sentry:zaions" -H "Authorization: Bearer $FH_PAT" -H "Content-Type: application/json" \
+  -d '{"all_projects": true}'
+
+# 2b. …or only the ones you pick.
+curl -X PUT "$FH/developer-accounts/sentry:zaions/projects" -H "Authorization: Bearer $FH_PAT" -H "Content-Type: application/json" \
+  -d '{"project_ids": [12, 31]}'
+```
+
+Rotating the token is one `PATCH` with `{"credentials": {"auth_token": "sntrys_…"}}`, and every project it
+serves picks up the new value on its next read.
+
+### What a project sees
+
+A project's vault reports the inherited field under `services.sentry`:
+
+```json
+{
+  "has": { "dsn": true, "org_slug": true, "project_slug": true, "auth_token": true },
+  "inherited": {
+    "auth_token": {
+      "developer_account_id": 7,
+      "developer_account": "Sentry (organisation) — zaions",
+      "via": "all_projects",
+      "ambiguous": false,
+      "candidates": 1,
+      "required_scope": "can_read_developer_accounts",
+      "reveal_via": "/api/public/v1/developer-accounts/7/reveal",
+      "included": false
+    }
+  },
+  "shadowed_stored_fields": []
+}
+```
+
+🔴 **The value needs both scopes.** A [project vault reveal](./project-vault.md) with `can_reveal_vault`
+alone tells you the token exists and which account holds it, and leaves the value out (`included: false`).
+Add `can_read_developer_accounts` and the reveal carries `values.auth_token` plus a `SENTRY_AUTH_TOKEN` line
+in the `node` and `laravel` env blocks. It is never added to `vite` or `next`. That read is also written to
+the Sentry account's own reveal history.
+
+**Which account wins.** One attached to the project explicitly beats one serving all projects; after that,
+the lowest id. When more than one qualifies, `ambiguous` is `true` and `candidates` says how many, so two
+organisations competing for one project are visible instead of silently resolved. Inactive accounts never
+serve.
+
+**Writing it on a project is refused.** `PUT /projects/{p}/vault/sentry` with a value for `auth_token`
+answers **422 `INHERITED_VAULT_FIELD`**, naming the provider and the field to set instead. An explicit
+`"auth_token": null` is still accepted, so a token stored on a project before this release can be deleted
+over the API. Until it is deleted, such a row is listed in `shadowed_stored_fields` and is never served.
+
 ## Where this is *not* the answer
 
 - **Play Console and App Store Connect** are deliberately absent. Their signing material is genuinely
@@ -191,4 +275,5 @@ token's scope — a project-scoped token still sees only its own projects listed
   `chrome_web_store`, `firefox_addons`, `edge_addons`. They are not duplicates. The vault row is *that
   project's* configuration: a Sentry DSN, an extension id, a repo name. The developer account is the
   account-wide credential that can administer every one of them. A DSN is safe in a bundle; an auth token can
-  delete a project.
+  delete a project. For Sentry the token is not stored on a project at all; it is
+  [inherited from the account](#sentry-one-account-every-project).

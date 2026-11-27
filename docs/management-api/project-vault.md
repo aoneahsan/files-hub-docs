@@ -4,7 +4,7 @@ title: Project vault
 description: Store every third-party credential, config file and identifier a project needs — Firebase, Google Cloud, Sentry, OneSignal, Cloudflare, store consoles, signing keys and more — and read, reveal AND write them over the FilesHub Management API with a scoped token, including ready-to-paste .env blocks.
 keywords: [project credential vault, store api keys per project, write credentials via api, firebase config api, google services json api, android keystore storage, env file generator api, can_read_vault, can_reveal_vault, can_write_vault, secrets vault for developers, bootstrap project credentials cli, seed project secrets programmatically]
 last_update:
-  date: 2026-11-12
+  date: 2026-11-27
   author: Ahsan Mahmood
 ---
 
@@ -187,6 +187,14 @@ as `ONESIGNAL_IDENTITY_VERIFICATION_SECRET_KEY` in the server `.env` blocks only
 `identity_verification_public_key` (the half OneSignal checks those JWTs with; not secret). Paste the PEM
 with its line breaks. And `amplitude.api_key` can also be written through the Amplitude project it belongs
 to ([Amplitude accounts](./amplitude-accounts.md)): the same vault row either way.
+
+:red_circle: **`sentry.auth_token` is inherited, not stored** (`2026.11.27.1`). The Sentry auth token lives
+only on a [Sentry developer account](./developer-accounts.md#sentry-one-account-every-project), turned on
+for all projects or for the ones you pick. `GET /vault/services` lists it under the service's `inherits`
+array instead of `fields`. A project's payload reports it in `has` and in an `inherited` block that names
+the source account; the value appears in a reveal only when the token also holds
+`can_read_developer_accounts`. Writing a value for it on a project answers
+**422 `INHERITED_VAULT_FIELD`**, and `null` deletes a row stored before the change.
 
 :red_circle: **`turnstile` is separate from `cloudflare` on purpose.** A project uses Cloudflare Turnstile
 without owning any Cloudflare account configuration — no API token, no zone, no R2 — so merging them would
@@ -379,7 +387,7 @@ Partial, and the two ways of "not sending a value" mean different things:
 ```bash
 curl -X PUT https://fileshub.zaions.com/api/public/v1/projects/my-app/vault/sentry \
   -H "Authorization: Bearer $FH_PAT" -H 'Content-Type: application/json' \
-  -d '{"values": {"dsn": "https://abc@o1.ingest.sentry.io/2", "org_slug": "zaions", "auth_token": null}}'
+  -d '{"values": {"dsn": "https://abc@o1.ingest.sentry.io/2", "org_slug": "zaions", "project_slug": null}}'
 ```
 
 For the freeform `general` service you name your own keys, and you may pass a `secrets` map alongside:
@@ -392,7 +400,7 @@ For the freeform `general` service you name your own keys, and you may pass a `s
 :::danger `secrets` is honoured on freeform rows ONLY
 For a field the registry declares, **the registry decides** whether it is secret and a caller-supplied flag
 is ignored. That is not a courtesy — the non-reveal views filter on exactly that flag, so a caller able to
-mark `sentry.auth_token` as public would publish a live credential in an ordinary `200` that needs no reveal
+mark `onesignal.rest_api_key` as public would publish a live credential in an ordinary `200` that needs no reveal
 scope at all. On a freeform row the flag is the only signal there is, so its **absence defaults to `true`**.
 :::
 
